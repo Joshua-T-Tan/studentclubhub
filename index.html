@@ -24,10 +24,7 @@
             pointer-events: none;
             transition: opacity 0.25s ease;
         }
-        .modal-overlay.open {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
         .modal-card {
             background: #fff;
             border-radius: 1rem;
@@ -52,30 +49,19 @@
         /* Disabled -> Active button transition (global rule) */
         .action-btn {
             transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease;
-            background-color: #e5e7eb; /* gray-200 */
-            color: #9ca3af;            /* gray-400 */
-            cursor: not-allowed;
+            background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed;
         }
-        .action-btn.enabled {
-            background-color: #7c3aed; /* purple-600 */
-            color: #ffffff;
-            cursor: pointer;
-        }
+        .action-btn.enabled { background-color: #7c3aed; color: #ffffff; cursor: pointer; }
         .action-btn.enabled:hover { background-color: #6d28d9; }
         .action-btn.enabled:active { transform: scale(0.98); }
 
         /* Toast */
         #toast {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
+            position: fixed; bottom: 2rem; left: 50%;
             transform: translateX(-50%) translateY(150%);
-            background: #111827;
-            color: #fff;
-            padding: 0.75rem 1.25rem;
-            border-radius: 0.75rem;
-            font-size: 0.875rem;
-            z-index: 200;
+            background: #111827; color: #fff;
+            padding: 0.75rem 1.25rem; border-radius: 0.75rem;
+            font-size: 0.875rem; z-index: 200;
             transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
             box-shadow: 0 10px 25px rgba(0,0,0,0.25);
         }
@@ -83,63 +69,41 @@
 
         /* Code input boxes */
         .code-box {
-            width: 3rem; height: 3.5rem;
-            text-align: center;
-            font-size: 1.5rem;
-            font-weight: 700;
-            border: 2px solid #d1d5db;
-            border-radius: 0.5rem;
-            background: #fff;
+            width: 3rem; height: 3.5rem; text-align: center;
+            font-size: 1.5rem; font-weight: 700;
+            border: 2px solid #d1d5db; border-radius: 0.5rem; background: #fff;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
-        .code-box:focus {
-            outline: none;
-            border-color: #7c3aed;
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
-        }
+        .code-box:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2); }
 
         /* Role / amount selectable cards */
-        .select-card {
-            border: 2px solid #e5e7eb;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
+        .select-card { border: 2px solid #e5e7eb; transition: all 0.2s ease; cursor: pointer; }
         .select-card:hover { border-color: #c4b5fd; }
-        .select-card.selected {
-            border-color: #7c3aed;
-            background: #f5f3ff;
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
-        }
+        .select-card.selected { border-color: #7c3aed; background: #f5f3ff; box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15); }
 
-        .amount-chip {
-            border: 2px solid #e5e7eb;
-            transition: all 0.15s ease;
-            cursor: pointer;
+        .amount-chip { border: 2px solid #e5e7eb; transition: all 0.15s ease; cursor: pointer; }
+        .amount-chip.selected { border-color: #7c3aed; background: #7c3aed; color: #fff; }
+
+        /* Quick-filter pill tags */
+        .filter-pill {
+            border: 1px solid #e5e7eb; background: #fff; color: #4b5563;
+            transition: all 0.15s ease; cursor: pointer;
         }
-        .amount-chip.selected {
-            border-color: #7c3aed;
-            background: #7c3aed;
-            color: #fff;
-        }
+        .filter-pill:hover { border-color: #c4b5fd; color: #7c3aed; }
+        .filter-pill.active { background: #7c3aed; border-color: #7c3aed; color: #fff; }
 
         /* Spinner */
         .spinner {
             width: 3rem; height: 3rem;
-            border: 4px solid #ede9fe;
-            border-top-color: #7c3aed;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            border: 4px solid #ede9fe; border-top-color: #7c3aed;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Animated checkmark */
         .checkmark {
-            width: 96px; height: 96px;
-            border-radius: 50%;
-            display: block;
-            stroke-width: 3;
-            stroke: #16a34a;
-            stroke-miterlimit: 10;
+            width: 96px; height: 96px; border-radius: 50%; display: block;
+            stroke-width: 3; stroke: #16a34a; stroke-miterlimit: 10;
             box-shadow: inset 0 0 0 #16a34a;
             animation: fillGreen 0.4s ease-in-out 0.4s forwards, scaleUp 0.3s ease-in-out 0.9s both;
         }
@@ -159,11 +123,8 @@
 
         /* Confetti */
         .confetti-piece {
-            position: absolute;
-            width: 10px; height: 14px;
-            top: -10px;
-            opacity: 0.9;
-            animation: confettiFall linear forwards;
+            position: absolute; width: 10px; height: 14px; top: -10px;
+            opacity: 0.9; animation: confettiFall linear forwards;
         }
         @keyframes confettiFall {
             0%   { transform: translateY(-10px) rotateZ(0deg); opacity: 1; }
@@ -173,13 +134,20 @@
         /* Warning popup for anonymous */
         .anon-popup {
             transition: opacity 0.25s ease, transform 0.25s ease;
-            opacity: 0;
-            transform: translateY(6px);
-            pointer-events: none;
+            opacity: 0; transform: translateY(6px); pointer-events: none;
         }
         .anon-popup.show { opacity: 1; transform: translateY(0); }
 
         .valid-ring:focus { box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2); }
+
+        /* School searchable combobox */
+        .combo-dropdown {
+            max-height: 12rem; overflow-y: auto;
+            border: 1px solid #e5e7eb; border-radius: 0.5rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        }
+        .combo-option { padding: 0.5rem 0.75rem; cursor: pointer; font-size: 0.875rem; }
+        .combo-option:hover, .combo-option.highlight { background: #f5f3ff; color: #7c3aed; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
@@ -187,20 +155,20 @@
     <!-- Navigation Header -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="bg-indigo-600 text-white p-2 rounded-lg font-bold text-lg">SCH</div>
-                <span class="text-xl font-bold text-gray-900">Student Club Hub</span>
-            </div>
+            <!-- Brand text aligned far left (SCH square removed) -->
+            <span class="text-xl font-bold text-gray-900">Student Club Hub</span>
+
             <nav class="hidden md:flex space-x-8 text-sm font-medium text-gray-600">
                 <a href="#directory" class="hover:text-indigo-600">Directory</a>
+                <a href="#how-it-works" class="hover:text-indigo-600">How It Works</a>
                 <a href="#fundraising" class="hover:text-indigo-600">Fundraising &amp; Sponsorship</a>
                 <a href="#resources" class="hover:text-indigo-600">Resource Hub</a>
             </nav>
-            <div id="authArea">
-                <!-- Logged-out state -->
-                <button id="loginBtn" onclick="openAuthModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">
-                    Log In / Sign Up
-                </button>
+
+            <div id="authArea" class="flex items-center gap-3">
+                <!-- Logged-out state: two separate buttons -->
+                <button onclick="openLoginModal()" class="text-indigo-600 border border-indigo-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition">Log In</button>
+                <button onclick="openSignupModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Sign Up</button>
             </div>
         </div>
     </header>
@@ -209,10 +177,12 @@
     <section class="bg-indigo-900 text-white py-20 px-4 text-center">
         <div class="max-w-4xl mx-auto">
             <span class="bg-indigo-800 text-indigo-200 text-xs uppercase tracking-widest px-3 py-1 rounded-full font-semibold">Non-Profit Platform</span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mt-4 mb-6">Advertise &amp; Fund Your High School Club</h1>
-            <p class="text-lg md:text-xl text-indigo-200 mb-8">Empowering high school club leaders with global visibility, member recruitment tools, and customizable fundraising toolkits.</p>
+            <h1 class="text-4xl md:text-6xl font-extrabold mt-4 mb-6">Discover, Support, and Grow High School Clubs Worldwide</h1>
+            <p class="text-lg md:text-xl text-indigo-200 mb-8">Connecting student leaders with new members, sponsorship toolkits, and community supporters.</p>
             <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <a href="#directory" class="bg-white text-indigo-900 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition">Browse Club Directory</a>
+                <a href="#directory" class="bg-white text-indigo-900 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition">
+                    <i class="fa-solid fa-magnifying-glass mr-2"></i>Browse Clubs
+                </a>
                 <button onclick="openDonationModal()" class="bg-emerald-500 text-white border border-emerald-400 px-6 py-3 rounded-lg font-bold hover:bg-emerald-600 transition shadow-lg">
                     <i class="fa-solid fa-heart mr-2"></i>Donate as Guest
                 </button>
@@ -220,73 +190,93 @@
         </div>
     </section>
 
+    <!-- Impact Stats Bar -->
+    <section class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+            <div>
+                <p class="text-3xl font-extrabold text-indigo-600">50+</p>
+                <p class="text-sm text-gray-500 mt-1">High School Clubs</p>
+            </div>
+            <div class="sm:border-l sm:border-r border-gray-200">
+                <p class="text-3xl font-extrabold text-indigo-600">12</p>
+                <p class="text-sm text-gray-500 mt-1">States Represented</p>
+            </div>
+            <div>
+                <p class="text-3xl font-extrabold text-indigo-600">$2,500+</p>
+                <p class="text-sm text-gray-500 mt-1">Raised for Student Projects</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900">How It Works</h2>
+            <p class="text-gray-600 mt-2">A simple path from starting a club to getting it funded and supported.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center">
+                <div class="w-14 h-14 mx-auto rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-bold mb-4">1</div>
+                <i class="fa-solid fa-user-plus text-2xl text-indigo-600 mb-3"></i>
+                <h3 class="font-bold text-gray-900 mb-2">Register Your Club</h3>
+                <p class="text-sm text-gray-600">Students create a free profile, add their mission, meeting times, and leadership so new members can find them.</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center">
+                <div class="w-14 h-14 mx-auto rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-bold mb-4">2</div>
+                <i class="fa-solid fa-bullhorn text-2xl text-indigo-600 mb-3"></i>
+                <h3 class="font-bold text-gray-900 mb-2">Fundraise &amp; Recruit</h3>
+                <p class="text-sm text-gray-600">Use free sponsorship toolkits and share your club page to attract members and micro-sponsorships.</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center">
+                <div class="w-14 h-14 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl font-bold mb-4">3</div>
+                <i class="fa-solid fa-hand-holding-heart text-2xl text-emerald-600 mb-3"></i>
+                <h3 class="font-bold text-gray-900 mb-2">Donors Support</h3>
+                <p class="text-sm text-gray-600">Community supporters browse the directory and back initiatives they care about — as a guest or a member.</p>
+            </div>
+        </div>
+    </section>
+
     <!-- Section 1: Club Directory -->
-    <section id="directory" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="directory" class="py-16 bg-gray-100">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="mb-8">
             <h2 class="text-3xl font-bold text-gray-900">Global &amp; Local Club Directory</h2>
             <p class="text-gray-600 mt-2">Discover, filter, and connect with high school clubs near you or around the globe.</p>
         </div>
 
         <!-- Search & Filter Bar -->
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-8 flex flex-col md:flex-row gap-4">
-            <input type="text" placeholder="Search by club name, keyword, or location..." class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-            <select class="border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-700">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4 flex flex-col md:flex-row gap-4">
+            <input id="searchInput" type="text" oninput="applyFilters()" placeholder="Search by club name, keyword, or location..." class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <select id="categorySelect" onchange="applyFilters()" class="border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-700">
                 <option>All Categories</option>
-                <option>STEM</option>
-                <option>Business &amp; Finance</option>
-                <option>Culture &amp; Arts</option>
-                <option>Voluntarism &amp; Community</option>
+                <option>STEM &amp; Tech</option>
+                <option>Business &amp; Entrepreneurship</option>
+                <option>Arts, Media &amp; Design</option>
+                <option>Culture &amp; Language</option>
+                <option>Volunteering &amp; Community Service</option>
+                <option>Humanities &amp; Debate</option>
+                <option>Health &amp; Medicine</option>
+                <option>Hobbies &amp; Niche Interests</option>
             </select>
         </div>
 
-        <!-- Sample Club Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Club Card 1 -->
-            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
-                <div class="flex items-center space-x-3 mb-4">
-                    <div class="bg-blue-100 text-blue-600 p-3 rounded-lg font-bold"><i class="fa-solid fa-microchip text-xl"></i></div>
-                    <div>
-                        <h3 class="font-bold text-gray-900">Robotics &amp; AI Society</h3>
-                        <p class="text-xs text-gray-500">STEM • West High School</p>
-                    </div>
-                </div>
-                <p class="text-sm text-gray-600 mb-4">Dedicated to building autonomous robots and competing in national STEM challenges.</p>
-                <div class="text-xs text-gray-500 mb-4"><i class="fa-regular fa-clock mr-1"></i> Meets Tuesdays @ 3:30 PM</div>
-                <button class="w-full bg-gray-100 text-indigo-600 font-semibold py-2 rounded-lg text-sm hover:bg-indigo-50 transition">Join / Contact Club</button>
-            </div>
-
-            <!-- Club Card 2 -->
-            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
-                <div class="flex items-center space-x-3 mb-4">
-                    <div class="bg-emerald-100 text-emerald-600 p-3 rounded-lg font-bold"><i class="fa-solid fa-leaf text-xl"></i></div>
-                    <div>
-                        <h3 class="font-bold text-gray-900">Eco-Action Alliance</h3>
-                        <p class="text-xs text-gray-500">Voluntarism • Global Chapter</p>
-                    </div>
-                </div>
-                <p class="text-sm text-gray-600 mb-4">Organizing beach cleanups, recycling drives, and community sustainability workshops.</p>
-                <div class="text-xs text-gray-500 mb-4"><i class="fa-regular fa-clock mr-1"></i> Meets Thursdays @ 4:00 PM</div>
-                <button class="w-full bg-gray-100 text-indigo-600 font-semibold py-2 rounded-lg text-sm hover:bg-indigo-50 transition">Join / Contact Club</button>
-            </div>
-
-            <!-- Club Card 3 -->
-            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
-                <div class="flex items-center space-x-3 mb-4">
-                    <div class="bg-amber-100 text-amber-600 p-3 rounded-lg font-bold"><i class="fa-solid fa-chart-line text-xl"></i></div>
-                    <div>
-                        <h3 class="font-bold text-gray-900">Young Entrepreneurs Club</h3>
-                        <p class="text-xs text-gray-500">Business • Central High</p>
-                    </div>
-                </div>
-                <p class="text-sm text-gray-600 mb-4">Helping high school students turn business ideas into real-world startups and pitches.</p>
-                <div class="text-xs text-gray-500 mb-4"><i class="fa-regular fa-clock mr-1"></i> Meets Fridays @ 3:00 PM</div>
-                <button class="w-full bg-gray-100 text-indigo-600 font-semibold py-2 rounded-lg text-sm hover:bg-indigo-50 transition">Join / Contact Club</button>
-            </div>
+        <!-- Quick-Filter Tags -->
+        <div class="flex flex-wrap gap-2 mb-8" id="filterTags">
+            <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="STEM" onclick="toggleTag(this)">#STEM</span>
+            <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="Volunteering" onclick="toggleTag(this)">#Volunteering</span>
+            <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="Debate" onclick="toggleTag(this)">#Debate</span>
+            <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="Robotics" onclick="toggleTag(this)">#Robotics</span>
+            <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="EcoFriendly" onclick="toggleTag(this)">#EcoFriendly</span>
         </div>
+
+        <!-- Club Cards (rendered by JS) -->
+        <div id="clubGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+        <p id="noResults" class="hidden text-center text-gray-500 py-10"><i class="fa-solid fa-magnifying-glass mr-2"></i>No clubs match your filters yet. Try clearing a tag.</p>
+      </div>
     </section>
 
     <!-- Section 2: Fundraising & Sponsorship -->
-    <section id="fundraising" class="bg-gray-100 py-16">
+    <section id="fundraising" class="bg-white py-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="mb-8">
                 <h2 class="text-3xl font-bold text-gray-900">Club Fundraising &amp; Sponsorship</h2>
@@ -294,21 +284,21 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div class="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200">
                     <i class="fa-solid fa-file-pen text-2xl text-indigo-600 mb-3"></i>
                     <h3 class="font-bold text-gray-900 mb-2">Sponsorship Pitch Kit</h3>
                     <p class="text-sm text-gray-600 mb-4">Free, customizable letter templates for club presidents to pitch local businesses for $50–$500 micro-sponsorships.</p>
                     <a href="#" class="text-indigo-600 text-sm font-semibold hover:underline">Download Template →</a>
                 </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div class="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200">
                     <i class="fa-solid fa-hand-holding-dollar text-2xl text-indigo-600 mb-3"></i>
                     <h3 class="font-bold text-gray-900 mb-2">Fundraising Guides</h3>
                     <p class="text-sm text-gray-600 mb-4">Step-by-step guides on organizing digital and offline community fundraisers with high return on investment.</p>
                     <a href="#" class="text-indigo-600 text-sm font-semibold hover:underline">Read Guide →</a>
                 </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div class="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200">
                     <i class="fa-solid fa-award text-2xl text-indigo-600 mb-3"></i>
                     <h3 class="font-bold text-gray-900 mb-2">Grants Directory (TBD)</h3>
                     <p class="text-sm text-gray-600 mb-4">A curated list of national grants, competitions, or corporate programs offering funding to high school groups.</p>
@@ -343,15 +333,77 @@
         </div>
     </section>
 
+    <!-- Testimonials -->
+    <section class="bg-indigo-900 py-16">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-white">Loved by Students &amp; Supporters</h2>
+                <p class="text-indigo-200 mt-2">Real voices from the Student Club Hub community.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="text-amber-400 mb-3"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                    <p class="text-gray-700 italic mb-5">"We grew our Robotics club from 8 to 40 members in one semester and raised enough for our first competition kit. This platform made us visible."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">MA</div>
+                        <div>
+                            <p class="font-semibold text-gray-900">Maya A.</p>
+                            <p class="text-xs text-gray-500">President, Robotics &amp; AI Society</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="text-amber-400 mb-3"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                    <p class="text-gray-700 italic mb-5">"As a local business owner, I love that I can support real student projects in my community directly. The whole process took two minutes."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">DR</div>
+                        <div>
+                            <p class="font-semibold text-gray-900">David R.</p>
+                            <p class="text-xs text-gray-500">Community Sponsor &amp; Advisor</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer class="bg-gray-900 text-gray-400 py-8 border-t border-gray-800 text-center text-sm">
         <p>© 2026 Student Club Hub. Non-profit Initiative.</p>
     </footer>
 
     <!-- ============================================================= -->
-    <!-- ==================  AUTH (SIGN-UP / LOGIN) MODAL  ============ -->
+    <!-- =========================  LOG IN MODAL  ==================== -->
     <!-- ============================================================= -->
-    <div id="authModal" class="modal-overlay">
+    <div id="loginModal" class="modal-overlay">
+        <div class="modal-card p-6 sm:p-8">
+            <div class="flex items-center justify-end mb-2">
+                <button onclick="closeLoginModal()" class="text-gray-400 hover:text-gray-700 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-1">Welcome back</h2>
+            <p class="text-sm text-gray-500 mb-6">Log in to your Student Club Hub account.</p>
+
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+            <input id="loginEmail" type="email" oninput="validateLogin()" placeholder="you@example.com"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-4 focus:outline-none focus:border-indigo-500 valid-ring">
+
+            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input id="loginPassword" type="password" oninput="validateLogin()" placeholder="••••••••"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-5 focus:outline-none focus:border-indigo-500 valid-ring">
+
+            <button id="loginSubmit" onclick="doLogin()" disabled class="action-btn w-full py-3 rounded-lg font-semibold">Log In</button>
+
+            <p class="text-center text-sm text-gray-500 mt-4">
+                Don't have an account?
+                <a href="#" onclick="loginToSignup(event)" class="text-indigo-600 font-semibold hover:underline">Sign Up</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- ==================  SIGN UP MODAL (WIZARD)  ================= -->
+    <!-- ============================================================= -->
+    <div id="signupModal" class="modal-overlay">
         <div class="modal-card p-6 sm:p-8">
             <!-- Header row: Back button + progress -->
             <div class="flex items-center justify-between mb-6">
@@ -359,12 +411,12 @@
                     <i class="fa-solid fa-arrow-left mr-1"></i> Back
                 </button>
                 <span id="authStageLabel" class="text-xs font-semibold text-indigo-500 uppercase tracking-wide">Step 1 of 4</span>
-                <button onclick="closeAuthModal()" class="text-gray-400 hover:text-gray-700 text-lg"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeSignupModal()" class="text-gray-400 hover:text-gray-700 text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <!-- ---------- Stage 1: Credentials ---------- -->
+            <!-- Stage 1: Credentials -->
             <div id="authStage1" class="stage active">
-                <h2 id="authTitle" class="text-2xl font-bold text-gray-900 mb-1">Create your account</h2>
+                <h2 class="text-2xl font-bold text-gray-900 mb-1">Create your account</h2>
                 <p class="text-sm text-gray-500 mb-6">Join Student Club Hub to advertise, fund, and grow your club.</p>
 
                 <label class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
@@ -375,28 +427,28 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
                 <input id="signupPassword" type="password" oninput="validateStage1()" placeholder="••••••••"
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-1 focus:outline-none focus:border-indigo-500 valid-ring">
-                <p id="pwHint" class="text-xs text-gray-400 mb-5">Create a new password for Student Club Hub (min. 6 characters).</p>
+                <p class="text-xs text-gray-400 mb-5">Create a new password for Student Club Hub (min. 6 characters).</p>
 
                 <button id="stage1Next" onclick="goToStage(2)" disabled class="action-btn w-full py-3 rounded-lg font-semibold">Next</button>
 
                 <p class="text-center text-sm text-gray-500 mt-4">
-                    <span id="toggleAuthText">Already have an account?</span>
-                    <a href="#" onclick="toggleAuthMode(event)" id="toggleAuthLink" class="text-indigo-600 font-semibold hover:underline">Log In</a>
+                    Already have an account?
+                    <a href="#" onclick="signupToLogin(event)" class="text-indigo-600 font-semibold hover:underline">Log In</a>
                 </p>
             </div>
 
-            <!-- ---------- Stage 2: Email Verification ---------- -->
+            <!-- Stage 2: Email Verification -->
             <div id="authStage2" class="stage">
                 <h2 class="text-2xl font-bold text-gray-900 mb-1">Verify your email</h2>
                 <p class="text-sm text-gray-500 mb-6">We sent a 6-digit code to <span id="verifyEmailDisplay" class="font-semibold text-gray-700"></span>. Enter it below.</p>
 
                 <div class="flex justify-between gap-2 mb-4" id="codeInputs">
-                    <input class="code-box" maxlength="1" inputmode="numeric" data-index="0">
-                    <input class="code-box" maxlength="1" inputmode="numeric" data-index="1">
-                    <input class="code-box" maxlength="1" inputmode="numeric" data-index="2">
-                    <input class="code-box" maxlength="1" inputmode="numeric" data-index="3">
-                    <input class="code-box" maxlength="1" inputmode="numeric" data-index="4">
-                    <input class="code-box" maxlength="1" inputmode="numeric" data-index="5">
+                    <input class="code-box" maxlength="1" inputmode="numeric">
+                    <input class="code-box" maxlength="1" inputmode="numeric">
+                    <input class="code-box" maxlength="1" inputmode="numeric">
+                    <input class="code-box" maxlength="1" inputmode="numeric">
+                    <input class="code-box" maxlength="1" inputmode="numeric">
+                    <input class="code-box" maxlength="1" inputmode="numeric">
                 </div>
 
                 <div class="bg-indigo-50 text-indigo-700 text-xs rounded-lg p-2 mb-4 text-center">
@@ -409,7 +461,7 @@
                 </p>
             </div>
 
-            <!-- ---------- Stage 3: Role Selection ---------- -->
+            <!-- Stage 3: Role Selection -->
             <div id="authStage3" class="stage">
                 <h2 class="text-2xl font-bold text-gray-900 mb-1">How will you use Student Club Hub?</h2>
                 <p class="text-sm text-gray-500 mb-6">This helps us tailor your dashboard. You can change it later.</p>
@@ -431,12 +483,12 @@
                     </div>
                 </div>
 
-                <p class="text-xs text-gray-400 italic mb-5 text-center">Note: Anyone can donate or explore clubs regardless of account type!</p>
+                <p class="text-xs text-gray-500 italic mb-5 text-center">💡 Note: Anyone can donate or explore clubs regardless of account type!</p>
 
                 <button id="stage3Next" onclick="goToStage(4)" disabled class="action-btn w-full py-3 rounded-lg font-semibold">Next</button>
             </div>
 
-            <!-- ---------- Stage 4: Profile Details ---------- -->
+            <!-- Stage 4: Profile Details -->
             <div id="authStage4" class="stage">
                 <h2 class="text-2xl font-bold text-gray-900 mb-1">Finish your profile</h2>
                 <p class="text-sm text-gray-500 mb-6">Just a couple of details to set up your account.</p>
@@ -471,16 +523,17 @@
                         </select>
                     </div>
 
-                    <div id="schoolWrap">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">High School</label>
-                        <select id="schoolSelect" onchange="onSchoolChange()" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-2 bg-white focus:outline-none focus:border-indigo-500">
-                            <option value="">— Choose a school —</option>
-                        </select>
-                        <input id="otherSchool" type="text" oninput="validateStage4()" placeholder="Type your school name"
-                            class="hidden w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-2 focus:outline-none focus:border-indigo-500 valid-ring">
-                    </div>
+                    <!-- Searchable school combobox -->
+                    <div id="schoolWrap" class="relative">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">High School <span class="text-gray-400 font-normal">(search or pick)</span></label>
+                        <input id="schoolSearch" type="text" autocomplete="off" oninput="onSchoolSearch()" onfocus="onSchoolSearch()" placeholder="Start typing your school name..."
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-1 focus:outline-none focus:border-indigo-500 valid-ring">
+                        <div id="schoolDropdown" class="combo-dropdown bg-white absolute left-0 right-0 z-20 hidden"></div>
 
-                    <p class="text-xs text-gray-400 mb-5">Can be updated anytime in account settings.</p>
+                        <input id="otherSchool" type="text" oninput="validateStage4()" placeholder="Type your school name"
+                            class="hidden w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:outline-none focus:border-indigo-500 valid-ring">
+                        <p class="text-xs text-gray-400 mt-1 mb-5">Can be updated anytime in account settings.</p>
+                    </div>
                 </div>
 
                 <button id="createAccountBtn" onclick="createAccount()" disabled class="action-btn w-full py-3 rounded-lg font-semibold">Create Account</button>
@@ -493,13 +546,11 @@
     <!-- ============================================================= -->
     <div id="donationModal" class="modal-overlay">
         <div class="modal-card max-w-lg overflow-hidden">
-
-            <!-- Body (form) -->
             <div id="donationBody">
                 <!-- Top log-in banner -->
                 <div class="bg-indigo-50 border-b border-indigo-100 px-6 py-3 text-sm text-indigo-800 flex items-center justify-between">
                     <span>Already have an account?
-                        <a href="#" onclick="switchToAuth(event)" class="font-semibold underline">Log In / Sign Up</a>
+                        <a href="#" onclick="donationToLogin(event)" class="font-semibold underline">Log In / Sign Up</a>
                         to track your donation history.
                     </span>
                     <button onclick="closeDonationModal()" class="text-indigo-400 hover:text-indigo-700 text-lg ml-3"><i class="fa-solid fa-xmark"></i></button>
@@ -507,15 +558,15 @@
 
                 <div class="p-6 max-h-[75vh] overflow-y-auto">
                     <h2 class="text-2xl font-bold text-gray-900 mb-1">Support a Student Club</h2>
-                    <p class="text-sm text-gray-500 mb-5">100% of your contribution helps high school students fund their initiatives.</p>
+                    <p id="donationClubLine" class="text-sm text-gray-500 mb-5">100% of your contribution helps high school students fund their initiatives.</p>
 
                     <!-- Amount selector -->
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Choose an amount</label>
                     <div class="grid grid-cols-4 gap-2 mb-3">
-                        <div class="amount-chip rounded-lg py-3 text-center font-semibold text-gray-700" data-amount="10" onclick="selectAmount(10, this)">$10</div>
-                        <div class="amount-chip rounded-lg py-3 text-center font-semibold text-gray-700" data-amount="25" onclick="selectAmount(25, this)">$25</div>
-                        <div class="amount-chip rounded-lg py-3 text-center font-semibold text-gray-700" data-amount="50" onclick="selectAmount(50, this)">$50</div>
-                        <div class="amount-chip rounded-lg py-3 text-center font-semibold text-gray-700" data-amount="100" onclick="selectAmount(100, this)">$100</div>
+                        <div class="amount-chip rounded-lg py-3 text-center font-semibold text-gray-700" onclick="selectAmount(10, this)">$10</div>
+                        <div class="amount-chip rounded-lg py-3 text-center font-semibold text-gray-700" onclick="selectAmount(25, this)">$25</div>
+                        <div class="amount-chip rounded-lg py-3 text-center font-semibold text-gray-700" onclick="selectAmount(50, this)">$50</div>
+                        <div class="amount-chip rounded-lg py-3 text-center font-semibold text-gray-700" onclick="selectAmount(100, this)">$100</div>
                     </div>
                     <div class="relative mb-6">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
@@ -539,10 +590,9 @@
                                 <input id="anonCheck" type="checkbox" onchange="onDonorNameOrAnon()" class="mt-0.5 h-4 w-4 text-indigo-600 rounded border-gray-300">
                                 <span class="text-sm text-gray-600">Donate Anonymously <span class="text-gray-400">(Hide my name from public club supporter lists)</span></span>
                             </label>
-                            <!-- Interactive warning popup -->
                             <div id="anonPopup" class="anon-popup absolute left-0 right-0 mt-2 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg z-10">
                                 <i class="fa-solid fa-lock mr-1 text-emerald-400"></i>
-                                By checking this box, recipient clubs will only see "Anonymous" publicly, and your name will remain completely private.
+                                By checking this box, recipient clubs will only see "Anonymous" publicly, and your name will remain private.
                             </div>
                         </div>
                     </div>
@@ -593,6 +643,48 @@
         </div>
     </div>
 
+    <!-- ============================================================= -->
+    <!-- =====================  CLUB QUICK-VIEW MODAL  =============== -->
+    <!-- ============================================================= -->
+    <div id="quickViewModal" class="modal-overlay">
+        <div class="modal-card max-w-lg">
+            <div class="p-6 sm:p-8">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <div id="qvIcon" class="p-3 rounded-lg text-xl"></div>
+                        <div>
+                            <h2 id="qvName" class="text-xl font-bold text-gray-900"></h2>
+                            <p id="qvMeta" class="text-xs text-gray-500"></p>
+                        </div>
+                    </div>
+                    <button onclick="closeQuickView()" class="text-gray-400 hover:text-gray-700 text-lg"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <div class="mb-4">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-1"><i class="fa-solid fa-bullseye text-indigo-600 mr-1"></i> Mission</h3>
+                    <p id="qvMission" class="text-sm text-gray-600"></p>
+                </div>
+
+                <div class="mb-4">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-1"><i class="fa-regular fa-clock text-indigo-600 mr-1"></i> Meeting Schedule</h3>
+                    <p id="qvMeeting" class="text-sm text-gray-600"></p>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-2"><i class="fa-solid fa-user-group text-indigo-600 mr-1"></i> Leadership Contacts</h3>
+                    <div id="qvLeaders" class="space-y-2"></div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="supportThisClub()" class="flex-1 bg-emerald-500 text-white py-2.5 rounded-lg font-semibold hover:bg-emerald-600 transition">
+                        <i class="fa-solid fa-heart mr-1"></i> Support This Club
+                    </button>
+                    <button onclick="closeQuickView()" class="px-5 bg-gray-100 text-gray-700 py-2.5 rounded-lg font-semibold hover:bg-gray-200 transition">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast notification -->
     <div id="toast"></div>
 
@@ -618,35 +710,64 @@
         btn.classList.toggle('enabled', enabled);
     }
 
+    function lockScroll(lock) { document.body.style.overflow = lock ? 'hidden' : ''; }
+
     /* =====================================================
-       AUTH MODAL
+       LOG IN MODAL (single screen)
     ===================================================== */
-    let authState = {
-        mode: 'signup',      // 'signup' | 'login'
-        currentStage: 1,
-        history: [],
-        role: null,
-        demoCode: '',
-    };
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    function openAuthModal() {
-        document.getElementById('authModal').classList.add('open');
-        document.body.style.overflow = 'hidden';
-        resetAuth();
+    function openLoginModal() {
+        document.getElementById('loginModal').classList.add('open');
+        lockScroll(true);
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPassword').value = '';
+        setBtn('loginSubmit', false);
     }
-    function closeAuthModal() {
-        document.getElementById('authModal').classList.remove('open');
-        document.body.style.overflow = '';
+    function closeLoginModal() {
+        document.getElementById('loginModal').classList.remove('open');
+        lockScroll(false);
     }
+    function validateLogin() {
+        const email = document.getElementById('loginEmail').value.trim();
+        const pw = document.getElementById('loginPassword').value;
+        setBtn('loginSubmit', EMAIL_RE.test(email) && pw.length >= 1);
+    }
+    function doLogin() {
+        if (document.getElementById('loginSubmit').disabled) return;
+        const email = document.getElementById('loginEmail').value.trim();
+        const name = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        closeLoginModal();
+        setLoggedIn(name);
+        showToast('Welcome back, ' + name + '!');
+    }
+    function loginToSignup(e) { e.preventDefault(); closeLoginModal(); openSignupModal(); }
 
-    function resetAuth() {
-        authState.currentStage = 1;
-        authState.history = [];
-        authState.role = null;
+    /* =====================================================
+       SIGN UP MODAL (multi-step wizard)
+    ===================================================== */
+    let authState = { currentStage: 1, history: [], role: null, demoCode: '', selectedSchool: '' };
+
+    function openSignupModal() {
+        document.getElementById('signupModal').classList.add('open');
+        lockScroll(true);
+        resetSignup();
+    }
+    function closeSignupModal() {
+        document.getElementById('signupModal').classList.remove('open');
+        lockScroll(false);
+    }
+    function signupToLogin(e) { e.preventDefault(); closeSignupModal(); openLoginModal(); }
+
+    function resetSignup() {
+        authState = { currentStage: 1, history: [], role: null, demoCode: '', selectedSchool: '' };
         document.getElementById('signupEmail').value = '';
         document.getElementById('signupPassword').value = '';
         document.getElementById('displayName').value = '';
-        document.querySelectorAll('.code-box').forEach(b => b.value = '');
+        document.getElementById('schoolSearch').value = '';
+        document.getElementById('otherSchool').value = '';
+        document.getElementById('otherSchool').classList.add('hidden');
+        document.querySelectorAll('#signupModal .code-box').forEach(b => b.value = '');
         document.querySelectorAll('.select-card').forEach(c => c.classList.remove('selected'));
         setBtn('stage1Next', false);
         setBtn('stage3Next', false);
@@ -660,222 +781,328 @@
         }
         authState.currentStage = n;
         document.getElementById('authStageLabel').textContent = 'Step ' + n + ' of 4';
-        // Back button visible on any stage past the first, or when we have history
-        const backBtn = document.getElementById('authBackBtn');
-        backBtn.classList.toggle('invisible', authState.history.length === 0);
+        document.getElementById('authBackBtn').classList.toggle('invisible', authState.history.length === 0);
     }
-
     function goToStage(n) {
         authState.history.push(authState.currentStage);
         showStage(n);
         if (n === 2) prepareVerification();
         if (n === 4) prepareProfile();
     }
-
     function authBack() {
         if (authState.history.length === 0) return;
-        const prev = authState.history.pop();
-        showStage(prev);
+        showStage(authState.history.pop());
     }
 
-    /* ---- Stage 1: credential validation ---- */
-    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    /* Stage 1 validation */
     function validateStage1() {
         const email = document.getElementById('signupEmail').value.trim();
         const pw = document.getElementById('signupPassword').value;
         const emailOk = EMAIL_RE.test(email);
-        const pwOk = pw.length >= 6;
-
-        const err = document.getElementById('emailError');
-        err.textContent = (email.length > 0 && !emailOk) ? 'Please enter a valid email (user@domain.com).' : '';
-
-        setBtn('stage1Next', emailOk && pwOk);
+        document.getElementById('emailError').textContent =
+            (email.length > 0 && !emailOk) ? 'Please enter a valid email (user@domain.com).' : '';
+        setBtn('stage1Next', emailOk && pw.length >= 6);
     }
 
-    /* Toggle Sign Up <-> Log In */
-    function toggleAuthMode(e) {
-        e.preventDefault();
-        authState.mode = authState.mode === 'signup' ? 'login' : 'signup';
-        const isLogin = authState.mode === 'login';
-        document.getElementById('authTitle').textContent = isLogin ? 'Welcome back' : 'Create your account';
-        document.getElementById('pwHint').textContent = isLogin
-            ? 'Enter your Student Club Hub password.'
-            : 'Create a new password for Student Club Hub (min. 6 characters).';
-        document.getElementById('toggleAuthText').textContent = isLogin ? "Don't have an account?" : 'Already have an account?';
-        document.getElementById('toggleAuthLink').textContent = isLogin ? 'Sign Up' : 'Log In';
-    }
-
-    /* ---- Stage 2: verification code ---- */
+    /* Stage 2: verification code */
+    function genCode() { let c = ''; for (let i = 0; i < 6; i++) c += Math.floor(Math.random() * 10); return c; }
     function prepareVerification() {
-        // Simulate a custom 6-digit code (deterministic per open, no crypto needed)
-        let code = '';
-        for (let i = 0; i < 6; i++) code += Math.floor(Math.random() * 10);
-        authState.demoCode = code;
-        document.getElementById('demoCode').textContent = code;
+        authState.demoCode = genCode();
+        document.getElementById('demoCode').textContent = authState.demoCode;
         document.getElementById('verifyEmailDisplay').textContent = document.getElementById('signupEmail').value.trim();
-        const boxes = document.querySelectorAll('.code-box');
+        const boxes = document.querySelectorAll('#signupModal .code-box');
         boxes.forEach(b => b.value = '');
         setTimeout(() => boxes[0].focus(), 100);
     }
-
-    // Code box behavior: auto-advance + auto-submit on 6th
-    document.querySelectorAll('.code-box').forEach((box, idx, boxes) => {
+    document.querySelectorAll('#signupModal .code-box').forEach((box, idx, boxes) => {
         box.addEventListener('input', function () {
             this.value = this.value.replace(/[^0-9]/g, '');
-            if (this.value && idx < boxes.length - 1) {
-                boxes[idx + 1].focus();
-            }
-            checkCodeComplete();
+            if (this.value && idx < boxes.length - 1) boxes[idx + 1].focus();
+            if (Array.from(boxes).every(b => b.value.length === 1)) setTimeout(() => goToStage(3), 250);
         });
         box.addEventListener('keydown', function (e) {
-            if (e.key === 'Backspace' && !this.value && idx > 0) {
-                boxes[idx - 1].focus();
-            }
+            if (e.key === 'Backspace' && !this.value && idx > 0) boxes[idx - 1].focus();
         });
     });
-
-    function checkCodeComplete() {
-        const boxes = document.querySelectorAll('.code-box');
-        const filled = Array.from(boxes).every(b => b.value.length === 1);
-        if (filled) {
-            // Automatic transition to Stage 3 upon 6th valid digit
-            setTimeout(() => goToStage(3), 250);
-        }
-    }
-
     function resendCode(e) {
         e.preventDefault();
-        let code = '';
-        for (let i = 0; i < 6; i++) code += Math.floor(Math.random() * 10);
-        authState.demoCode = code;
-        document.getElementById('demoCode').textContent = code;
+        authState.demoCode = genCode();
+        document.getElementById('demoCode').textContent = authState.demoCode;
         showToast('A new 6-digit confirmation code was generated.');
     }
 
-    /* ---- Stage 3: role selection ---- */
+    /* Stage 3: role selection */
     function selectRole(role) {
         authState.role = role;
-        document.querySelectorAll('.select-card').forEach(c => {
-            c.classList.toggle('selected', c.dataset.role === role);
-        });
+        document.querySelectorAll('.select-card').forEach(c => c.classList.toggle('selected', c.dataset.role === role));
         setBtn('stage3Next', true);
     }
 
-    /* ---- Stage 4: profile + dynamic school selection ---- */
-    const SCHOOLS_BY_STATE = {
-        'CA': ['Lincoln High School (Public)', 'Harvard-Westlake School (Private)', 'Gateway Charter Academy (Charter)', 'Palo Alto High School (Public)'],
-        'NY': ['Stuyvesant High School (Public)', 'Trinity School (Private)', 'Success Academy HS (Charter)', 'Bronx Science (Public)'],
-        'TX': ['Westlake High School (Public)', 'St. Marks School (Private)', 'IDEA Public Schools (Charter)', 'Plano Senior High (Public)'],
-        'FL': ['Miami Palmetto Senior High (Public)', 'Ransom Everglades (Private)', 'Doral Academy (Charter)', 'Boca Raton High (Public)'],
-        'IL': ['New Trier High School (Public)', 'Latin School of Chicago (Private)', 'Noble Charter HS (Charter)', 'Naperville North (Public)'],
-        'WA': ['Garfield High School (Public)', 'Lakeside School (Private)', 'Summit Sierra (Charter)', 'Bellevue High (Public)'],
-    };
+    /* Stage 4: profile + searchable school combobox */
     const US_STATES = {
-        'CA': 'California', 'NY': 'New York', 'TX': 'Texas', 'FL': 'Florida',
-        'IL': 'Illinois', 'WA': 'Washington'
+        'CA': 'California', 'NY': 'New York', 'TX': 'Texas', 'FL': 'Florida', 'IL': 'Illinois',
+        'WA': 'Washington', 'MA': 'Massachusetts', 'GA': 'Georgia', 'PA': 'Pennsylvania',
+        'OH': 'Ohio', 'NC': 'North Carolina', 'MI': 'Michigan', 'NJ': 'New Jersey',
+        'VA': 'Virginia', 'AZ': 'Arizona', 'CO': 'Colorado'
     };
+    const SCHOOLS_BY_STATE = {
+        'CA': ['Lincoln High School (Public)', 'Harvard-Westlake School (Private)', 'Gateway Charter Academy (Charter)', 'Palo Alto High School (Public)', 'Lowell High School (Public)', 'Crossroads School (Private)', 'Aspire Charter HS (Charter)', 'Beverly Hills High School (Public)'],
+        'NY': ['Stuyvesant High School (Public)', 'Trinity School (Private)', 'Success Academy HS (Charter)', 'Bronx Science (Public)', 'Brooklyn Technical HS (Public)', 'Horace Mann School (Private)', 'KIPP NYC College Prep (Charter)', 'Regis High School (Private)'],
+        'TX': ['Westlake High School (Public)', "St. Mark's School (Private)", 'IDEA Public Schools (Charter)', 'Plano Senior High (Public)', 'Highland Park HS (Public)', 'The Kinkaid School (Private)', 'KIPP Austin (Charter)', 'Cypress Ranch HS (Public)'],
+        'FL': ['Miami Palmetto Senior High (Public)', 'Ransom Everglades (Private)', 'Doral Academy (Charter)', 'Boca Raton High (Public)', 'Gulliver Prep (Private)', 'Somerset Academy (Charter)', 'Cypress Bay HS (Public)', 'American Heritage School (Private)'],
+        'IL': ['New Trier High School (Public)', 'Latin School of Chicago (Private)', 'Noble Charter HS (Charter)', 'Naperville North (Public)', 'Whitney Young HS (Public)', 'University of Chicago Lab (Private)', 'Walter Payton College Prep (Public)', 'Loyola Academy (Private)'],
+        'WA': ['Garfield High School (Public)', 'Lakeside School (Private)', 'Summit Sierra (Charter)', 'Bellevue High (Public)', 'Roosevelt High School (Public)', 'The Bush School (Private)', 'Rainier Prep (Charter)', 'Newport High School (Public)'],
+        'MA': ['Boston Latin School (Public)', 'Phillips Academy Andover (Private)', 'City on a Hill (Charter)', 'Lexington High School (Public)', 'Milton Academy (Private)', 'Brookline High School (Public)', 'MATCH Charter HS (Charter)', 'Newton North HS (Public)'],
+        'GA': ['North Atlanta HS (Public)', 'The Westminster Schools (Private)', 'Atlanta Classical Academy (Charter)', 'Walton High School (Public)', 'Pace Academy (Private)', 'Lambert High School (Public)', 'Drew Charter School (Charter)', 'Chamblee Charter HS (Charter)'],
+        'PA': ['Central High School (Public)', 'The Haverford School (Private)', 'MaST Community Charter (Charter)', 'Lower Merion HS (Public)', 'The Baldwin School (Private)', 'Masterman School (Public)', 'Boys Latin Charter (Charter)', 'Radnor High School (Public)'],
+        'OH': ['Walnut Hills HS (Public)', 'Hawken School (Private)', 'Columbus Collegiate (Charter)', 'Upper Arlington HS (Public)', 'University School (Private)', 'Shaker Heights HS (Public)', 'Menlo Park Academy (Charter)', 'Sycamore High School (Public)'],
+        'NC': ['Raleigh Charter HS (Charter)', 'Charlotte Latin School (Private)', 'Enloe Magnet HS (Public)', 'Myers Park HS (Public)', 'Cary Academy (Private)', 'Green Hope HS (Public)', 'Research Triangle HS (Charter)', 'Providence Day School (Private)'],
+        'MI': ['Cass Technical HS (Public)', 'Cranbrook Schools (Private)', 'University Prep (Charter)', 'Novi High School (Public)', 'Detroit Country Day (Private)', 'Troy High School (Public)', 'Star International Academy (Charter)', 'Northville High School (Public)'],
+        'NJ': ['High Technology HS (Public)', 'The Lawrenceville School (Private)', 'North Star Academy (Charter)', 'Millburn High School (Public)', 'Newark Academy (Private)', 'Princeton High School (Public)', 'TEAM Academy Charter (Charter)', 'Ridgewood High School (Public)'],
+        'VA': ['Thomas Jefferson HS (Public)', 'Flint Hill School (Private)', 'BASIS Charter (Charter)', 'Langley High School (Public)', 'The Potomac School (Private)', 'McLean High School (Public)', 'Richmond Charter (Charter)', 'Oakton High School (Public)'],
+        'AZ': ['BASIS Scottsdale (Charter)', 'Brophy College Prep (Private)', 'Hamilton High School (Public)', 'Desert Vista HS (Public)', 'Phoenix Country Day (Private)', 'Chandler High School (Public)', 'Great Hearts Academies (Charter)', 'Corona del Sol HS (Public)'],
+        'CO': ['Cherry Creek HS (Public)', 'Kent Denver School (Private)', 'DSST Charter (Charter)', 'Fairview High School (Public)', 'Colorado Academy (Private)', 'Boulder High School (Public)', 'Denver School of the Arts (Public)', 'Ricardo Flores Magón (Charter)']
+    };
+    const GENERIC_SCHOOLS = ['Central High School (Public)', 'Northside High School (Public)', 'St. Mary Academy (Private)', 'Riverside Charter HS (Charter)', 'Westfield High School (Public)', 'Oakwood Preparatory (Private)'];
 
     function prepareProfile() {
         const isStudent = authState.role === 'student';
         document.getElementById('studentFields').classList.toggle('hidden', !isStudent);
         document.getElementById('donorFields').classList.toggle('hidden', isStudent);
-        if (isStudent) {
-            onCountryChange();
-        }
+        if (isStudent) onCountryChange();
         validateStage4();
     }
-
     function onCountryChange() {
-        const country = document.getElementById('countrySelect').value;
-        const stateWrap = document.getElementById('stateWrap');
-        const isUS = country === 'US';
-        // State dropdown appears only for the United States
-        stateWrap.style.display = isUS ? 'block' : 'none';
+        const isUS = document.getElementById('countrySelect').value === 'US';
+        document.getElementById('stateWrap').style.display = isUS ? 'block' : 'none';
         if (isUS) {
             const sel = document.getElementById('stateSelect');
             sel.innerHTML = '<option value="">— Choose a state —</option>';
-            Object.keys(US_STATES).forEach(code => {
-                sel.innerHTML += `<option value="${code}">${US_STATES[code]}</option>`;
-            });
+            Object.keys(US_STATES).forEach(code => sel.innerHTML += `<option value="${code}">${US_STATES[code]}</option>`);
         }
-        // reset schools
-        const schoolSel = document.getElementById('schoolSelect');
-        schoolSel.innerHTML = '<option value="">— Choose a school —</option>';
-        document.getElementById('otherSchool').classList.add('hidden');
-        document.getElementById('otherSchool').value = '';
+        resetSchoolPicker();
         validateStage4();
     }
+    function onStateChange() { resetSchoolPicker(); validateStage4(); }
 
-    function onStateChange() {
+    function resetSchoolPicker() {
+        authState.selectedSchool = '';
+        document.getElementById('schoolSearch').value = '';
+        document.getElementById('otherSchool').value = '';
+        document.getElementById('otherSchool').classList.add('hidden');
+        document.getElementById('schoolDropdown').classList.add('hidden');
+    }
+    function currentSchoolList() {
         const state = document.getElementById('stateSelect').value;
-        const schoolSel = document.getElementById('schoolSelect');
-        schoolSel.innerHTML = '<option value="">— Choose a school —</option>';
-        if (state && SCHOOLS_BY_STATE[state]) {
-            SCHOOLS_BY_STATE[state].forEach(s => {
-                schoolSel.innerHTML += `<option value="${s}">${s}</option>`;
-            });
-        }
-        schoolSel.innerHTML += '<option value="__other__">Other / Add My School</option>';
+        return (state && SCHOOLS_BY_STATE[state]) ? SCHOOLS_BY_STATE[state] : GENERIC_SCHOOLS;
+    }
+    function onSchoolSearch() {
+        const q = document.getElementById('schoolSearch').value.trim().toLowerCase();
+        authState.selectedSchool = ''; // typing invalidates a prior pick until re-selected
+        const list = currentSchoolList().filter(s => s.toLowerCase().includes(q));
+        const dd = document.getElementById('schoolDropdown');
+        let html = list.map(s => `<div class="combo-option" onclick="pickSchool('${s.replace(/'/g, "\\'")}')">${s}</div>`).join('');
+        html += `<div class="combo-option font-semibold text-indigo-600" onclick="pickOtherSchool()"><i class="fa-solid fa-plus mr-1"></i> Other / Add My School</div>`;
+        dd.innerHTML = html;
+        dd.classList.remove('hidden');
+        validateStage4();
+    }
+    function pickSchool(name) {
+        authState.selectedSchool = name;
+        document.getElementById('schoolSearch').value = name;
+        document.getElementById('schoolDropdown').classList.add('hidden');
         document.getElementById('otherSchool').classList.add('hidden');
         document.getElementById('otherSchool').value = '';
         validateStage4();
     }
-
-    function onSchoolChange() {
-        const val = document.getElementById('schoolSelect').value;
+    function pickOtherSchool() {
+        authState.selectedSchool = '';
+        document.getElementById('schoolSearch').value = '';
+        document.getElementById('schoolDropdown').classList.add('hidden');
         const other = document.getElementById('otherSchool');
-        if (val === '__other__') {
-            other.classList.remove('hidden');
-            other.focus();
-        } else {
-            other.classList.add('hidden');
-            other.value = '';
-        }
+        other.classList.remove('hidden');
+        other.focus();
         validateStage4();
     }
+    // Close school dropdown when clicking elsewhere
+    document.addEventListener('click', function (e) {
+        const wrap = document.getElementById('schoolWrap');
+        if (wrap && !wrap.contains(e.target)) document.getElementById('schoolDropdown').classList.add('hidden');
+    });
 
     function validateStage4() {
         const name = document.getElementById('displayName').value.trim();
         let ok = name.length > 0;
-
         if (authState.role === 'student') {
-            const country = document.getElementById('countrySelect').value;
-            if (country === 'US') {
+            if (document.getElementById('countrySelect').value === 'US') {
                 const state = document.getElementById('stateSelect').value;
-                const school = document.getElementById('schoolSelect').value;
-                let schoolOk = false;
-                if (school === '__other__') {
-                    schoolOk = document.getElementById('otherSchool').value.trim().length > 0;
-                } else {
-                    schoolOk = school.length > 0;
-                }
+                const otherVisible = !document.getElementById('otherSchool').classList.contains('hidden');
+                const schoolOk = otherVisible
+                    ? document.getElementById('otherSchool').value.trim().length > 0
+                    : authState.selectedSchool.length > 0;
                 ok = ok && state.length > 0 && schoolOk;
             }
-            // For non-US countries in this prototype, name alone is sufficient
         }
         setBtn('createAccountBtn', ok);
     }
 
     function createAccount() {
         const name = document.getElementById('displayName').value.trim() || 'Member';
-        closeAuthModal();
-        // Update header to logged-in profile
-        const initials = name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+        closeSignupModal();
+        setLoggedIn(name);
+        showToast('Welcome to Student Club Hub, ' + name + '! 🎉');
+    }
+
+    /* Shared logged-in header state */
+    function setLoggedIn(name) {
+        const initials = name.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'ME';
         document.getElementById('authArea').innerHTML = `
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">${initials}</div>
                 <span class="hidden sm:inline text-sm font-semibold text-gray-800">${name}</span>
                 <button onclick="logOut()" class="text-gray-400 hover:text-gray-700 text-sm" title="Log out"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
             </div>`;
-        showToast('Welcome to Student Club Hub, ' + name + '! 🎉');
     }
-
     function logOut() {
         document.getElementById('authArea').innerHTML = `
-            <button id="loginBtn" onclick="openAuthModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">
-                Log In / Sign Up
-            </button>`;
+            <button onclick="openLoginModal()" class="text-indigo-600 border border-indigo-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition">Log In</button>
+            <button onclick="openSignupModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Sign Up</button>`;
         showToast('You have been logged out.');
+    }
+
+    /* =====================================================
+       DIRECTORY: club data, rendering, filtering, quick view
+    ===================================================== */
+    const CLUBS = [
+        {
+            name: 'Robotics & AI Society', category: 'STEM & Tech', tags: ['STEM', 'Robotics'],
+            school: 'West High School', icon: 'fa-microchip', bg: 'bg-blue-100', text: 'text-blue-600',
+            desc: 'Dedicated to building autonomous robots and competing in national STEM challenges.',
+            meeting: 'Tuesdays @ 3:30 PM, Engineering Lab (Rm 204)',
+            mission: 'To give every student hands-on experience with robotics, coding, and AI by building competition robots and mentoring middle-school teams.',
+            leaders: [{ n: 'Maya A.', r: 'President', c: 'maya.a@wesths.edu' }, { n: 'Leo T.', r: 'Lead Engineer', c: 'leo.t@wesths.edu' }]
+        },
+        {
+            name: 'Eco-Action Alliance', category: 'Volunteering & Community Service', tags: ['Volunteering', 'EcoFriendly'],
+            school: 'Global Chapter', icon: 'fa-leaf', bg: 'bg-emerald-100', text: 'text-emerald-600',
+            desc: 'Organizing beach cleanups, recycling drives, and community sustainability workshops.',
+            meeting: 'Thursdays @ 4:00 PM, Room 118 & monthly field events',
+            mission: 'To empower students to lead local environmental action — from cleanups to school-wide recycling programs — and build lifelong sustainability habits.',
+            leaders: [{ n: 'Priya S.', r: 'Founder', c: 'priya.s@ecoaction.org' }, { n: 'Noah K.', r: 'Events Coordinator', c: 'noah.k@ecoaction.org' }]
+        },
+        {
+            name: 'Young Entrepreneurs Club', category: 'Business & Entrepreneurship', tags: ['Business'],
+            school: 'Central High', icon: 'fa-chart-line', bg: 'bg-amber-100', text: 'text-amber-600',
+            desc: 'Helping high school students turn business ideas into real-world startups and pitches.',
+            meeting: 'Fridays @ 3:00 PM, Business Wing (Rm 301)',
+            mission: 'To teach entrepreneurship through real ventures — students build products, pitch to local mentors, and run a spring startup showcase.',
+            leaders: [{ n: 'Daniel R.', r: 'President', c: 'daniel.r@centralhigh.edu' }, { n: 'Sofia M.', r: 'Treasurer', c: 'sofia.m@centralhigh.edu' }]
+        },
+        {
+            name: 'Debate & Model UN', category: 'Humanities & Debate', tags: ['Debate'],
+            school: 'Lincoln High School', icon: 'fa-gavel', bg: 'bg-purple-100', text: 'text-purple-600',
+            desc: 'Competitive debate, public speaking, and Model United Nations delegations.',
+            meeting: 'Mondays & Wednesdays @ 3:45 PM, Library Forum',
+            mission: 'To sharpen students\' research, argumentation, and public-speaking skills while competing at regional debate and Model UN conferences.',
+            leaders: [{ n: 'Aisha B.', r: 'Captain', c: 'aisha.b@lincolnhs.edu' }, { n: 'Marcus W.', r: 'Secretary', c: 'marcus.w@lincolnhs.edu' }]
+        },
+        {
+            name: 'Film & Media Collective', category: 'Arts, Media & Design', tags: ['Arts'],
+            school: 'Palo Alto High', icon: 'fa-clapperboard', bg: 'bg-pink-100', text: 'text-pink-600',
+            desc: 'Producing short films, documentaries, and the school\'s digital news channel.',
+            meeting: 'Wednesdays @ 4:00 PM, Media Studio',
+            mission: 'To give student storytellers the gear, skills, and platform to produce films and run the school\'s student-led news channel.',
+            leaders: [{ n: 'Ivy C.', r: 'Director', c: 'ivy.c@paly.edu' }, { n: 'Ethan L.', r: 'Editor', c: 'ethan.l@paly.edu' }]
+        },
+        {
+            name: 'HOSA Future Health Pros', category: 'Health & Medicine', tags: ['Health', 'Volunteering'],
+            school: 'Miami Palmetto Senior High', icon: 'fa-heart-pulse', bg: 'bg-red-100', text: 'text-red-600',
+            desc: 'Exploring healthcare careers, first-aid training, and community health drives.',
+            meeting: 'Tuesdays @ 3:30 PM, Science Wing (Rm 210)',
+            mission: 'To prepare future healthcare leaders through CPR/first-aid certification, hospital volunteering, and HOSA competitive events.',
+            leaders: [{ n: 'Camila P.', r: 'President', c: 'camila.p@palmettohs.edu' }, { n: 'Jordan H.', r: 'Outreach Lead', c: 'jordan.h@palmettohs.edu' }]
+        }
+    ];
+
+    let activeTags = new Set();
+    let currentClubIndex = null;
+
+    function renderClubs(list) {
+        const grid = document.getElementById('clubGrid');
+        grid.innerHTML = list.map(club => {
+            const i = CLUBS.indexOf(club);
+            return `
+            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="${club.bg} ${club.text} p-3 rounded-lg font-bold"><i class="fa-solid ${club.icon} text-xl"></i></div>
+                    <div>
+                        <h3 class="font-bold text-gray-900">${club.name}</h3>
+                        <p class="text-xs text-gray-500">${club.category} • ${club.school}</p>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-600 mb-4 flex-1">${club.desc}</p>
+                <div class="text-xs text-gray-500 mb-4"><i class="fa-regular fa-clock mr-1"></i> ${club.meeting.split(',')[0]}</div>
+                <div class="flex gap-2">
+                    <button onclick="openQuickView(${i})" class="flex-1 bg-gray-100 text-indigo-600 font-semibold py-2 rounded-lg text-sm hover:bg-indigo-50 transition"><i class="fa-regular fa-eye mr-1"></i> Quick View</button>
+                    <button onclick="openDonationModal(${i})" class="flex-1 bg-indigo-600 text-white font-semibold py-2 rounded-lg text-sm hover:bg-indigo-700 transition">Support</button>
+                </div>
+            </div>`;
+        }).join('');
+        document.getElementById('noResults').classList.toggle('hidden', list.length > 0);
+    }
+
+    function applyFilters() {
+        const q = document.getElementById('searchInput').value.trim().toLowerCase();
+        const cat = document.getElementById('categorySelect').value;
+        const filtered = CLUBS.filter(club => {
+            const matchesSearch = !q ||
+                club.name.toLowerCase().includes(q) ||
+                club.desc.toLowerCase().includes(q) ||
+                club.school.toLowerCase().includes(q) ||
+                club.tags.join(' ').toLowerCase().includes(q);
+            const matchesCat = cat === 'All Categories' || club.category === cat;
+            const matchesTags = activeTags.size === 0 || club.tags.some(t => activeTags.has(t));
+            return matchesSearch && matchesCat && matchesTags;
+        });
+        renderClubs(filtered);
+    }
+
+    function toggleTag(el) {
+        const tag = el.dataset.tag;
+        if (activeTags.has(tag)) { activeTags.delete(tag); el.classList.remove('active'); }
+        else { activeTags.add(tag); el.classList.add('active'); }
+        applyFilters();
+    }
+
+    /* Quick View */
+    function openQuickView(i) {
+        currentClubIndex = i;
+        const c = CLUBS[i];
+        document.getElementById('qvIcon').className = `${c.bg} ${c.text} p-3 rounded-lg text-xl`;
+        document.getElementById('qvIcon').innerHTML = `<i class="fa-solid ${c.icon}"></i>`;
+        document.getElementById('qvName').textContent = c.name;
+        document.getElementById('qvMeta').textContent = `${c.category} • ${c.school}`;
+        document.getElementById('qvMission').textContent = c.mission;
+        document.getElementById('qvMeeting').textContent = c.meeting;
+        document.getElementById('qvLeaders').innerHTML = c.leaders.map(l => `
+            <div class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                <div>
+                    <p class="text-sm font-medium text-gray-800">${l.n}</p>
+                    <p class="text-xs text-gray-500">${l.r}</p>
+                </div>
+                <a href="mailto:${l.c}" class="text-xs text-indigo-600 font-semibold hover:underline"><i class="fa-regular fa-envelope mr-1"></i>${l.c}</a>
+            </div>`).join('');
+        document.getElementById('quickViewModal').classList.add('open');
+        lockScroll(true);
+    }
+    function closeQuickView() {
+        document.getElementById('quickViewModal').classList.remove('open');
+        lockScroll(false);
+    }
+    function supportThisClub() {
+        const i = currentClubIndex;
+        closeQuickView();
+        openDonationModal(i);
     }
 
     /* =====================================================
@@ -883,21 +1110,25 @@
     ===================================================== */
     let donationState = { amount: 0 };
 
-    function openDonationModal() {
+    function openDonationModal(clubIndex) {
+        const line = document.getElementById('donationClubLine');
+        if (typeof clubIndex === 'number' && CLUBS[clubIndex]) {
+            line.innerHTML = `You're supporting <span class="font-semibold text-indigo-600">${CLUBS[clubIndex].name}</span>. 100% of your contribution goes to their initiatives.`;
+        } else {
+            line.textContent = '100% of your contribution helps high school students fund their initiatives.';
+        }
         document.getElementById('donationModal').classList.add('open');
-        document.body.style.overflow = 'hidden';
-        // reset views
+        lockScroll(true);
         document.getElementById('donationBody').classList.remove('hidden');
         document.getElementById('donationLoading').classList.add('hidden');
         document.getElementById('donationLoading').classList.remove('flex');
         document.getElementById('donationThankYou').classList.add('hidden');
+        resetDonation();
     }
     function closeDonationModal() {
         document.getElementById('donationModal').classList.remove('open');
-        document.body.style.overflow = '';
-        resetDonation();
+        lockScroll(false);
     }
-
     function resetDonation() {
         donationState.amount = 0;
         document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('selected'));
@@ -905,16 +1136,11 @@
         document.getElementById('anonCheck').checked = false;
         document.getElementById('wordCount').textContent = '0';
         document.getElementById('confettiContainer').innerHTML = '';
+        document.getElementById('anonPopup').classList.remove('show');
         validateDonation();
     }
+    function donationToLogin(e) { e.preventDefault(); closeDonationModal(); openLoginModal(); }
 
-    function switchToAuth(e) {
-        e.preventDefault();
-        closeDonationModal();
-        openAuthModal();
-    }
-
-    /* Amount selection */
     function selectAmount(amt, el) {
         donationState.amount = amt;
         document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('selected'));
@@ -928,24 +1154,17 @@
         donationState.amount = (!isNaN(val) && val > 0) ? val : 0;
         validateDonation();
     }
-
-    /* Word counter (200 words) */
     function countWords() {
         const ta = document.getElementById('donorNote');
         let words = ta.value.trim().split(/\s+/).filter(Boolean);
-        if (words.length > 200) {
-            words = words.slice(0, 200);
-            ta.value = words.join(' ');
-        }
+        if (words.length > 200) { words = words.slice(0, 200); ta.value = words.join(' '); }
         document.getElementById('wordCount').textContent = ta.value.trim() === '' ? 0 : words.length;
     }
-
-    /* Anonymous + name interaction popup */
     function onDonorNameOrAnon() {
-        const name = document.getElementById('donorName').value.trim();
+        const hasName = document.getElementById('donorName').value.trim().length > 0;
         const anon = document.getElementById('anonCheck').checked;
         const popup = document.getElementById('anonPopup');
-        if (name.length > 0 && anon) {
+        if (hasName && anon) {
             popup.classList.add('show');
             clearTimeout(window._anonTimer);
             window._anonTimer = setTimeout(() => popup.classList.remove('show'), 5000);
@@ -953,8 +1172,6 @@
             popup.classList.remove('show');
         }
     }
-
-    /* Card formatting */
     function formatCard() {
         const el = document.getElementById('cardNumber');
         let v = el.value.replace(/\D/g, '').substring(0, 16);
@@ -973,19 +1190,14 @@
         document.getElementById('cardZip').value = document.getElementById('cardZip').value.replace(/\D/g, '');
         validateDonation();
     }
-
     function validateDonation() {
         const amountOk = donationState.amount > 0;
-        const cardDigits = document.getElementById('cardNumber').value.replace(/\s/g, '');
-        const cardOk = cardDigits.length === 16;
-        const exp = document.getElementById('cardExp').value;
-        const expOk = /^\d{2}\/\d{2}$/.test(exp);
+        const cardOk = document.getElementById('cardNumber').value.replace(/\s/g, '').length === 16;
+        const expOk = /^\d{2}\/\d{2}$/.test(document.getElementById('cardExp').value);
         const cvvOk = document.getElementById('cardCvv').value.length >= 3;
         const zipOk = document.getElementById('cardZip').value.length >= 5;
         setBtn('donateBtn', amountOk && cardOk && expOk && cvvOk && zipOk);
     }
-
-    /* Process donation -> loading -> thank you */
     function processDonation() {
         if (document.getElementById('donateBtn').disabled) return;
         const amt = donationState.amount;
@@ -993,18 +1205,14 @@
         const loading = document.getElementById('donationLoading');
         loading.classList.remove('hidden');
         loading.classList.add('flex');
-
         setTimeout(() => {
             loading.classList.add('hidden');
             loading.classList.remove('flex');
             document.getElementById('donationThankYou').classList.remove('hidden');
-            document.getElementById('thankYouAmount').textContent =
-                'Your gift of $' + amt.toFixed(2) + ' is on its way to student clubs.';
+            document.getElementById('thankYouAmount').textContent = 'Your gift of $' + amt.toFixed(2) + ' is on its way to student clubs.';
             launchConfetti();
         }, 1800);
     }
-
-    /* Confetti */
     function launchConfetti() {
         const container = document.getElementById('confettiContainer');
         container.innerHTML = '';
@@ -1023,16 +1231,24 @@
         }
     }
 
-    /* Close modals on overlay click */
-    document.getElementById('authModal').addEventListener('click', function (e) {
-        if (e.target === this) closeAuthModal();
-    });
-    document.getElementById('donationModal').addEventListener('click', function (e) {
-        if (e.target === this) closeDonationModal();
+    /* Close modals on overlay click + Escape */
+    ['loginModal', 'signupModal', 'donationModal', 'quickViewModal'].forEach(id => {
+        document.getElementById(id).addEventListener('click', function (e) {
+            if (e.target === this) {
+                this.classList.remove('open');
+                lockScroll(false);
+            }
+        });
     });
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') { closeAuthModal(); closeDonationModal(); }
+        if (e.key === 'Escape') {
+            ['loginModal', 'signupModal', 'donationModal', 'quickViewModal'].forEach(id => document.getElementById(id).classList.remove('open'));
+            lockScroll(false);
+        }
     });
+
+    /* Initial render */
+    renderClubs(CLUBS);
     </script>
 </body>
 </html>
