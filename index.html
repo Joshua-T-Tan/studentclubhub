@@ -7,6 +7,180 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ---------- Modal + animation helpers ---------- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 2rem 1rem;
+            z-index: 100;
+            overflow-y: auto;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-card {
+            background: #fff;
+            border-radius: 1rem;
+            width: 100%;
+            max-width: 30rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            transform: translateY(20px) scale(0.98);
+            transition: transform 0.25s ease;
+            position: relative;
+            margin: auto;
+        }
+        .modal-overlay.open .modal-card { transform: translateY(0) scale(1); }
+
+        /* Stage transitions */
+        .stage { display: none; }
+        .stage.active { display: block; animation: fadeSlide 0.3s ease; }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateX(12px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Disabled -> Active button transition (global rule) */
+        .action-btn {
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease;
+            background-color: #e5e7eb; /* gray-200 */
+            color: #9ca3af;            /* gray-400 */
+            cursor: not-allowed;
+        }
+        .action-btn.enabled {
+            background-color: #7c3aed; /* purple-600 */
+            color: #ffffff;
+            cursor: pointer;
+        }
+        .action-btn.enabled:hover { background-color: #6d28d9; }
+        .action-btn.enabled:active { transform: scale(0.98); }
+
+        /* Toast */
+        #toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(150%);
+            background: #111827;
+            color: #fff;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            z-index: 200;
+            transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* Code input boxes */
+        .code-box {
+            width: 3rem; height: 3.5rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border: 2px solid #d1d5db;
+            border-radius: 0.5rem;
+            background: #fff;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .code-box:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+        }
+
+        /* Role / amount selectable cards */
+        .select-card {
+            border: 2px solid #e5e7eb;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .select-card:hover { border-color: #c4b5fd; }
+        .select-card.selected {
+            border-color: #7c3aed;
+            background: #f5f3ff;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+        }
+
+        .amount-chip {
+            border: 2px solid #e5e7eb;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        .amount-chip.selected {
+            border-color: #7c3aed;
+            background: #7c3aed;
+            color: #fff;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 3rem; height: 3rem;
+            border: 4px solid #ede9fe;
+            border-top-color: #7c3aed;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Animated checkmark */
+        .checkmark {
+            width: 96px; height: 96px;
+            border-radius: 50%;
+            display: block;
+            stroke-width: 3;
+            stroke: #16a34a;
+            stroke-miterlimit: 10;
+            box-shadow: inset 0 0 0 #16a34a;
+            animation: fillGreen 0.4s ease-in-out 0.4s forwards, scaleUp 0.3s ease-in-out 0.9s both;
+        }
+        .checkmark-circle {
+            stroke-dasharray: 166; stroke-dashoffset: 166;
+            stroke-width: 3; stroke: #16a34a; fill: none;
+            animation: strokeAnim 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+        .checkmark-check {
+            transform-origin: 50% 50%;
+            stroke-dasharray: 48; stroke-dashoffset: 48;
+            animation: strokeAnim 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+        @keyframes strokeAnim { to { stroke-dashoffset: 0; } }
+        @keyframes scaleUp { 0%,100% { transform: none; } 50% { transform: scale3d(1.1,1.1,1); } }
+        @keyframes fillGreen { to { box-shadow: inset 0 0 0 48px #dcfce7; } }
+
+        /* Confetti */
+        .confetti-piece {
+            position: absolute;
+            width: 10px; height: 14px;
+            top: -10px;
+            opacity: 0.9;
+            animation: confettiFall linear forwards;
+        }
+        @keyframes confettiFall {
+            0%   { transform: translateY(-10px) rotateZ(0deg); opacity: 1; }
+            100% { transform: translateY(520px) rotateZ(720deg); opacity: 0; }
+        }
+
+        /* Warning popup for anonymous */
+        .anon-popup {
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            opacity: 0;
+            transform: translateY(6px);
+            pointer-events: none;
+        }
+        .anon-popup.show { opacity: 1; transform: translateY(0); }
+
+        .valid-ring:focus { box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2); }
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
 
@@ -19,11 +193,14 @@
             </div>
             <nav class="hidden md:flex space-x-8 text-sm font-medium text-gray-600">
                 <a href="#directory" class="hover:text-indigo-600">Directory</a>
-                <a href="#fundraising" class="hover:text-indigo-600">Fundraising & Sponsorship</a>
+                <a href="#fundraising" class="hover:text-indigo-600">Fundraising &amp; Sponsorship</a>
                 <a href="#resources" class="hover:text-indigo-600">Resource Hub</a>
             </nav>
-            <div>
-                <a href="#register" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Register Your Club</a>
+            <div id="authArea">
+                <!-- Logged-out state -->
+                <button id="loginBtn" onclick="openAuthModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">
+                    Log In / Sign Up
+                </button>
             </div>
         </div>
     </header>
@@ -32,11 +209,13 @@
     <section class="bg-indigo-900 text-white py-20 px-4 text-center">
         <div class="max-w-4xl mx-auto">
             <span class="bg-indigo-800 text-indigo-200 text-xs uppercase tracking-widest px-3 py-1 rounded-full font-semibold">Non-Profit Platform</span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mt-4 mb-6">Advertise & Fund Your High School Club</h1>
+            <h1 class="text-4xl md:text-6xl font-extrabold mt-4 mb-6">Advertise &amp; Fund Your High School Club</h1>
             <p class="text-lg md:text-xl text-indigo-200 mb-8">Empowering high school club leaders with global visibility, member recruitment tools, and customizable fundraising toolkits.</p>
             <div class="flex flex-col sm:flex-row justify-center gap-4">
                 <a href="#directory" class="bg-white text-indigo-900 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition">Browse Club Directory</a>
-                <a href="#fundraising" class="bg-indigo-700 text-white border border-indigo-500 px-6 py-3 rounded-lg font-bold hover:bg-indigo-600 transition">Explore Fundraising Guides</a>
+                <button onclick="openDonationModal()" class="bg-emerald-500 text-white border border-emerald-400 px-6 py-3 rounded-lg font-bold hover:bg-emerald-600 transition shadow-lg">
+                    <i class="fa-solid fa-heart mr-2"></i>Donate as Guest
+                </button>
             </div>
         </div>
     </section>
@@ -44,7 +223,7 @@
     <!-- Section 1: Club Directory -->
     <section id="directory" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="mb-8">
-            <h2 class="text-3xl font-bold text-gray-900">Global & Local Club Directory</h2>
+            <h2 class="text-3xl font-bold text-gray-900">Global &amp; Local Club Directory</h2>
             <p class="text-gray-600 mt-2">Discover, filter, and connect with high school clubs near you or around the globe.</p>
         </div>
 
@@ -54,9 +233,9 @@
             <select class="border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-700">
                 <option>All Categories</option>
                 <option>STEM</option>
-                <option>Business & Finance</option>
-                <option>Culture & Arts</option>
-                <option>Voluntarism & Community</option>
+                <option>Business &amp; Finance</option>
+                <option>Culture &amp; Arts</option>
+                <option>Voluntarism &amp; Community</option>
             </select>
         </div>
 
@@ -67,7 +246,7 @@
                 <div class="flex items-center space-x-3 mb-4">
                     <div class="bg-blue-100 text-blue-600 p-3 rounded-lg font-bold"><i class="fa-solid fa-microchip text-xl"></i></div>
                     <div>
-                        <h3 class="font-bold text-gray-900">Robotics & AI Society</h3>
+                        <h3 class="font-bold text-gray-900">Robotics &amp; AI Society</h3>
                         <p class="text-xs text-gray-500">STEM • West High School</p>
                     </div>
                 </div>
@@ -110,7 +289,7 @@
     <section id="fundraising" class="bg-gray-100 py-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="mb-8">
-                <h2 class="text-3xl font-bold text-gray-900">Club Fundraising & Sponsorship</h2>
+                <h2 class="text-3xl font-bold text-gray-900">Club Fundraising &amp; Sponsorship</h2>
                 <p class="text-gray-600 mt-2">Free toolkits to help high school clubs secure micro-sponsorships and run online drives.</p>
             </div>
 
@@ -142,7 +321,7 @@
     <!-- Section 3: Resource & Collaboration Hub -->
     <section id="resources" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="mb-8">
-            <h2 class="text-3xl font-bold text-gray-900">Resource & Collaboration Hub</h2>
+            <h2 class="text-3xl font-bold text-gray-900">Resource &amp; Collaboration Hub</h2>
             <p class="text-gray-600 mt-2">Tools to streamline your club's administrative work and collaborate with other schools.</p>
         </div>
 
@@ -169,5 +348,691 @@
         <p>© 2026 Student Club Hub. Non-profit Initiative.</p>
     </footer>
 
+    <!-- ============================================================= -->
+    <!-- ==================  AUTH (SIGN-UP / LOGIN) MODAL  ============ -->
+    <!-- ============================================================= -->
+    <div id="authModal" class="modal-overlay">
+        <div class="modal-card p-6 sm:p-8">
+            <!-- Header row: Back button + progress -->
+            <div class="flex items-center justify-between mb-6">
+                <button id="authBackBtn" onclick="authBack()" class="text-gray-400 hover:text-gray-700 text-sm font-medium flex items-center invisible">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Back
+                </button>
+                <span id="authStageLabel" class="text-xs font-semibold text-indigo-500 uppercase tracking-wide">Step 1 of 4</span>
+                <button onclick="closeAuthModal()" class="text-gray-400 hover:text-gray-700 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- ---------- Stage 1: Credentials ---------- -->
+            <div id="authStage1" class="stage active">
+                <h2 id="authTitle" class="text-2xl font-bold text-gray-900 mb-1">Create your account</h2>
+                <p class="text-sm text-gray-500 mb-6">Join Student Club Hub to advertise, fund, and grow your club.</p>
+
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                <input id="signupEmail" type="email" oninput="validateStage1()" placeholder="you@example.com"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-1 focus:outline-none focus:border-indigo-500 valid-ring">
+                <p id="emailError" class="text-xs text-red-500 mb-3 h-4"></p>
+
+                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input id="signupPassword" type="password" oninput="validateStage1()" placeholder="••••••••"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-1 focus:outline-none focus:border-indigo-500 valid-ring">
+                <p id="pwHint" class="text-xs text-gray-400 mb-5">Create a new password for Student Club Hub (min. 6 characters).</p>
+
+                <button id="stage1Next" onclick="goToStage(2)" disabled class="action-btn w-full py-3 rounded-lg font-semibold">Next</button>
+
+                <p class="text-center text-sm text-gray-500 mt-4">
+                    <span id="toggleAuthText">Already have an account?</span>
+                    <a href="#" onclick="toggleAuthMode(event)" id="toggleAuthLink" class="text-indigo-600 font-semibold hover:underline">Log In</a>
+                </p>
+            </div>
+
+            <!-- ---------- Stage 2: Email Verification ---------- -->
+            <div id="authStage2" class="stage">
+                <h2 class="text-2xl font-bold text-gray-900 mb-1">Verify your email</h2>
+                <p class="text-sm text-gray-500 mb-6">We sent a 6-digit code to <span id="verifyEmailDisplay" class="font-semibold text-gray-700"></span>. Enter it below.</p>
+
+                <div class="flex justify-between gap-2 mb-4" id="codeInputs">
+                    <input class="code-box" maxlength="1" inputmode="numeric" data-index="0">
+                    <input class="code-box" maxlength="1" inputmode="numeric" data-index="1">
+                    <input class="code-box" maxlength="1" inputmode="numeric" data-index="2">
+                    <input class="code-box" maxlength="1" inputmode="numeric" data-index="3">
+                    <input class="code-box" maxlength="1" inputmode="numeric" data-index="4">
+                    <input class="code-box" maxlength="1" inputmode="numeric" data-index="5">
+                </div>
+
+                <div class="bg-indigo-50 text-indigo-700 text-xs rounded-lg p-2 mb-4 text-center">
+                    <i class="fa-solid fa-flask mr-1"></i> Demo code: <span id="demoCode" class="font-bold tracking-widest"></span> (type any 6 digits to continue)
+                </div>
+
+                <p class="text-center text-sm text-gray-500">
+                    Didn't get it?
+                    <a href="#" onclick="resendCode(event)" class="text-indigo-600 font-semibold hover:underline">Resend Confirmation Code</a>
+                </p>
+            </div>
+
+            <!-- ---------- Stage 3: Role Selection ---------- -->
+            <div id="authStage3" class="stage">
+                <h2 class="text-2xl font-bold text-gray-900 mb-1">How will you use Student Club Hub?</h2>
+                <p class="text-sm text-gray-500 mb-6">This helps us tailor your dashboard. You can change it later.</p>
+
+                <div class="space-y-3 mb-4">
+                    <div class="select-card rounded-xl p-4 flex items-start gap-3" data-role="student" onclick="selectRole('student')">
+                        <div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg"><i class="fa-solid fa-graduation-cap"></i></div>
+                        <div>
+                            <p class="font-semibold text-gray-900">High School Student / Club Leader</p>
+                            <p class="text-xs text-gray-500">Advertise your club, recruit members, and raise funds.</p>
+                        </div>
+                    </div>
+                    <div class="select-card rounded-xl p-4 flex items-start gap-3" data-role="donor" onclick="selectRole('donor')">
+                        <div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                        <div>
+                            <p class="font-semibold text-gray-900">Donor / Supporter / Advisor</p>
+                            <p class="text-xs text-gray-500">Discover clubs, follow progress, and support students.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-xs text-gray-400 italic mb-5 text-center">Note: Anyone can donate or explore clubs regardless of account type!</p>
+
+                <button id="stage3Next" onclick="goToStage(4)" disabled class="action-btn w-full py-3 rounded-lg font-semibold">Next</button>
+            </div>
+
+            <!-- ---------- Stage 4: Profile Details ---------- -->
+            <div id="authStage4" class="stage">
+                <h2 class="text-2xl font-bold text-gray-900 mb-1">Finish your profile</h2>
+                <p class="text-sm text-gray-500 mb-6">Just a couple of details to set up your account.</p>
+
+                <label class="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
+                <input id="displayName" type="text" oninput="validateStage4()" placeholder="e.g. Jordan Lee"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-4 focus:outline-none focus:border-indigo-500 valid-ring">
+
+                <!-- Donor optional affiliation -->
+                <div id="donorFields" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Affiliated High School <span class="text-gray-400 font-normal">(Optional)</span></label>
+                    <input id="donorSchool" type="text" placeholder="School name (optional)"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-2 focus:outline-none focus:border-indigo-500 valid-ring">
+                </div>
+
+                <!-- Student dynamic 3-tier selector -->
+                <div id="studentFields" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Select Country</label>
+                    <select id="countrySelect" onchange="onCountryChange()" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-4 bg-white focus:outline-none focus:border-indigo-500">
+                        <option value="US">United States</option>
+                        <option value="CA">Canada</option>
+                        <option value="GB">United Kingdom</option>
+                        <option value="IN">India</option>
+                        <option value="AU">Australia</option>
+                        <option value="SG">Singapore</option>
+                    </select>
+
+                    <div id="stateWrap">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Select State</label>
+                        <select id="stateSelect" onchange="onStateChange()" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-4 bg-white focus:outline-none focus:border-indigo-500">
+                            <option value="">— Choose a state —</option>
+                        </select>
+                    </div>
+
+                    <div id="schoolWrap">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">High School</label>
+                        <select id="schoolSelect" onchange="onSchoolChange()" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-2 bg-white focus:outline-none focus:border-indigo-500">
+                            <option value="">— Choose a school —</option>
+                        </select>
+                        <input id="otherSchool" type="text" oninput="validateStage4()" placeholder="Type your school name"
+                            class="hidden w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-2 focus:outline-none focus:border-indigo-500 valid-ring">
+                    </div>
+
+                    <p class="text-xs text-gray-400 mb-5">Can be updated anytime in account settings.</p>
+                </div>
+
+                <button id="createAccountBtn" onclick="createAccount()" disabled class="action-btn w-full py-3 rounded-lg font-semibold">Create Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- =====================  GUEST DONATION MODAL  ================= -->
+    <!-- ============================================================= -->
+    <div id="donationModal" class="modal-overlay">
+        <div class="modal-card max-w-lg overflow-hidden">
+
+            <!-- Body (form) -->
+            <div id="donationBody">
+                <!-- Top log-in banner -->
+                <div class="bg-indigo-50 border-b border-indigo-100 px-6 py-3 text-sm text-indigo-800 flex items-center justify-between">
+                    <span>Already have an account?
+                        <a href="#" onclick="switchToAuth(event)" class="font-semibold underline">Log In / Sign Up</a>
+                        to track your donation history.
+                    </span>
+                    <button onclick="closeDonationModal()" class="text-indigo-400 hover:text-indigo-700 text-lg ml-3"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <div class="p-6 max-h-[75vh] overflow-y-auto">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-1">Support a Student Club</h2>
+                    <p class="text-sm text-gray-500 mb-5">100% of your contribution helps high school students fund their initiatives.</p>
+
+                    <!-- Amount selector -->
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Choose an amount</label>
+                    <div class="grid grid-cols-4 gap-2 mb-3">
+                        <div class="amount-chip rounded-lg py-3 text-center font-semibold text-gray-700" data-amount="10" onclick="selectAmount(10, this)">$10</div>
+                        <div class="amount-chip rounded-lg py-3 text-center font-semibold text-gray-700" data-amount="25" onclick="selectAmount(25, this)">$25</div>
+                        <div class="amount-chip rounded-lg py-3 text-center font-semibold text-gray-700" data-amount="50" onclick="selectAmount(50, this)">$50</div>
+                        <div class="amount-chip rounded-lg py-3 text-center font-semibold text-gray-700" data-amount="100" onclick="selectAmount(100, this)">$100</div>
+                    </div>
+                    <div class="relative mb-6">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                        <input id="customAmount" type="number" min="1" oninput="onCustomAmount()" placeholder="Custom amount"
+                            class="w-full border border-gray-300 rounded-lg pl-7 pr-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
+                    </div>
+
+                    <!-- Combined supporter box -->
+                    <div class="border border-gray-200 rounded-xl p-4 mb-6 bg-gray-50">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Your name <span class="text-gray-400 font-normal">(Optional)</span></label>
+                        <input id="donorName" type="text" oninput="onDonorNameOrAnon()" placeholder="Leave blank to stay unnamed"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 bg-white focus:outline-none focus:border-indigo-500 valid-ring">
+
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Note to the club <span class="text-gray-400 font-normal">(Optional)</span></label>
+                        <textarea id="donorNote" rows="3" oninput="countWords()" placeholder="Add a message of encouragement..."
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-indigo-500 valid-ring resize-none"></textarea>
+                        <p class="text-xs text-gray-400 mt-1 mb-4">Word count: <span id="wordCount">0</span> / 200</p>
+
+                        <div class="relative">
+                            <label class="flex items-start gap-2 cursor-pointer">
+                                <input id="anonCheck" type="checkbox" onchange="onDonorNameOrAnon()" class="mt-0.5 h-4 w-4 text-indigo-600 rounded border-gray-300">
+                                <span class="text-sm text-gray-600">Donate Anonymously <span class="text-gray-400">(Hide my name from public club supporter lists)</span></span>
+                            </label>
+                            <!-- Interactive warning popup -->
+                            <div id="anonPopup" class="anon-popup absolute left-0 right-0 mt-2 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg z-10">
+                                <i class="fa-solid fa-lock mr-1 text-emerald-400"></i>
+                                By checking this box, recipient clubs will only see "Anonymous" publicly, and your name will remain completely private.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment info -->
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Payment information</label>
+                    <div class="relative mb-3">
+                        <input id="cardNumber" type="text" inputmode="numeric" oninput="formatCard()" placeholder="Card number"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 pr-12 focus:outline-none focus:border-indigo-500 valid-ring">
+                        <i class="fa-regular fa-credit-card absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3 mb-6">
+                        <input id="cardExp" type="text" oninput="formatExp()" placeholder="MM/YY" maxlength="5"
+                            class="border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
+                        <input id="cardCvv" type="text" inputmode="numeric" oninput="onPaymentInput()" placeholder="CVV" maxlength="4"
+                            class="border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
+                        <input id="cardZip" type="text" inputmode="numeric" oninput="onPaymentInput()" placeholder="Zip" maxlength="10"
+                            class="border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
+                    </div>
+
+                    <button id="donateBtn" onclick="processDonation()" disabled class="action-btn w-full py-3 rounded-lg font-semibold text-base">
+                        Proceed with Donation
+                    </button>
+                    <p class="text-center text-xs text-gray-400 mt-3"><i class="fa-solid fa-shield-halved mr-1"></i> This is a prototype — no real payment is processed.</p>
+                </div>
+            </div>
+
+            <!-- Loading state -->
+            <div id="donationLoading" class="hidden py-20 flex-col items-center justify-center text-center px-6">
+                <div class="spinner mx-auto mb-6"></div>
+                <p class="text-gray-600 font-medium">Processing your donation...</p>
+            </div>
+
+            <!-- Thank you state -->
+            <div id="donationThankYou" class="hidden relative py-16 px-6 text-center overflow-hidden">
+                <div id="confettiContainer" class="absolute inset-0 pointer-events-none"></div>
+                <div class="relative z-10">
+                    <svg class="checkmark mx-auto mb-6" viewBox="0 0 52 52">
+                        <circle class="checkmark-circle" cx="26" cy="26" r="24" fill="none"/>
+                        <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                    </svg>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Thank You for Supporting High School Student Initiatives!</h2>
+                    <p id="thankYouAmount" class="text-indigo-600 font-semibold mb-4"></p>
+                    <p class="text-sm text-gray-500 max-w-sm mx-auto mb-8">Personalized thank-you messages from student club leaders will appear here upon full setup.</p>
+                    <button onclick="closeDonationModal()" class="bg-indigo-600 text-white px-8 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast"></div>
+
+    <!-- ============================================================= -->
+    <!-- ==========================  SCRIPTS  ========================= -->
+    <!-- ============================================================= -->
+    <script>
+    /* ---------------- Toast helper ---------------- */
+    let toastTimer;
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    /* Enable/disable action buttons (global rule) */
+    function setBtn(id, enabled) {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.disabled = !enabled;
+        btn.classList.toggle('enabled', enabled);
+    }
+
+    /* =====================================================
+       AUTH MODAL
+    ===================================================== */
+    let authState = {
+        mode: 'signup',      // 'signup' | 'login'
+        currentStage: 1,
+        history: [],
+        role: null,
+        demoCode: '',
+    };
+
+    function openAuthModal() {
+        document.getElementById('authModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+        resetAuth();
+    }
+    function closeAuthModal() {
+        document.getElementById('authModal').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    function resetAuth() {
+        authState.currentStage = 1;
+        authState.history = [];
+        authState.role = null;
+        document.getElementById('signupEmail').value = '';
+        document.getElementById('signupPassword').value = '';
+        document.getElementById('displayName').value = '';
+        document.querySelectorAll('.code-box').forEach(b => b.value = '');
+        document.querySelectorAll('.select-card').forEach(c => c.classList.remove('selected'));
+        setBtn('stage1Next', false);
+        setBtn('stage3Next', false);
+        setBtn('createAccountBtn', false);
+        showStage(1);
+    }
+
+    function showStage(n) {
+        for (let i = 1; i <= 4; i++) {
+            document.getElementById('authStage' + i).classList.toggle('active', i === n);
+        }
+        authState.currentStage = n;
+        document.getElementById('authStageLabel').textContent = 'Step ' + n + ' of 4';
+        // Back button visible on any stage past the first, or when we have history
+        const backBtn = document.getElementById('authBackBtn');
+        backBtn.classList.toggle('invisible', authState.history.length === 0);
+    }
+
+    function goToStage(n) {
+        authState.history.push(authState.currentStage);
+        showStage(n);
+        if (n === 2) prepareVerification();
+        if (n === 4) prepareProfile();
+    }
+
+    function authBack() {
+        if (authState.history.length === 0) return;
+        const prev = authState.history.pop();
+        showStage(prev);
+    }
+
+    /* ---- Stage 1: credential validation ---- */
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    function validateStage1() {
+        const email = document.getElementById('signupEmail').value.trim();
+        const pw = document.getElementById('signupPassword').value;
+        const emailOk = EMAIL_RE.test(email);
+        const pwOk = pw.length >= 6;
+
+        const err = document.getElementById('emailError');
+        err.textContent = (email.length > 0 && !emailOk) ? 'Please enter a valid email (user@domain.com).' : '';
+
+        setBtn('stage1Next', emailOk && pwOk);
+    }
+
+    /* Toggle Sign Up <-> Log In */
+    function toggleAuthMode(e) {
+        e.preventDefault();
+        authState.mode = authState.mode === 'signup' ? 'login' : 'signup';
+        const isLogin = authState.mode === 'login';
+        document.getElementById('authTitle').textContent = isLogin ? 'Welcome back' : 'Create your account';
+        document.getElementById('pwHint').textContent = isLogin
+            ? 'Enter your Student Club Hub password.'
+            : 'Create a new password for Student Club Hub (min. 6 characters).';
+        document.getElementById('toggleAuthText').textContent = isLogin ? "Don't have an account?" : 'Already have an account?';
+        document.getElementById('toggleAuthLink').textContent = isLogin ? 'Sign Up' : 'Log In';
+    }
+
+    /* ---- Stage 2: verification code ---- */
+    function prepareVerification() {
+        // Simulate a custom 6-digit code (deterministic per open, no crypto needed)
+        let code = '';
+        for (let i = 0; i < 6; i++) code += Math.floor(Math.random() * 10);
+        authState.demoCode = code;
+        document.getElementById('demoCode').textContent = code;
+        document.getElementById('verifyEmailDisplay').textContent = document.getElementById('signupEmail').value.trim();
+        const boxes = document.querySelectorAll('.code-box');
+        boxes.forEach(b => b.value = '');
+        setTimeout(() => boxes[0].focus(), 100);
+    }
+
+    // Code box behavior: auto-advance + auto-submit on 6th
+    document.querySelectorAll('.code-box').forEach((box, idx, boxes) => {
+        box.addEventListener('input', function () {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            if (this.value && idx < boxes.length - 1) {
+                boxes[idx + 1].focus();
+            }
+            checkCodeComplete();
+        });
+        box.addEventListener('keydown', function (e) {
+            if (e.key === 'Backspace' && !this.value && idx > 0) {
+                boxes[idx - 1].focus();
+            }
+        });
+    });
+
+    function checkCodeComplete() {
+        const boxes = document.querySelectorAll('.code-box');
+        const filled = Array.from(boxes).every(b => b.value.length === 1);
+        if (filled) {
+            // Automatic transition to Stage 3 upon 6th valid digit
+            setTimeout(() => goToStage(3), 250);
+        }
+    }
+
+    function resendCode(e) {
+        e.preventDefault();
+        let code = '';
+        for (let i = 0; i < 6; i++) code += Math.floor(Math.random() * 10);
+        authState.demoCode = code;
+        document.getElementById('demoCode').textContent = code;
+        showToast('A new 6-digit confirmation code was generated.');
+    }
+
+    /* ---- Stage 3: role selection ---- */
+    function selectRole(role) {
+        authState.role = role;
+        document.querySelectorAll('.select-card').forEach(c => {
+            c.classList.toggle('selected', c.dataset.role === role);
+        });
+        setBtn('stage3Next', true);
+    }
+
+    /* ---- Stage 4: profile + dynamic school selection ---- */
+    const SCHOOLS_BY_STATE = {
+        'CA': ['Lincoln High School (Public)', 'Harvard-Westlake School (Private)', 'Gateway Charter Academy (Charter)', 'Palo Alto High School (Public)'],
+        'NY': ['Stuyvesant High School (Public)', 'Trinity School (Private)', 'Success Academy HS (Charter)', 'Bronx Science (Public)'],
+        'TX': ['Westlake High School (Public)', 'St. Marks School (Private)', 'IDEA Public Schools (Charter)', 'Plano Senior High (Public)'],
+        'FL': ['Miami Palmetto Senior High (Public)', 'Ransom Everglades (Private)', 'Doral Academy (Charter)', 'Boca Raton High (Public)'],
+        'IL': ['New Trier High School (Public)', 'Latin School of Chicago (Private)', 'Noble Charter HS (Charter)', 'Naperville North (Public)'],
+        'WA': ['Garfield High School (Public)', 'Lakeside School (Private)', 'Summit Sierra (Charter)', 'Bellevue High (Public)'],
+    };
+    const US_STATES = {
+        'CA': 'California', 'NY': 'New York', 'TX': 'Texas', 'FL': 'Florida',
+        'IL': 'Illinois', 'WA': 'Washington'
+    };
+
+    function prepareProfile() {
+        const isStudent = authState.role === 'student';
+        document.getElementById('studentFields').classList.toggle('hidden', !isStudent);
+        document.getElementById('donorFields').classList.toggle('hidden', isStudent);
+        if (isStudent) {
+            onCountryChange();
+        }
+        validateStage4();
+    }
+
+    function onCountryChange() {
+        const country = document.getElementById('countrySelect').value;
+        const stateWrap = document.getElementById('stateWrap');
+        const isUS = country === 'US';
+        // State dropdown appears only for the United States
+        stateWrap.style.display = isUS ? 'block' : 'none';
+        if (isUS) {
+            const sel = document.getElementById('stateSelect');
+            sel.innerHTML = '<option value="">— Choose a state —</option>';
+            Object.keys(US_STATES).forEach(code => {
+                sel.innerHTML += `<option value="${code}">${US_STATES[code]}</option>`;
+            });
+        }
+        // reset schools
+        const schoolSel = document.getElementById('schoolSelect');
+        schoolSel.innerHTML = '<option value="">— Choose a school —</option>';
+        document.getElementById('otherSchool').classList.add('hidden');
+        document.getElementById('otherSchool').value = '';
+        validateStage4();
+    }
+
+    function onStateChange() {
+        const state = document.getElementById('stateSelect').value;
+        const schoolSel = document.getElementById('schoolSelect');
+        schoolSel.innerHTML = '<option value="">— Choose a school —</option>';
+        if (state && SCHOOLS_BY_STATE[state]) {
+            SCHOOLS_BY_STATE[state].forEach(s => {
+                schoolSel.innerHTML += `<option value="${s}">${s}</option>`;
+            });
+        }
+        schoolSel.innerHTML += '<option value="__other__">Other / Add My School</option>';
+        document.getElementById('otherSchool').classList.add('hidden');
+        document.getElementById('otherSchool').value = '';
+        validateStage4();
+    }
+
+    function onSchoolChange() {
+        const val = document.getElementById('schoolSelect').value;
+        const other = document.getElementById('otherSchool');
+        if (val === '__other__') {
+            other.classList.remove('hidden');
+            other.focus();
+        } else {
+            other.classList.add('hidden');
+            other.value = '';
+        }
+        validateStage4();
+    }
+
+    function validateStage4() {
+        const name = document.getElementById('displayName').value.trim();
+        let ok = name.length > 0;
+
+        if (authState.role === 'student') {
+            const country = document.getElementById('countrySelect').value;
+            if (country === 'US') {
+                const state = document.getElementById('stateSelect').value;
+                const school = document.getElementById('schoolSelect').value;
+                let schoolOk = false;
+                if (school === '__other__') {
+                    schoolOk = document.getElementById('otherSchool').value.trim().length > 0;
+                } else {
+                    schoolOk = school.length > 0;
+                }
+                ok = ok && state.length > 0 && schoolOk;
+            }
+            // For non-US countries in this prototype, name alone is sufficient
+        }
+        setBtn('createAccountBtn', ok);
+    }
+
+    function createAccount() {
+        const name = document.getElementById('displayName').value.trim() || 'Member';
+        closeAuthModal();
+        // Update header to logged-in profile
+        const initials = name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+        document.getElementById('authArea').innerHTML = `
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">${initials}</div>
+                <span class="hidden sm:inline text-sm font-semibold text-gray-800">${name}</span>
+                <button onclick="logOut()" class="text-gray-400 hover:text-gray-700 text-sm" title="Log out"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+            </div>`;
+        showToast('Welcome to Student Club Hub, ' + name + '! 🎉');
+    }
+
+    function logOut() {
+        document.getElementById('authArea').innerHTML = `
+            <button id="loginBtn" onclick="openAuthModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">
+                Log In / Sign Up
+            </button>`;
+        showToast('You have been logged out.');
+    }
+
+    /* =====================================================
+       GUEST DONATION MODAL
+    ===================================================== */
+    let donationState = { amount: 0 };
+
+    function openDonationModal() {
+        document.getElementById('donationModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+        // reset views
+        document.getElementById('donationBody').classList.remove('hidden');
+        document.getElementById('donationLoading').classList.add('hidden');
+        document.getElementById('donationLoading').classList.remove('flex');
+        document.getElementById('donationThankYou').classList.add('hidden');
+    }
+    function closeDonationModal() {
+        document.getElementById('donationModal').classList.remove('open');
+        document.body.style.overflow = '';
+        resetDonation();
+    }
+
+    function resetDonation() {
+        donationState.amount = 0;
+        document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('selected'));
+        ['customAmount','donorName','donorNote','cardNumber','cardExp','cardCvv','cardZip'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('anonCheck').checked = false;
+        document.getElementById('wordCount').textContent = '0';
+        document.getElementById('confettiContainer').innerHTML = '';
+        validateDonation();
+    }
+
+    function switchToAuth(e) {
+        e.preventDefault();
+        closeDonationModal();
+        openAuthModal();
+    }
+
+    /* Amount selection */
+    function selectAmount(amt, el) {
+        donationState.amount = amt;
+        document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('customAmount').value = '';
+        validateDonation();
+    }
+    function onCustomAmount() {
+        const val = parseFloat(document.getElementById('customAmount').value);
+        document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('selected'));
+        donationState.amount = (!isNaN(val) && val > 0) ? val : 0;
+        validateDonation();
+    }
+
+    /* Word counter (200 words) */
+    function countWords() {
+        const ta = document.getElementById('donorNote');
+        let words = ta.value.trim().split(/\s+/).filter(Boolean);
+        if (words.length > 200) {
+            words = words.slice(0, 200);
+            ta.value = words.join(' ');
+        }
+        document.getElementById('wordCount').textContent = ta.value.trim() === '' ? 0 : words.length;
+    }
+
+    /* Anonymous + name interaction popup */
+    function onDonorNameOrAnon() {
+        const name = document.getElementById('donorName').value.trim();
+        const anon = document.getElementById('anonCheck').checked;
+        const popup = document.getElementById('anonPopup');
+        if (name.length > 0 && anon) {
+            popup.classList.add('show');
+            clearTimeout(window._anonTimer);
+            window._anonTimer = setTimeout(() => popup.classList.remove('show'), 5000);
+        } else {
+            popup.classList.remove('show');
+        }
+    }
+
+    /* Card formatting */
+    function formatCard() {
+        const el = document.getElementById('cardNumber');
+        let v = el.value.replace(/\D/g, '').substring(0, 16);
+        el.value = v.replace(/(.{4})/g, '$1 ').trim();
+        validateDonation();
+    }
+    function formatExp() {
+        const el = document.getElementById('cardExp');
+        let v = el.value.replace(/\D/g, '').substring(0, 4);
+        if (v.length >= 3) v = v.substring(0, 2) + '/' + v.substring(2);
+        el.value = v;
+        validateDonation();
+    }
+    function onPaymentInput() {
+        document.getElementById('cardCvv').value = document.getElementById('cardCvv').value.replace(/\D/g, '');
+        document.getElementById('cardZip').value = document.getElementById('cardZip').value.replace(/\D/g, '');
+        validateDonation();
+    }
+
+    function validateDonation() {
+        const amountOk = donationState.amount > 0;
+        const cardDigits = document.getElementById('cardNumber').value.replace(/\s/g, '');
+        const cardOk = cardDigits.length === 16;
+        const exp = document.getElementById('cardExp').value;
+        const expOk = /^\d{2}\/\d{2}$/.test(exp);
+        const cvvOk = document.getElementById('cardCvv').value.length >= 3;
+        const zipOk = document.getElementById('cardZip').value.length >= 5;
+        setBtn('donateBtn', amountOk && cardOk && expOk && cvvOk && zipOk);
+    }
+
+    /* Process donation -> loading -> thank you */
+    function processDonation() {
+        if (document.getElementById('donateBtn').disabled) return;
+        const amt = donationState.amount;
+        document.getElementById('donationBody').classList.add('hidden');
+        const loading = document.getElementById('donationLoading');
+        loading.classList.remove('hidden');
+        loading.classList.add('flex');
+
+        setTimeout(() => {
+            loading.classList.add('hidden');
+            loading.classList.remove('flex');
+            document.getElementById('donationThankYou').classList.remove('hidden');
+            document.getElementById('thankYouAmount').textContent =
+                'Your gift of $' + amt.toFixed(2) + ' is on its way to student clubs.';
+            launchConfetti();
+        }, 1800);
+    }
+
+    /* Confetti */
+    function launchConfetti() {
+        const container = document.getElementById('confettiContainer');
+        container.innerHTML = '';
+        const colors = ['#7c3aed', '#16a34a', '#f59e0b', '#3b82f6', '#ec4899', '#10b981'];
+        for (let i = 0; i < 80; i++) {
+            const piece = document.createElement('div');
+            piece.className = 'confetti-piece';
+            piece.style.left = Math.random() * 100 + '%';
+            piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+            piece.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's';
+            piece.style.animationDelay = (Math.random() * 0.5) + 's';
+            piece.style.width = (Math.random() * 6 + 6) + 'px';
+            piece.style.height = (Math.random() * 8 + 8) + 'px';
+            if (Math.random() > 0.5) piece.style.borderRadius = '50%';
+            container.appendChild(piece);
+        }
+    }
+
+    /* Close modals on overlay click */
+    document.getElementById('authModal').addEventListener('click', function (e) {
+        if (e.target === this) closeAuthModal();
+    });
+    document.getElementById('donationModal').addEventListener('click', function (e) {
+        if (e.target === this) closeDonationModal();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { closeAuthModal(); closeDonationModal(); }
+    });
+    </script>
 </body>
 </html>
