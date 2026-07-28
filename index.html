@@ -10,47 +10,30 @@
     <style>
         /* ---------- Modal + animation helpers ---------- */
         .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(17, 24, 39, 0.6);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            padding: 2rem 1rem;
-            z-index: 100;
-            overflow-y: auto;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.25s ease;
+            position: fixed; inset: 0;
+            background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(4px);
+            display: flex; align-items: flex-start; justify-content: center;
+            padding: 2rem 1rem; z-index: 100; overflow-y: auto;
+            opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
         }
         .modal-overlay.open { opacity: 1; pointer-events: auto; }
         .modal-card {
-            background: #fff;
-            border-radius: 1rem;
-            width: 100%;
-            max-width: 30rem;
+            background: #fff; border-radius: 1rem; width: 100%; max-width: 30rem;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
-            transform: translateY(20px) scale(0.98);
-            transition: transform 0.25s ease;
-            position: relative;
-            margin: auto;
+            transform: translateY(20px) scale(0.98); transition: transform 0.25s ease;
+            position: relative; margin: auto;
         }
         .modal-overlay.open .modal-card { transform: translateY(0) scale(1); }
 
-        /* Stage transitions */
+        /* Stage / view transitions */
         .stage { display: none; }
         .stage.active { display: block; animation: fadeSlide 0.3s ease; }
-        @keyframes fadeSlide {
-            from { opacity: 0; transform: translateX(12px); }
-            to   { opacity: 1; transform: translateX(0); }
-        }
+        @keyframes fadeSlide { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+        .app-view { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Disabled -> Active button transition (global rule) */
-        .action-btn {
-            transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease;
-            background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed;
-        }
+        .action-btn { transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease; background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
         .action-btn.enabled { background-color: #7c3aed; color: #ffffff; cursor: pointer; }
         .action-btn.enabled:hover { background-color: #6d28d9; }
         .action-btn.enabled:active { transform: scale(0.98); }
@@ -59,24 +42,18 @@
         #toast {
             position: fixed; bottom: 2rem; left: 50%;
             transform: translateX(-50%) translateY(150%);
-            background: #111827; color: #fff;
-            padding: 0.75rem 1.25rem; border-radius: 0.75rem;
-            font-size: 0.875rem; z-index: 200;
+            background: #111827; color: #fff; padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem; font-size: 0.875rem; z-index: 200;
             transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
             box-shadow: 0 10px 25px rgba(0,0,0,0.25);
         }
         #toast.show { transform: translateX(-50%) translateY(0); }
 
         /* Code input boxes */
-        .code-box {
-            width: 3rem; height: 3.5rem; text-align: center;
-            font-size: 1.5rem; font-weight: 700;
-            border: 2px solid #d1d5db; border-radius: 0.5rem; background: #fff;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
+        .code-box { width: 3rem; height: 3.5rem; text-align: center; font-size: 1.5rem; font-weight: 700; border: 2px solid #d1d5db; border-radius: 0.5rem; background: #fff; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
         .code-box:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2); }
 
-        /* Role / amount selectable cards */
+        /* Selectable cards */
         .select-card { border: 2px solid #e5e7eb; transition: all 0.2s ease; cursor: pointer; }
         .select-card:hover { border-color: #c4b5fd; }
         .select-card.selected { border-color: #7c3aed; background: #f5f3ff; box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15); }
@@ -85,69 +62,50 @@
         .amount-chip.selected { border-color: #7c3aed; background: #7c3aed; color: #fff; }
 
         /* Quick-filter pill tags */
-        .filter-pill {
-            border: 1px solid #e5e7eb; background: #fff; color: #4b5563;
-            transition: all 0.15s ease; cursor: pointer;
-        }
+        .filter-pill { border: 1px solid #e5e7eb; background: #fff; color: #4b5563; transition: all 0.15s ease; cursor: pointer; }
         .filter-pill:hover { border-color: #c4b5fd; color: #7c3aed; }
         .filter-pill.active { background: #7c3aed; border-color: #7c3aed; color: #fff; }
 
         /* Spinner */
-        .spinner {
-            width: 3rem; height: 3rem;
-            border: 4px solid #ede9fe; border-top-color: #7c3aed;
-            border-radius: 50%; animation: spin 0.8s linear infinite;
-        }
+        .spinner { width: 3rem; height: 3rem; border: 4px solid #ede9fe; border-top-color: #7c3aed; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Animated checkmark */
-        .checkmark {
-            width: 96px; height: 96px; border-radius: 50%; display: block;
-            stroke-width: 3; stroke: #16a34a; stroke-miterlimit: 10;
-            box-shadow: inset 0 0 0 #16a34a;
-            animation: fillGreen 0.4s ease-in-out 0.4s forwards, scaleUp 0.3s ease-in-out 0.9s both;
-        }
-        .checkmark-circle {
-            stroke-dasharray: 166; stroke-dashoffset: 166;
-            stroke-width: 3; stroke: #16a34a; fill: none;
-            animation: strokeAnim 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-        }
-        .checkmark-check {
-            transform-origin: 50% 50%;
-            stroke-dasharray: 48; stroke-dashoffset: 48;
-            animation: strokeAnim 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
-        }
+        .checkmark { width: 96px; height: 96px; border-radius: 50%; display: block; stroke-width: 3; stroke: #16a34a; stroke-miterlimit: 10; box-shadow: inset 0 0 0 #16a34a; animation: fillGreen 0.4s ease-in-out 0.4s forwards, scaleUp 0.3s ease-in-out 0.9s both; }
+        .checkmark-circle { stroke-dasharray: 166; stroke-dashoffset: 166; stroke-width: 3; stroke: #16a34a; fill: none; animation: strokeAnim 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards; }
+        .checkmark-check { transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48; animation: strokeAnim 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards; }
         @keyframes strokeAnim { to { stroke-dashoffset: 0; } }
         @keyframes scaleUp { 0%,100% { transform: none; } 50% { transform: scale3d(1.1,1.1,1); } }
         @keyframes fillGreen { to { box-shadow: inset 0 0 0 48px #dcfce7; } }
 
         /* Confetti */
-        .confetti-piece {
-            position: absolute; width: 10px; height: 14px; top: -10px;
-            opacity: 0.9; animation: confettiFall linear forwards;
-        }
-        @keyframes confettiFall {
-            0%   { transform: translateY(-10px) rotateZ(0deg); opacity: 1; }
-            100% { transform: translateY(520px) rotateZ(720deg); opacity: 0; }
-        }
+        .confetti-piece { position: absolute; width: 10px; height: 14px; top: -10px; opacity: 0.9; animation: confettiFall linear forwards; }
+        @keyframes confettiFall { 0% { transform: translateY(-10px) rotateZ(0deg); opacity: 1; } 100% { transform: translateY(520px) rotateZ(720deg); opacity: 0; } }
 
         /* Warning popup for anonymous */
-        .anon-popup {
-            transition: opacity 0.25s ease, transform 0.25s ease;
-            opacity: 0; transform: translateY(6px); pointer-events: none;
-        }
+        .anon-popup { transition: opacity 0.25s ease, transform 0.25s ease; opacity: 0; transform: translateY(6px); pointer-events: none; }
         .anon-popup.show { opacity: 1; transform: translateY(0); }
 
         .valid-ring:focus { box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2); }
 
         /* School searchable combobox */
-        .combo-dropdown {
-            max-height: 12rem; overflow-y: auto;
-            border: 1px solid #e5e7eb; border-radius: 0.5rem;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-        }
+        .combo-dropdown { max-height: 12rem; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 0.5rem; box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
         .combo-option { padding: 0.5rem 0.75rem; cursor: pointer; font-size: 0.875rem; }
         .combo-option:hover, .combo-option.highlight { background: #f5f3ff; color: #7c3aed; }
+
+        /* Settings sidebar tabs */
+        .settings-tab { cursor: pointer; transition: all 0.15s ease; }
+        .settings-tab.active { background: #f5f3ff; color: #7c3aed; font-weight: 600; }
+
+        /* Toggle switch */
+        .toggle { position: relative; width: 2.75rem; height: 1.5rem; background: #d1d5db; border-radius: 9999px; cursor: pointer; transition: background 0.2s ease; flex-shrink: 0; }
+        .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 1.25rem; height: 1.25rem; background: #fff; border-radius: 9999px; transition: transform 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .toggle.on { background: #7c3aed; }
+        .toggle.on::after { transform: translateX(1.25rem); }
+
+        /* Interactive stars */
+        .star-input i { cursor: pointer; transition: transform 0.1s ease; }
+        .star-input i:hover { transform: scale(1.15); }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
@@ -155,412 +113,589 @@
     <!-- Navigation Header -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <!-- Brand text aligned far left (SCH square removed) -->
-            <span class="text-xl font-bold text-gray-900">Student Club Hub</span>
+            <span class="text-xl font-bold text-gray-900 cursor-pointer" onclick="goToSection(null)">Student Club Hub</span>
 
             <nav class="hidden md:flex space-x-8 text-sm font-medium text-gray-600">
-                <a href="#directory" class="hover:text-indigo-600">Directory</a>
-                <a href="#how-it-works" class="hover:text-indigo-600">How It Works</a>
-                <a href="#fundraising" class="hover:text-indigo-600">Fundraising &amp; Sponsorship</a>
-                <a href="#resources" class="hover:text-indigo-600">Resource Hub</a>
+                <a href="javascript:void(0)" onclick="goToSection('directory')" class="hover:text-indigo-600">Directory</a>
+                <a href="javascript:void(0)" onclick="goToSection('how-it-works')" class="hover:text-indigo-600">How It Works</a>
+                <a href="javascript:void(0)" onclick="goToSection('fundraising')" class="hover:text-indigo-600">Fundraising &amp; Sponsorship</a>
+                <a href="javascript:void(0)" onclick="goToSection('resources')" class="hover:text-indigo-600">Resource Hub</a>
             </nav>
 
             <div id="authArea" class="flex items-center gap-3">
-                <!-- Logged-out state: two separate buttons -->
                 <button onclick="openLoginModal()" class="text-indigo-600 border border-indigo-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition">Log In</button>
                 <button onclick="openSignupModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Sign Up</button>
             </div>
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="bg-indigo-900 text-white py-20 px-4 text-center">
-        <div class="max-w-4xl mx-auto">
-            <span class="bg-indigo-800 text-indigo-200 text-xs uppercase tracking-widest px-3 py-1 rounded-full font-semibold">Non-Profit Platform</span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mt-4 mb-6">Discover, Support, and Grow High School Clubs Worldwide</h1>
-            <p class="text-lg md:text-xl text-indigo-200 mb-8">Connecting student leaders with new members, sponsorship toolkits, and community supporters.</p>
-            <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <a href="#directory" class="bg-white text-indigo-900 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition">
-                    <i class="fa-solid fa-magnifying-glass mr-2"></i>Browse Clubs
-                </a>
-                <button onclick="openDonationModal()" class="bg-emerald-500 text-white border border-emerald-400 px-6 py-3 rounded-lg font-bold hover:bg-emerald-600 transition shadow-lg">
-                    <i class="fa-solid fa-heart mr-2"></i>Donate as Guest
-                </button>
-            </div>
+    <!-- Logged-in sub navigation bar -->
+    <div id="loggedInNav" class="hidden bg-white border-b border-gray-200 sticky top-16 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center gap-2 text-sm font-medium">
+            <button data-nav="home" onclick="showView('home')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100"><i class="fa-solid fa-house mr-1"></i> Home</button>
+            <button data-nav="my-clubs" onclick="showView('my-clubs')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100"><i class="fa-solid fa-layer-group mr-1"></i> My Clubs</button>
+            <button data-nav="start-club" onclick="showView('start-club')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100"><i class="fa-solid fa-plus mr-1"></i> Start a Club</button>
+            <button data-nav="settings" onclick="showView('settings')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100"><i class="fa-solid fa-gear mr-1"></i> Settings</button>
         </div>
-    </section>
+    </div>
 
-    <!-- Impact Stats Bar -->
-    <section class="bg-white border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-            <div>
-                <p class="text-3xl font-extrabold text-indigo-600">50+</p>
-                <p class="text-sm text-gray-500 mt-1">High School Clubs</p>
+    <!-- ============================================================= -->
+    <!-- ======================  VIEW: HOME  ========================= -->
+    <!-- ============================================================= -->
+    <div id="view-home" class="app-view">
+        <!-- Hero Section -->
+        <section class="bg-indigo-900 text-white py-20 px-4 text-center">
+            <div class="max-w-4xl mx-auto">
+                <span class="bg-indigo-800 text-indigo-200 text-xs uppercase tracking-widest px-3 py-1 rounded-full font-semibold">Non-Profit Platform</span>
+                <h1 class="text-4xl md:text-6xl font-extrabold mt-4 mb-6">Discover, Support, and Grow High School Clubs Worldwide</h1>
+                <p class="text-lg md:text-xl text-indigo-200 mb-8">Connecting student leaders with new members, sponsorship toolkits, and community supporters.</p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="javascript:void(0)" onclick="goToSection('directory')" class="bg-white text-indigo-900 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition">
+                        <i class="fa-solid fa-magnifying-glass mr-2"></i>Browse Clubs
+                    </a>
+                    <button id="heroDonateBtn" onclick="openDonationModal()" class="bg-emerald-500 text-white border border-emerald-400 px-6 py-3 rounded-lg font-bold hover:bg-emerald-600 transition shadow-lg">
+                        <i class="fa-solid fa-heart mr-2"></i>Donate as Guest
+                    </button>
+                </div>
             </div>
-            <div class="sm:border-l sm:border-r border-gray-200">
-                <p class="text-3xl font-extrabold text-indigo-600">12</p>
-                <p class="text-sm text-gray-500 mt-1">States Represented</p>
+        </section>
+
+        <!-- Impact Stats Bar -->
+        <section class="bg-white border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+                <div><p class="text-3xl font-extrabold text-indigo-600">50+</p><p class="text-sm text-gray-500 mt-1">High School Clubs</p></div>
+                <div class="sm:border-l sm:border-r border-gray-200"><p class="text-3xl font-extrabold text-indigo-600">12</p><p class="text-sm text-gray-500 mt-1">States Represented</p></div>
+                <div><p class="text-3xl font-extrabold text-indigo-600">$2,500+</p><p class="text-sm text-gray-500 mt-1">Raised for Student Projects</p></div>
             </div>
-            <div>
-                <p class="text-3xl font-extrabold text-indigo-600">$2,500+</p>
-                <p class="text-sm text-gray-500 mt-1">Raised for Student Projects</p>
+        </section>
+
+        <!-- How It Works -->
+        <section id="how-it-works" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900">How It Works</h2>
+                <p class="text-gray-600 mt-2">A simple path from starting a club to getting it funded and supported.</p>
             </div>
-        </div>
-    </section>
-
-    <!-- How It Works -->
-    <section id="how-it-works" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-gray-900">How It Works</h2>
-            <p class="text-gray-600 mt-2">A simple path from starting a club to getting it funded and supported.</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center">
-                <div class="w-14 h-14 mx-auto rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-bold mb-4">1</div>
-                <i class="fa-solid fa-user-plus text-2xl text-indigo-600 mb-3"></i>
-                <h3 class="font-bold text-gray-900 mb-2">Register Your Club</h3>
-                <p class="text-sm text-gray-600">Students create a free profile, add their mission, meeting times, and leadership so new members can find them.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center">
+                    <div class="w-14 h-14 mx-auto rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-bold mb-4">1</div>
+                    <i class="fa-solid fa-user-plus text-2xl text-indigo-600 mb-3"></i>
+                    <h3 class="font-bold text-gray-900 mb-2">Register Your Club</h3>
+                    <p class="text-sm text-gray-600">Students create a free profile, add their mission, meeting times, and leadership so new members can find them.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center">
+                    <div class="w-14 h-14 mx-auto rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-bold mb-4">2</div>
+                    <i class="fa-solid fa-bullhorn text-2xl text-indigo-600 mb-3"></i>
+                    <h3 class="font-bold text-gray-900 mb-2">Fundraise &amp; Recruit</h3>
+                    <p class="text-sm text-gray-600">Use free sponsorship toolkits and share your club page to attract members and micro-sponsorships.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center">
+                    <div class="w-14 h-14 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl font-bold mb-4">3</div>
+                    <i class="fa-solid fa-hand-holding-heart text-2xl text-emerald-600 mb-3"></i>
+                    <h3 class="font-bold text-gray-900 mb-2">Donors Support</h3>
+                    <p class="text-sm text-gray-600">Community supporters browse the directory and back initiatives they care about — as a guest or a member.</p>
+                </div>
             </div>
-            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center">
-                <div class="w-14 h-14 mx-auto rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-bold mb-4">2</div>
-                <i class="fa-solid fa-bullhorn text-2xl text-indigo-600 mb-3"></i>
-                <h3 class="font-bold text-gray-900 mb-2">Fundraise &amp; Recruit</h3>
-                <p class="text-sm text-gray-600">Use free sponsorship toolkits and share your club page to attract members and micro-sponsorships.</p>
+        </section>
+
+        <!-- Club Directory -->
+        <section id="directory" class="py-16 bg-gray-100">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">Global &amp; Local Club Directory</h2>
+                    <p class="text-gray-600 mt-2">Discover, filter, and connect with high school clubs near you or around the globe.</p>
+                </div>
+                <button onclick="requireLogin(() => showView('start-club'))" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition"><i class="fa-solid fa-plus mr-1"></i> Start a Club</button>
             </div>
-            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center">
-                <div class="w-14 h-14 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl font-bold mb-4">3</div>
-                <i class="fa-solid fa-hand-holding-heart text-2xl text-emerald-600 mb-3"></i>
-                <h3 class="font-bold text-gray-900 mb-2">Donors Support</h3>
-                <p class="text-sm text-gray-600">Community supporters browse the directory and back initiatives they care about — as a guest or a member.</p>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4 flex flex-col md:flex-row gap-4">
+                <input id="searchInput" type="text" oninput="applyFilters()" placeholder="Search by club name, keyword, or location..." class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <select id="categorySelect" onchange="applyFilters()" class="border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-700">
+                    <option>All Categories</option>
+                    <option>STEM &amp; Tech</option>
+                    <option>Business &amp; Entrepreneurship</option>
+                    <option>Arts, Media &amp; Design</option>
+                    <option>Culture &amp; Language</option>
+                    <option>Volunteering &amp; Community Service</option>
+                    <option>Humanities &amp; Debate</option>
+                    <option>Health &amp; Medicine</option>
+                    <option>Hobbies &amp; Niche Interests</option>
+                </select>
             </div>
-        </div>
-    </section>
 
-    <!-- Section 1: Club Directory -->
-    <section id="directory" class="py-16 bg-gray-100">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="mb-8">
-            <h2 class="text-3xl font-bold text-gray-900">Global &amp; Local Club Directory</h2>
-            <p class="text-gray-600 mt-2">Discover, filter, and connect with high school clubs near you or around the globe.</p>
-        </div>
+            <div class="flex flex-wrap gap-2 mb-8" id="filterTags">
+                <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="STEM" onclick="toggleTag(this)">#STEM</span>
+                <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="Volunteering" onclick="toggleTag(this)">#Volunteering</span>
+                <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="Debate" onclick="toggleTag(this)">#Debate</span>
+                <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="Robotics" onclick="toggleTag(this)">#Robotics</span>
+                <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="EcoFriendly" onclick="toggleTag(this)">#EcoFriendly</span>
+            </div>
 
-        <!-- Search & Filter Bar -->
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4 flex flex-col md:flex-row gap-4">
-            <input id="searchInput" type="text" oninput="applyFilters()" placeholder="Search by club name, keyword, or location..." class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-            <select id="categorySelect" onchange="applyFilters()" class="border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-700">
-                <option>All Categories</option>
-                <option>STEM &amp; Tech</option>
-                <option>Business &amp; Entrepreneurship</option>
-                <option>Arts, Media &amp; Design</option>
-                <option>Culture &amp; Language</option>
-                <option>Volunteering &amp; Community Service</option>
-                <option>Humanities &amp; Debate</option>
-                <option>Health &amp; Medicine</option>
-                <option>Hobbies &amp; Niche Interests</option>
-            </select>
-        </div>
+            <div id="clubGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+            <p id="noResults" class="hidden text-center text-gray-500 py-10"><i class="fa-solid fa-magnifying-glass mr-2"></i>No clubs match your filters yet. Try clearing a tag.</p>
+          </div>
+        </section>
 
-        <!-- Quick-Filter Tags -->
-        <div class="flex flex-wrap gap-2 mb-8" id="filterTags">
-            <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="STEM" onclick="toggleTag(this)">#STEM</span>
-            <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="Volunteering" onclick="toggleTag(this)">#Volunteering</span>
-            <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="Debate" onclick="toggleTag(this)">#Debate</span>
-            <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="Robotics" onclick="toggleTag(this)">#Robotics</span>
-            <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="EcoFriendly" onclick="toggleTag(this)">#EcoFriendly</span>
-        </div>
+        <!-- Fundraising -->
+        <section id="fundraising" class="bg-white py-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900">Club Fundraising &amp; Sponsorship</h2>
+                    <p class="text-gray-600 mt-2">Free toolkits to help high school clubs secure micro-sponsorships and run online drives.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200">
+                        <i class="fa-solid fa-file-pen text-2xl text-indigo-600 mb-3"></i>
+                        <h3 class="font-bold text-gray-900 mb-2">Sponsorship Pitch Kit</h3>
+                        <p class="text-sm text-gray-600 mb-4">Free, customizable letter templates for club presidents to pitch local businesses for $50–$500 micro-sponsorships.</p>
+                        <a href="#" class="text-indigo-600 text-sm font-semibold hover:underline">Download Template →</a>
+                    </div>
+                    <div class="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200">
+                        <i class="fa-solid fa-hand-holding-dollar text-2xl text-indigo-600 mb-3"></i>
+                        <h3 class="font-bold text-gray-900 mb-2">Fundraising Guides</h3>
+                        <p class="text-sm text-gray-600 mb-4">Step-by-step guides on organizing digital and offline community fundraisers with high return on investment.</p>
+                        <a href="#" class="text-indigo-600 text-sm font-semibold hover:underline">Read Guide →</a>
+                    </div>
+                    <div class="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200">
+                        <i class="fa-solid fa-award text-2xl text-indigo-600 mb-3"></i>
+                        <h3 class="font-bold text-gray-900 mb-2">Grants Directory (TBD)</h3>
+                        <p class="text-sm text-gray-600 mb-4">A curated list of national grants, competitions, or corporate programs offering funding to high school groups.</p>
+                        <span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded font-semibold">Coming Soon</span>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        <!-- Club Cards (rendered by JS) -->
-        <div id="clubGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-        <p id="noResults" class="hidden text-center text-gray-500 py-10"><i class="fa-solid fa-magnifying-glass mr-2"></i>No clubs match your filters yet. Try clearing a tag.</p>
-      </div>
-    </section>
-
-    <!-- Section 2: Fundraising & Sponsorship -->
-    <section id="fundraising" class="bg-white py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Resource Hub -->
+        <section id="resources" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="mb-8">
-                <h2 class="text-3xl font-bold text-gray-900">Club Fundraising &amp; Sponsorship</h2>
-                <p class="text-gray-600 mt-2">Free toolkits to help high school clubs secure micro-sponsorships and run online drives.</p>
+                <h2 class="text-3xl font-bold text-gray-900">Resource &amp; Collaboration Hub</h2>
+                <p class="text-gray-600 mt-2">Tools to streamline your club's administrative work and collaborate with other schools.</p>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200">
-                    <i class="fa-solid fa-file-pen text-2xl text-indigo-600 mb-3"></i>
-                    <h3 class="font-bold text-gray-900 mb-2">Sponsorship Pitch Kit</h3>
-                    <p class="text-sm text-gray-600 mb-4">Free, customizable letter templates for club presidents to pitch local businesses for $50–$500 micro-sponsorships.</p>
-                    <a href="#" class="text-indigo-600 text-sm font-semibold hover:underline">Download Template →</a>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                    <h3 class="font-bold text-gray-900 text-xl mb-4"><i class="fa-solid fa-folder-open text-indigo-600 mr-2"></i> Downloadable Assets</h3>
+                    <ul class="space-y-3 text-sm text-gray-600">
+                        <li class="flex items-center justify-between p-2 bg-gray-50 rounded"><span class="font-medium">Meeting Agenda Template</span> <a href="#" class="text-indigo-600 font-semibold">Download</a></li>
+                        <li class="flex items-center justify-between p-2 bg-gray-50 rounded"><span class="font-medium">Club Constitution Sample</span> <a href="#" class="text-indigo-600 font-semibold">Download</a></li>
+                        <li class="flex items-center justify-between p-2 bg-gray-50 rounded"><span class="font-medium">Event Flyer Design Kits</span> <a href="#" class="text-indigo-600 font-semibold">Download</a></li>
+                    </ul>
                 </div>
-
-                <div class="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200">
-                    <i class="fa-solid fa-hand-holding-dollar text-2xl text-indigo-600 mb-3"></i>
-                    <h3 class="font-bold text-gray-900 mb-2">Fundraising Guides</h3>
-                    <p class="text-sm text-gray-600 mb-4">Step-by-step guides on organizing digital and offline community fundraisers with high return on investment.</p>
-                    <a href="#" class="text-indigo-600 text-sm font-semibold hover:underline">Read Guide →</a>
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                    <h3 class="font-bold text-gray-900 text-xl mb-4"><i class="fa-solid fa-users text-indigo-600 mr-2"></i> Inter-Club Collaboration Board</h3>
+                    <p class="text-sm text-gray-600 mb-4">A dedicated board for clubs from different high schools to co-host webinars, joint charity drives, or virtual hackathons.</p>
+                    <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Post a Collaboration Idea</button>
                 </div>
+            </div>
+        </section>
 
-                <div class="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200">
-                    <i class="fa-solid fa-award text-2xl text-indigo-600 mb-3"></i>
-                    <h3 class="font-bold text-gray-900 mb-2">Grants Directory (TBD)</h3>
-                    <p class="text-sm text-gray-600 mb-4">A curated list of national grants, competitions, or corporate programs offering funding to high school groups.</p>
-                    <span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded font-semibold">Coming Soon</span>
+        <!-- Testimonials -->
+        <section class="bg-indigo-900 py-16">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-white">Loved by Students &amp; Supporters</h2>
+                    <p class="text-indigo-200 mt-2">Real voices from the Student Club Hub community.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <div class="text-amber-400 mb-3"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                        <p class="text-gray-700 italic mb-5">"We grew our Robotics club from 8 to 40 members in one semester and raised enough for our first competition kit. This platform made us visible."</p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">MA</div>
+                            <div><p class="font-semibold text-gray-900">Maya A.</p><p class="text-xs text-gray-500">President, Robotics &amp; AI Society</p></div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <div class="text-amber-400 mb-3"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                        <p class="text-gray-700 italic mb-5">"As a local business owner, I love that I can support real student projects in my community directly. The whole process took two minutes."</p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">DR</div>
+                            <div><p class="font-semibold text-gray-900">David R.</p><p class="text-xs text-gray-500">Community Sponsor &amp; Advisor</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- ==================  VIEW: START A CLUB  ===================== -->
+    <!-- ============================================================= -->
+    <div id="view-start-club" class="app-view hidden max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <button onclick="showView('home')" class="text-gray-500 hover:text-gray-800 text-sm font-medium mb-4"><i class="fa-solid fa-arrow-left mr-1"></i> Back to Home</button>
+        <h1 id="wizardHeading" class="text-3xl font-bold text-gray-900 mb-1">Start a Club</h1>
+        <p class="text-gray-600 mb-8">Fill in your club's details. You can save a draft anytime and publish when you're ready.</p>
+
+        <!-- Basic Information -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
+            <h2 class="font-bold text-gray-900 text-lg mb-4"><i class="fa-solid fa-circle-info text-indigo-600 mr-2"></i>Basic Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Club Title</label>
+                    <input id="clubTitle" oninput="validateWizard()" type="text" placeholder="e.g. Astronomy Society" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tagline</label>
+                    <input id="clubTagline" type="text" placeholder="Reach for the stars" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select id="clubCategory" onchange="validateWizard()" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:border-indigo-500">
+                        <option value="">— Select a category —</option>
+                        <option>STEM &amp; Tech</option>
+                        <option>Business &amp; Entrepreneurship</option>
+                        <option>Arts, Media &amp; Design</option>
+                        <option>Culture &amp; Language</option>
+                        <option>Volunteering &amp; Community Service</option>
+                        <option>Humanities &amp; Debate</option>
+                        <option>Health &amp; Medicine</option>
+                        <option>Hobbies &amp; Niche Interests</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Primary School Affiliation</label>
+                    <input id="clubSchool" type="text" placeholder="e.g. Central High School" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
+                </div>
+            </div>
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Short Description / Mission</label>
+                <textarea id="clubMission" rows="3" placeholder="What is your club about?" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring resize-none"></textarea>
+            </div>
+        </div>
+
+        <!-- Privacy & Membership -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
+            <h2 class="font-bold text-gray-900 text-lg mb-4"><i class="fa-solid fa-user-shield text-indigo-600 mr-2"></i>Privacy &amp; Membership</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="select-card rounded-xl p-4" data-privacy="Public (Open Join)" onclick="selectPrivacy(this)">
+                    <i class="fa-solid fa-earth-americas text-indigo-600 mb-2"></i>
+                    <p class="font-semibold text-gray-900 text-sm">Public</p>
+                    <p class="text-xs text-gray-500">Open Join — anyone can join instantly.</p>
+                </div>
+                <div class="select-card rounded-xl p-4" data-privacy="Private (Application Required)" onclick="selectPrivacy(this)">
+                    <i class="fa-solid fa-lock text-indigo-600 mb-2"></i>
+                    <p class="font-semibold text-gray-900 text-sm">Private</p>
+                    <p class="text-xs text-gray-500">Application required to join.</p>
+                </div>
+                <div class="select-card rounded-xl p-4" data-privacy="Cross-School Alliance (Multi-School)" onclick="selectPrivacy(this)">
+                    <i class="fa-solid fa-people-arrows text-indigo-600 mb-2"></i>
+                    <p class="font-semibold text-gray-900 text-sm">Cross-School Alliance</p>
+                    <p class="text-xs text-gray-500">Multi-school collaborative club.</p>
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- Section 3: Resource & Collaboration Hub -->
-    <section id="resources" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="mb-8">
-            <h2 class="text-3xl font-bold text-gray-900">Resource &amp; Collaboration Hub</h2>
-            <p class="text-gray-600 mt-2">Tools to streamline your club's administrative work and collaborate with other schools.</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                <h3 class="font-bold text-gray-900 text-xl mb-4"><i class="fa-solid fa-folder-open text-indigo-600 mr-2"></i> Downloadable Assets</h3>
-                <ul class="space-y-3 text-sm text-gray-600">
-                    <li class="flex items-center justify-between p-2 bg-gray-50 rounded"><span class="font-medium">Meeting Agenda Template</span> <a href="#" class="text-indigo-600 font-semibold">Download</a></li>
-                    <li class="flex items-center justify-between p-2 bg-gray-50 rounded"><span class="font-medium">Club Constitution Sample</span> <a href="#" class="text-indigo-600 font-semibold">Download</a></li>
-                    <li class="flex items-center justify-between p-2 bg-gray-50 rounded"><span class="font-medium">Event Flyer Design Kits</span> <a href="#" class="text-indigo-600 font-semibold">Download</a></li>
-                </ul>
-            </div>
-
-            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                <h3 class="font-bold text-gray-900 text-xl mb-4"><i class="fa-solid fa-users text-indigo-600 mr-2"></i> Inter-Club Collaboration Board</h3>
-                <p class="text-sm text-gray-600 mb-4">A dedicated board for clubs from different high schools to co-host webinars, joint charity drives, or virtual hackathons.</p>
-                <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Post a Collaboration Idea</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- Testimonials -->
-    <section class="bg-indigo-900 py-16">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-10">
-                <h2 class="text-3xl font-bold text-white">Loved by Students &amp; Supporters</h2>
-                <p class="text-indigo-200 mt-2">Real voices from the Student Club Hub community.</p>
-            </div>
+        <!-- Media & Gallery -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
+            <h2 class="font-bold text-gray-900 text-lg mb-4"><i class="fa-solid fa-images text-indigo-600 mr-2"></i>Media &amp; Gallery</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white p-6 rounded-xl shadow-lg">
-                    <div class="text-amber-400 mb-3"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
-                    <p class="text-gray-700 italic mb-5">"We grew our Robotics club from 8 to 40 members in one semester and raised enough for our first competition kit. This platform made us visible."</p>
-                    <div class="flex items-center gap-3">
-                        <div class="w-11 h-11 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">MA</div>
-                        <div>
-                            <p class="font-semibold text-gray-900">Maya A.</p>
-                            <p class="text-xs text-gray-500">President, Robotics &amp; AI Society</p>
-                        </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Club Profile / Banner Image</label>
+                    <div class="flex items-center gap-4">
+                        <div id="bannerPreview" class="w-24 h-24 rounded-lg bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center text-gray-400 overflow-hidden"><i class="fa-solid fa-image text-2xl"></i></div>
+                        <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg">
+                            Upload <input type="file" accept="image/*" class="hidden" onchange="previewBanner(event)">
+                        </label>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-lg">
-                    <div class="text-amber-400 mb-3"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
-                    <p class="text-gray-700 italic mb-5">"As a local business owner, I love that I can support real student projects in my community directly. The whole process took two minutes."</p>
-                    <div class="flex items-center gap-3">
-                        <div class="w-11 h-11 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">DR</div>
-                        <div>
-                            <p class="font-semibold text-gray-900">David R.</p>
-                            <p class="text-xs text-gray-500">Community Sponsor &amp; Advisor</p>
-                        </div>
-                    </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Activity Photo Gallery <span class="text-gray-400 font-normal">(field trips, workshops)</span></label>
+                    <label class="cursor-pointer inline-block bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg mb-3">
+                        Add Photos <input type="file" accept="image/*" multiple class="hidden" onchange="previewGallery(event)">
+                    </label>
+                    <div id="galleryPreview" class="grid grid-cols-4 gap-2"></div>
                 </div>
             </div>
         </div>
-    </section>
+
+        <!-- Meeting Details -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
+            <h2 class="font-bold text-gray-900 text-lg mb-4"><i class="fa-regular fa-clock text-indigo-600 mr-2"></i>Meeting Details</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Meeting Days / Times</label>
+                    <input id="meetingDays" type="text" placeholder="e.g. Tuesdays @ 3:30 PM" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Room / Location</label>
+                    <input id="meetingLocation" type="text" placeholder="e.g. Science Lab, Rm 204" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Officer Contact Email</label>
+                    <input id="officerEmail" type="email" placeholder="president@school.edu" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
+                </div>
+            </div>
+        </div>
+
+        <!-- Links & Invites -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
+            <h2 class="font-bold text-gray-900 text-lg mb-4"><i class="fa-solid fa-link text-indigo-600 mr-2"></i>Links &amp; Invites</h2>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Invite Members <span class="text-gray-400 font-normal">(comma or line-separated emails)</span></label>
+            <textarea id="inviteEmails" rows="2" placeholder="friend1@school.edu, friend2@school.edu" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-4 focus:outline-none focus:border-indigo-500 valid-ring resize-none"></textarea>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Discord Link</label>
+                    <input id="discordLink" type="url" placeholder="https://discord.gg/..." class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Website Link</label>
+                    <input id="websiteLink" type="url" placeholder="https://myclub.org" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
+                </div>
+            </div>
+        </div>
+
+        <!-- Fundraising Settings -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
+            <h2 class="font-bold text-gray-900 text-lg mb-4"><i class="fa-solid fa-hand-holding-dollar text-indigo-600 mr-2"></i>Fundraising Settings</h2>
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input id="enableDonations" type="checkbox" checked class="h-4 w-4 text-indigo-600 rounded border-gray-300">
+                <span class="text-sm text-gray-700">Enable Direct Donations for this Club</span>
+            </label>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="flex flex-col sm:flex-row gap-3 justify-end">
+            <button onclick="saveDraft()" class="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition"><i class="fa-regular fa-floppy-disk mr-1"></i> Save as Draft</button>
+            <button onclick="previewClub()" class="bg-white border border-indigo-200 text-indigo-600 px-6 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition"><i class="fa-regular fa-eye mr-1"></i> Preview</button>
+            <button id="publishBtn" onclick="publishClub()" disabled class="action-btn px-6 py-3 rounded-lg font-semibold"><i class="fa-solid fa-rocket mr-1"></i> Publish Club</button>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- ================  VIEW: MY CLUBS & DRAFTS  ================== -->
+    <!-- ============================================================= -->
+    <div id="view-my-clubs" class="app-view hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">My Clubs &amp; Drafts</h1>
+                <p class="text-gray-600 mt-1">Manage the clubs you lead, the ones you've joined, and your saved drafts.</p>
+            </div>
+            <button onclick="showView('start-club')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition"><i class="fa-solid fa-plus mr-1"></i> Start a Club</button>
+        </div>
+
+        <div class="flex gap-2 border-b border-gray-200 mb-6 text-sm font-medium">
+            <button data-mctab="lead" onclick="myClubsTab('lead')" class="mc-tab px-4 py-2 border-b-2 border-indigo-600 text-indigo-600">Clubs I Lead</button>
+            <button data-mctab="joined" onclick="myClubsTab('joined')" class="mc-tab px-4 py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-800">Joined Clubs</button>
+            <button data-mctab="drafts" onclick="myClubsTab('drafts')" class="mc-tab px-4 py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-800">Saved Drafts</button>
+        </div>
+
+        <div id="mc-lead" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+        <div id="mc-joined" class="hidden grid-cols-1 md:grid-cols-3 gap-6 grid"></div>
+        <div id="mc-drafts" class="hidden grid-cols-1 md:grid-cols-3 gap-6 grid"></div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- ==================  VIEW: ACCOUNT SETTINGS  ================= -->
+    <!-- ============================================================= -->
+    <div id="view-settings" class="app-view hidden max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h1 class="text-3xl font-bold text-gray-900 mb-1">Account Settings</h1>
+        <p class="text-gray-600 mb-8">Manage your profile, security, notifications, and privacy.</p>
+
+        <div class="flex flex-col md:flex-row gap-8">
+            <aside class="md:w-56 flex-shrink-0">
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-2 flex md:flex-col gap-1 text-sm">
+                    <div class="settings-tab active px-4 py-2.5 rounded-lg text-gray-700" data-tab="profile" onclick="settingsTab('profile')"><i class="fa-solid fa-user w-5 mr-1"></i> Profile &amp; Identity</div>
+                    <div class="settings-tab px-4 py-2.5 rounded-lg text-gray-700" data-tab="security" onclick="settingsTab('security')"><i class="fa-solid fa-shield-halved w-5 mr-1"></i> Account &amp; Security</div>
+                    <div class="settings-tab px-4 py-2.5 rounded-lg text-gray-700" data-tab="notifications" onclick="settingsTab('notifications')"><i class="fa-solid fa-bell w-5 mr-1"></i> Notifications</div>
+                    <div class="settings-tab px-4 py-2.5 rounded-lg text-gray-700" data-tab="privacy" onclick="settingsTab('privacy')"><i class="fa-solid fa-lock w-5 mr-1"></i> Privacy &amp; Data</div>
+                </div>
+            </aside>
+
+            <div class="flex-1">
+                <div id="settings-profile" class="settings-panel bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <h2 class="font-bold text-gray-900 text-lg mb-4">Profile &amp; Identity</h2>
+                    <div class="flex items-center gap-4 mb-6">
+                        <div id="settingsAvatar" class="w-20 h-20 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl font-bold overflow-hidden">ME</div>
+                        <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg">
+                            Upload Photo <input type="file" accept="image/*" class="hidden" onchange="previewAvatar(event)">
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Display Name</label><input id="setDisplayName" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">High School</label><input id="setSchool" type="text" placeholder="Your high school" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Graduation Year</label><input id="setGradYear" type="number" placeholder="2027" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Headline</label><input id="setHeadline" type="text" placeholder="Club leader & robotics enthusiast" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring"></div>
+                    </div>
+                    <div class="mt-4"><label class="block text-sm font-medium text-gray-700 mb-1">Bio</label><textarea id="setBio" rows="3" placeholder="Tell others a bit about you..." class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring resize-none"></textarea></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1"><i class="fa-brands fa-instagram mr-1"></i>Instagram</label><input id="setInstagram" type="text" placeholder="@username" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1"><i class="fa-brands fa-linkedin mr-1"></i>LinkedIn</label><input id="setLinkedin" type="text" placeholder="linkedin.com/in/..." class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring"></div>
+                    </div>
+                    <div class="mt-6 text-right"><button onclick="saveSettings()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition">Save Changes</button></div>
+                </div>
+
+                <div id="settings-security" class="settings-panel hidden bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <h2 class="font-bold text-gray-900 text-lg mb-4">Account &amp; Security</h2>
+                    <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label><input id="setEmail" type="email" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">New Password</label><input type="password" placeholder="••••••••" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label><input type="password" placeholder="••••••••" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring"></div>
+                    </div>
+                    <div class="flex items-center justify-between border-t border-gray-100 pt-4">
+                        <div><p class="font-medium text-gray-800 text-sm">Two-Factor Authentication</p><p class="text-xs text-gray-500">Add an extra layer of security at login.</p></div>
+                        <div class="toggle" onclick="this.classList.toggle('on')"></div>
+                    </div>
+                    <div class="mt-6 text-right"><button onclick="saveSettings()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition">Save Changes</button></div>
+                </div>
+
+                <div id="settings-notifications" class="settings-panel hidden bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <h2 class="font-bold text-gray-900 text-lg mb-4">Notification Preferences</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between"><div><p class="font-medium text-gray-800 text-sm">Email alerts for member requests</p><p class="text-xs text-gray-500">Get notified when someone asks to join your club.</p></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+                        <div class="flex items-center justify-between border-t border-gray-100 pt-4"><div><p class="font-medium text-gray-800 text-sm">Donation updates</p><p class="text-xs text-gray-500">Receive a note whenever your club gets a donation.</p></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+                        <div class="flex items-center justify-between border-t border-gray-100 pt-4"><div><p class="font-medium text-gray-800 text-sm">Platform news</p><p class="text-xs text-gray-500">Occasional updates about new features.</p></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+                    </div>
+                    <div class="mt-6 text-right"><button onclick="saveSettings()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition">Save Changes</button></div>
+                </div>
+
+                <div id="settings-privacy" class="settings-panel hidden bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <h2 class="font-bold text-gray-900 text-lg mb-4">Privacy &amp; Data</h2>
+                    <div class="mb-5">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Profile Visibility</label>
+                        <div class="flex gap-3">
+                            <label class="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2.5 cursor-pointer flex-1"><input type="radio" name="visibility" checked class="text-indigo-600"> <span class="text-sm">Public</span></label>
+                            <label class="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2.5 cursor-pointer flex-1"><input type="radio" name="visibility" class="text-indigo-600"> <span class="text-sm">Private</span></label>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between border-t border-gray-100 pt-4 mb-5">
+                        <div><p class="font-medium text-gray-800 text-sm">Default to anonymous donations</p><p class="text-xs text-gray-500">Hide your name on public supporter lists by default.</p></div>
+                        <div class="toggle" onclick="this.classList.toggle('on')"></div>
+                    </div>
+                    <div class="border border-red-200 bg-red-50 rounded-lg p-4">
+                        <p class="font-semibold text-red-700 text-sm mb-1">Danger Zone</p>
+                        <p class="text-xs text-red-600 mb-3">Permanently delete your account and all associated data.</p>
+                        <button onclick="showToast('Account deletion is disabled in this prototype.')" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition">Delete Account</button>
+                    </div>
+                    <div class="mt-6 text-right"><button onclick="saveSettings()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition">Save Changes</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="bg-gray-900 text-gray-400 py-8 border-t border-gray-800 text-center text-sm">
         <p>© 2026 Student Club Hub. Non-profit Initiative.</p>
     </footer>
 
-    <!-- ============================================================= -->
-    <!-- =========================  LOG IN MODAL  ==================== -->
-    <!-- ============================================================= -->
-    <div id="loginModal" class="modal-overlay">
-        <div class="modal-card p-6 sm:p-8">
-            <div class="flex items-center justify-end mb-2">
-                <button onclick="closeLoginModal()" class="text-gray-400 hover:text-gray-700 text-lg"><i class="fa-solid fa-xmark"></i></button>
+    <!-- LOG OUT CONFIRM MODAL -->
+    <div id="logoutModal" class="modal-overlay">
+        <div class="modal-card max-w-sm p-6 text-center">
+            <div class="w-14 h-14 mx-auto rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl mb-4"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">Are You Sure You Want to Log Out?</h2>
+            <p class="text-sm text-gray-500 mb-6">You'll need to log back in to manage your clubs.</p>
+            <div class="flex gap-3">
+                <button onclick="closeLogoutModal()" class="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg font-semibold hover:bg-gray-200 transition">Cancel</button>
+                <button onclick="confirmLogout()" class="flex-1 bg-red-600 text-white py-2.5 rounded-lg font-semibold hover:bg-red-700 transition">Yes, Log Out</button>
             </div>
-            <h2 class="text-2xl font-bold text-gray-900 mb-1">Welcome back</h2>
-            <p class="text-sm text-gray-500 mb-6">Log in to your Student Club Hub account.</p>
-
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
-            <input id="loginEmail" type="email" oninput="validateLogin()" placeholder="you@example.com"
-                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-4 focus:outline-none focus:border-indigo-500 valid-ring">
-
-            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input id="loginPassword" type="password" oninput="validateLogin()" placeholder="••••••••"
-                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-5 focus:outline-none focus:border-indigo-500 valid-ring">
-
-            <button id="loginSubmit" onclick="doLogin()" disabled class="action-btn w-full py-3 rounded-lg font-semibold">Log In</button>
-
-            <p class="text-center text-sm text-gray-500 mt-4">
-                Don't have an account?
-                <a href="#" onclick="loginToSignup(event)" class="text-indigo-600 font-semibold hover:underline">Sign Up</a>
-            </p>
         </div>
     </div>
 
-    <!-- ============================================================= -->
-    <!-- ==================  SIGN UP MODAL (WIZARD)  ================= -->
-    <!-- ============================================================= -->
+    <!-- LOG IN MODAL -->
+    <div id="loginModal" class="modal-overlay">
+        <div class="modal-card p-6 sm:p-8">
+            <div class="flex items-center justify-end mb-2"><button onclick="closeLoginModal()" class="text-gray-400 hover:text-gray-700 text-lg"><i class="fa-solid fa-xmark"></i></button></div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-1">Welcome back</h2>
+            <p class="text-sm text-gray-500 mb-6">Log in to your Student Club Hub account.</p>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+            <input id="loginEmail" type="email" oninput="validateLogin()" placeholder="you@example.com" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-4 focus:outline-none focus:border-indigo-500 valid-ring">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input id="loginPassword" type="password" oninput="validateLogin()" placeholder="••••••••" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-5 focus:outline-none focus:border-indigo-500 valid-ring">
+            <button id="loginSubmit" onclick="doLogin()" disabled class="action-btn w-full py-3 rounded-lg font-semibold">Log In</button>
+            <p class="text-center text-sm text-gray-500 mt-4">Don't have an account? <a href="#" onclick="loginToSignup(event)" class="text-indigo-600 font-semibold hover:underline">Sign Up</a></p>
+        </div>
+    </div>
+
+    <!-- SIGN UP MODAL (WIZARD) -->
     <div id="signupModal" class="modal-overlay">
         <div class="modal-card p-6 sm:p-8">
-            <!-- Header row: Back button + progress -->
             <div class="flex items-center justify-between mb-6">
-                <button id="authBackBtn" onclick="authBack()" class="text-gray-400 hover:text-gray-700 text-sm font-medium flex items-center invisible">
-                    <i class="fa-solid fa-arrow-left mr-1"></i> Back
-                </button>
+                <button id="authBackBtn" onclick="authBack()" class="text-gray-400 hover:text-gray-700 text-sm font-medium flex items-center invisible"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
                 <span id="authStageLabel" class="text-xs font-semibold text-indigo-500 uppercase tracking-wide">Step 1 of 4</span>
                 <button onclick="closeSignupModal()" class="text-gray-400 hover:text-gray-700 text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <!-- Stage 1: Credentials -->
             <div id="authStage1" class="stage active">
                 <h2 class="text-2xl font-bold text-gray-900 mb-1">Create your account</h2>
                 <p class="text-sm text-gray-500 mb-6">Join Student Club Hub to advertise, fund, and grow your club.</p>
-
                 <label class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
-                <input id="signupEmail" type="email" oninput="validateStage1()" placeholder="you@example.com"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-1 focus:outline-none focus:border-indigo-500 valid-ring">
+                <input id="signupEmail" type="email" oninput="validateStage1()" placeholder="you@example.com" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-1 focus:outline-none focus:border-indigo-500 valid-ring">
                 <p id="emailError" class="text-xs text-red-500 mb-3 h-4"></p>
-
                 <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input id="signupPassword" type="password" oninput="validateStage1()" placeholder="••••••••"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-1 focus:outline-none focus:border-indigo-500 valid-ring">
+                <input id="signupPassword" type="password" oninput="validateStage1()" placeholder="••••••••" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-1 focus:outline-none focus:border-indigo-500 valid-ring">
                 <p class="text-xs text-gray-400 mb-5">Create a new password for Student Club Hub (min. 6 characters).</p>
-
                 <button id="stage1Next" onclick="goToStage(2)" disabled class="action-btn w-full py-3 rounded-lg font-semibold">Next</button>
-
-                <p class="text-center text-sm text-gray-500 mt-4">
-                    Already have an account?
-                    <a href="#" onclick="signupToLogin(event)" class="text-indigo-600 font-semibold hover:underline">Log In</a>
-                </p>
+                <p class="text-center text-sm text-gray-500 mt-4">Already have an account? <a href="#" onclick="signupToLogin(event)" class="text-indigo-600 font-semibold hover:underline">Log In</a></p>
             </div>
 
-            <!-- Stage 2: Email Verification -->
             <div id="authStage2" class="stage">
                 <h2 class="text-2xl font-bold text-gray-900 mb-1">Verify your email</h2>
                 <p class="text-sm text-gray-500 mb-6">We sent a 6-digit code to <span id="verifyEmailDisplay" class="font-semibold text-gray-700"></span>. Enter it below.</p>
-
                 <div class="flex justify-between gap-2 mb-4" id="codeInputs">
-                    <input class="code-box" maxlength="1" inputmode="numeric">
-                    <input class="code-box" maxlength="1" inputmode="numeric">
-                    <input class="code-box" maxlength="1" inputmode="numeric">
-                    <input class="code-box" maxlength="1" inputmode="numeric">
-                    <input class="code-box" maxlength="1" inputmode="numeric">
-                    <input class="code-box" maxlength="1" inputmode="numeric">
+                    <input class="code-box" maxlength="1" inputmode="numeric"><input class="code-box" maxlength="1" inputmode="numeric"><input class="code-box" maxlength="1" inputmode="numeric"><input class="code-box" maxlength="1" inputmode="numeric"><input class="code-box" maxlength="1" inputmode="numeric"><input class="code-box" maxlength="1" inputmode="numeric">
                 </div>
-
-                <div class="bg-indigo-50 text-indigo-700 text-xs rounded-lg p-2 mb-4 text-center">
-                    <i class="fa-solid fa-flask mr-1"></i> Demo code: <span id="demoCode" class="font-bold tracking-widest"></span> (type any 6 digits to continue)
-                </div>
-
-                <p class="text-center text-sm text-gray-500">
-                    Didn't get it?
-                    <a href="#" onclick="resendCode(event)" class="text-indigo-600 font-semibold hover:underline">Resend Confirmation Code</a>
-                </p>
+                <div class="bg-indigo-50 text-indigo-700 text-xs rounded-lg p-2 mb-4 text-center"><i class="fa-solid fa-flask mr-1"></i> Demo code: <span id="demoCode" class="font-bold tracking-widest"></span> (type any 6 digits to continue)</div>
+                <p class="text-center text-sm text-gray-500">Didn't get it? <a href="#" onclick="resendCode(event)" class="text-indigo-600 font-semibold hover:underline">Resend Confirmation Code</a></p>
             </div>
 
-            <!-- Stage 3: Role Selection -->
             <div id="authStage3" class="stage">
                 <h2 class="text-2xl font-bold text-gray-900 mb-1">How will you use Student Club Hub?</h2>
                 <p class="text-sm text-gray-500 mb-6">This helps us tailor your dashboard. You can change it later.</p>
-
                 <div class="space-y-3 mb-4">
                     <div class="select-card rounded-xl p-4 flex items-start gap-3" data-role="student" onclick="selectRole('student')">
                         <div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg"><i class="fa-solid fa-graduation-cap"></i></div>
-                        <div>
-                            <p class="font-semibold text-gray-900">High School Student / Club Leader</p>
-                            <p class="text-xs text-gray-500">Advertise your club, recruit members, and raise funds.</p>
-                        </div>
+                        <div><p class="font-semibold text-gray-900">High School Student / Club Leader</p><p class="text-xs text-gray-500">Advertise your club, recruit members, and raise funds.</p></div>
                     </div>
                     <div class="select-card rounded-xl p-4 flex items-start gap-3" data-role="donor" onclick="selectRole('donor')">
                         <div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg"><i class="fa-solid fa-hand-holding-heart"></i></div>
-                        <div>
-                            <p class="font-semibold text-gray-900">Donor / Supporter / Advisor</p>
-                            <p class="text-xs text-gray-500">Discover clubs, follow progress, and support students.</p>
-                        </div>
+                        <div><p class="font-semibold text-gray-900">Donor / Supporter / Advisor</p><p class="text-xs text-gray-500">Discover clubs, follow progress, and support students.</p></div>
                     </div>
                 </div>
-
                 <p class="text-xs text-gray-500 italic mb-5 text-center">💡 Note: Anyone can donate or explore clubs regardless of account type!</p>
-
                 <button id="stage3Next" onclick="goToStage(4)" disabled class="action-btn w-full py-3 rounded-lg font-semibold">Next</button>
             </div>
 
-            <!-- Stage 4: Profile Details -->
             <div id="authStage4" class="stage">
                 <h2 class="text-2xl font-bold text-gray-900 mb-1">Finish your profile</h2>
                 <p class="text-sm text-gray-500 mb-6">Just a couple of details to set up your account.</p>
-
                 <label class="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
-                <input id="displayName" type="text" oninput="validateStage4()" placeholder="e.g. Jordan Lee"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-4 focus:outline-none focus:border-indigo-500 valid-ring">
-
-                <!-- Donor optional affiliation -->
+                <input id="displayName" type="text" oninput="validateStage4()" placeholder="e.g. Jordan Lee" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-4 focus:outline-none focus:border-indigo-500 valid-ring">
                 <div id="donorFields" class="hidden">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Affiliated High School <span class="text-gray-400 font-normal">(Optional)</span></label>
-                    <input id="donorSchool" type="text" placeholder="School name (optional)"
-                        class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-2 focus:outline-none focus:border-indigo-500 valid-ring">
+                    <input id="donorSchool" type="text" placeholder="School name (optional)" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-2 focus:outline-none focus:border-indigo-500 valid-ring">
                 </div>
-
-                <!-- Student dynamic 3-tier selector -->
                 <div id="studentFields" class="hidden">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Select Country</label>
                     <select id="countrySelect" onchange="onCountryChange()" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-4 bg-white focus:outline-none focus:border-indigo-500">
-                        <option value="US">United States</option>
-                        <option value="CA">Canada</option>
-                        <option value="GB">United Kingdom</option>
-                        <option value="IN">India</option>
-                        <option value="AU">Australia</option>
-                        <option value="SG">Singapore</option>
+                        <option value="US">United States</option><option value="CA">Canada</option><option value="GB">United Kingdom</option><option value="IN">India</option><option value="AU">Australia</option><option value="SG">Singapore</option>
                     </select>
-
                     <div id="stateWrap">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Select State</label>
-                        <select id="stateSelect" onchange="onStateChange()" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-4 bg-white focus:outline-none focus:border-indigo-500">
-                            <option value="">— Choose a state —</option>
-                        </select>
+                        <select id="stateSelect" onchange="onStateChange()" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-4 bg-white focus:outline-none focus:border-indigo-500"><option value="">— Choose a state —</option></select>
                     </div>
-
-                    <!-- Searchable school combobox -->
                     <div id="schoolWrap" class="relative">
                         <label class="block text-sm font-medium text-gray-700 mb-1">High School <span class="text-gray-400 font-normal">(search or pick)</span></label>
-                        <input id="schoolSearch" type="text" autocomplete="off" oninput="onSchoolSearch()" onfocus="onSchoolSearch()" placeholder="Start typing your school name..."
-                            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-1 focus:outline-none focus:border-indigo-500 valid-ring">
+                        <input id="schoolSearch" type="text" autocomplete="off" oninput="onSchoolSearch()" onfocus="onSchoolSearch()" placeholder="Start typing your school name..." class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-1 focus:outline-none focus:border-indigo-500 valid-ring">
                         <div id="schoolDropdown" class="combo-dropdown bg-white absolute left-0 right-0 z-20 hidden"></div>
-
-                        <input id="otherSchool" type="text" oninput="validateStage4()" placeholder="Type your school name"
-                            class="hidden w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:outline-none focus:border-indigo-500 valid-ring">
+                        <input id="otherSchool" type="text" oninput="validateStage4()" placeholder="Type your school name" class="hidden w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:outline-none focus:border-indigo-500 valid-ring">
                         <p class="text-xs text-gray-400 mt-1 mb-5">Can be updated anytime in account settings.</p>
                     </div>
                 </div>
-
                 <button id="createAccountBtn" onclick="createAccount()" disabled class="action-btn w-full py-3 rounded-lg font-semibold">Create Account</button>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================= -->
-    <!-- =====================  GUEST DONATION MODAL  ================= -->
-    <!-- ============================================================= -->
+    <!-- GUEST DONATION MODAL -->
     <div id="donationModal" class="modal-overlay">
         <div class="modal-card max-w-lg overflow-hidden">
             <div id="donationBody">
-                <!-- Top log-in banner -->
                 <div class="bg-indigo-50 border-b border-indigo-100 px-6 py-3 text-sm text-indigo-800 flex items-center justify-between">
-                    <span>Already have an account?
-                        <a href="#" onclick="donationToLogin(event)" class="font-semibold underline">Log In / Sign Up</a>
-                        to track your donation history.
-                    </span>
+                    <span>Already have an account? <a href="#" onclick="donationToLogin(event)" class="font-semibold underline">Log In / Sign Up</a> to track your donation history.</span>
                     <button onclick="closeDonationModal()" class="text-indigo-400 hover:text-indigo-700 text-lg ml-3"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-
                 <div class="p-6 max-h-[75vh] overflow-y-auto">
                     <h2 class="text-2xl font-bold text-gray-900 mb-1">Support a Student Club</h2>
                     <p id="donationClubLine" class="text-sm text-gray-500 mb-5">100% of your contribution helps high school students fund their initiatives.</p>
-
-                    <!-- Amount selector -->
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Choose an amount</label>
                     <div class="grid grid-cols-4 gap-2 mb-3">
                         <div class="amount-chip rounded-lg py-3 text-center font-semibold text-gray-700" onclick="selectAmount(10, this)">$10</div>
@@ -568,72 +703,34 @@
                         <div class="amount-chip rounded-lg py-3 text-center font-semibold text-gray-700" onclick="selectAmount(50, this)">$50</div>
                         <div class="amount-chip rounded-lg py-3 text-center font-semibold text-gray-700" onclick="selectAmount(100, this)">$100</div>
                     </div>
-                    <div class="relative mb-6">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
-                        <input id="customAmount" type="number" min="1" oninput="onCustomAmount()" placeholder="Custom amount"
-                            class="w-full border border-gray-300 rounded-lg pl-7 pr-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
-                    </div>
-
-                    <!-- Combined supporter box -->
+                    <div class="relative mb-6"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span><input id="customAmount" type="number" min="1" oninput="onCustomAmount()" placeholder="Custom amount" class="w-full border border-gray-300 rounded-lg pl-7 pr-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring"></div>
                     <div class="border border-gray-200 rounded-xl p-4 mb-6 bg-gray-50">
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Your name <span class="text-gray-400 font-normal">(Optional)</span></label>
-                        <input id="donorName" type="text" oninput="onDonorNameOrAnon()" placeholder="Leave blank to stay unnamed"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 bg-white focus:outline-none focus:border-indigo-500 valid-ring">
-
+                        <input id="donorName" type="text" oninput="onDonorNameOrAnon()" placeholder="Leave blank to stay unnamed" class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 bg-white focus:outline-none focus:border-indigo-500 valid-ring">
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Note to the club <span class="text-gray-400 font-normal">(Optional)</span></label>
-                        <textarea id="donorNote" rows="3" oninput="countWords()" placeholder="Add a message of encouragement..."
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-indigo-500 valid-ring resize-none"></textarea>
+                        <textarea id="donorNote" rows="3" oninput="countWords()" placeholder="Add a message of encouragement..." class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-indigo-500 valid-ring resize-none"></textarea>
                         <p class="text-xs text-gray-400 mt-1 mb-4">Word count: <span id="wordCount">0</span> / 200</p>
-
                         <div class="relative">
-                            <label class="flex items-start gap-2 cursor-pointer">
-                                <input id="anonCheck" type="checkbox" onchange="onDonorNameOrAnon()" class="mt-0.5 h-4 w-4 text-indigo-600 rounded border-gray-300">
-                                <span class="text-sm text-gray-600">Donate Anonymously <span class="text-gray-400">(Hide my name from public club supporter lists)</span></span>
-                            </label>
-                            <div id="anonPopup" class="anon-popup absolute left-0 right-0 mt-2 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg z-10">
-                                <i class="fa-solid fa-lock mr-1 text-emerald-400"></i>
-                                By checking this box, recipient clubs will only see "Anonymous" publicly, and your name will remain private.
-                            </div>
+                            <label class="flex items-start gap-2 cursor-pointer"><input id="anonCheck" type="checkbox" onchange="onDonorNameOrAnon()" class="mt-0.5 h-4 w-4 text-indigo-600 rounded border-gray-300"><span class="text-sm text-gray-600">Donate Anonymously <span class="text-gray-400">(Hide my name from public club supporter lists)</span></span></label>
+                            <div id="anonPopup" class="anon-popup absolute left-0 right-0 mt-2 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg z-10"><i class="fa-solid fa-lock mr-1 text-emerald-400"></i> By checking this box, recipient clubs will only see "Anonymous" publicly, and your name will remain private.</div>
                         </div>
                     </div>
-
-                    <!-- Payment info -->
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Payment information</label>
-                    <div class="relative mb-3">
-                        <input id="cardNumber" type="text" inputmode="numeric" oninput="formatCard()" placeholder="Card number"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 pr-12 focus:outline-none focus:border-indigo-500 valid-ring">
-                        <i class="fa-regular fa-credit-card absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    </div>
+                    <div class="relative mb-3"><input id="cardNumber" type="text" inputmode="numeric" oninput="formatCard()" placeholder="Card number" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 pr-12 focus:outline-none focus:border-indigo-500 valid-ring"><i class="fa-regular fa-credit-card absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i></div>
                     <div class="grid grid-cols-3 gap-3 mb-6">
-                        <input id="cardExp" type="text" oninput="formatExp()" placeholder="MM/YY" maxlength="5"
-                            class="border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
-                        <input id="cardCvv" type="text" inputmode="numeric" oninput="onPaymentInput()" placeholder="CVV" maxlength="4"
-                            class="border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
-                        <input id="cardZip" type="text" inputmode="numeric" oninput="onPaymentInput()" placeholder="Zip" maxlength="10"
-                            class="border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
+                        <input id="cardExp" type="text" oninput="formatExp()" placeholder="MM/YY" maxlength="5" class="border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
+                        <input id="cardCvv" type="text" inputmode="numeric" oninput="onPaymentInput()" placeholder="CVV" maxlength="4" class="border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
+                        <input id="cardZip" type="text" inputmode="numeric" oninput="onPaymentInput()" placeholder="Zip" maxlength="10" class="border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
                     </div>
-
-                    <button id="donateBtn" onclick="processDonation()" disabled class="action-btn w-full py-3 rounded-lg font-semibold text-base">
-                        Proceed with Donation
-                    </button>
+                    <button id="donateBtn" onclick="processDonation()" disabled class="action-btn w-full py-3 rounded-lg font-semibold text-base">Proceed with Donation</button>
                     <p class="text-center text-xs text-gray-400 mt-3"><i class="fa-solid fa-shield-halved mr-1"></i> This is a prototype — no real payment is processed.</p>
                 </div>
             </div>
-
-            <!-- Loading state -->
-            <div id="donationLoading" class="hidden py-20 flex-col items-center justify-center text-center px-6">
-                <div class="spinner mx-auto mb-6"></div>
-                <p class="text-gray-600 font-medium">Processing your donation...</p>
-            </div>
-
-            <!-- Thank you state -->
+            <div id="donationLoading" class="hidden py-20 flex-col items-center justify-center text-center px-6"><div class="spinner mx-auto mb-6"></div><p class="text-gray-600 font-medium">Processing your donation...</p></div>
             <div id="donationThankYou" class="hidden relative py-16 px-6 text-center overflow-hidden">
                 <div id="confettiContainer" class="absolute inset-0 pointer-events-none"></div>
                 <div class="relative z-10">
-                    <svg class="checkmark mx-auto mb-6" viewBox="0 0 52 52">
-                        <circle class="checkmark-circle" cx="26" cy="26" r="24" fill="none"/>
-                        <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-                    </svg>
+                    <svg class="checkmark mx-auto mb-6" viewBox="0 0 52 52"><circle class="checkmark-circle" cx="26" cy="26" r="24" fill="none"/><path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
                     <h2 class="text-2xl font-bold text-gray-900 mb-2">Thank You for Supporting High School Student Initiatives!</h2>
                     <p id="thankYouAmount" class="text-indigo-600 font-semibold mb-4"></p>
                     <p class="text-sm text-gray-500 max-w-sm mx-auto mb-8">Personalized thank-you messages from student club leaders will appear here upon full setup.</p>
@@ -643,43 +740,50 @@
         </div>
     </div>
 
-    <!-- ============================================================= -->
-    <!-- =====================  CLUB QUICK-VIEW MODAL  =============== -->
-    <!-- ============================================================= -->
+    <!-- CLUB QUICK-VIEW MODAL (enhanced) -->
     <div id="quickViewModal" class="modal-overlay">
-        <div class="modal-card max-w-lg">
-            <div class="p-6 sm:p-8">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div id="qvIcon" class="p-3 rounded-lg text-xl"></div>
-                        <div>
-                            <h2 id="qvName" class="text-xl font-bold text-gray-900"></h2>
-                            <p id="qvMeta" class="text-xs text-gray-500"></p>
+        <div class="modal-card max-w-2xl overflow-hidden">
+            <div class="max-h-[85vh] overflow-y-auto">
+                <div class="relative">
+                    <div id="qvBanner" class="h-32 bg-indigo-600"></div>
+                    <button onclick="closeQuickView()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 text-gray-600 hover:text-gray-900 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                    <div id="qvIcon" class="absolute -bottom-6 left-6 w-14 h-14 rounded-xl shadow-md flex items-center justify-center text-2xl bg-white"></div>
+                </div>
+                <div class="p-6 pt-9">
+                    <span id="qvPrivacyBadge" class="hidden text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 mb-2 inline-block"></span>
+                    <h2 id="qvName" class="text-2xl font-bold text-gray-900"></h2>
+                    <p id="qvMeta" class="text-xs text-gray-500 mb-1"></p>
+                    <p id="qvTagline" class="text-sm text-indigo-600 italic mb-4"></p>
+                    <div class="mb-5"><h3 class="text-sm font-semibold text-gray-700 mb-1"><i class="fa-solid fa-bullseye text-indigo-600 mr-1"></i> Mission</h3><p id="qvMission" class="text-sm text-gray-600"></p></div>
+                    <div class="mb-5"><h3 class="text-sm font-semibold text-gray-700 mb-2"><i class="fa-solid fa-images text-indigo-600 mr-1"></i> Activity Gallery</h3><div id="qvGallery" class="grid grid-cols-4 gap-2"></div></div>
+                    <div class="mb-5"><h3 class="text-sm font-semibold text-gray-700 mb-1"><i class="fa-regular fa-clock text-indigo-600 mr-1"></i> Meeting Schedule</h3><p id="qvMeeting" class="text-sm text-gray-600"></p></div>
+                    <div class="mb-6"><h3 class="text-sm font-semibold text-gray-700 mb-2"><i class="fa-solid fa-user-group text-indigo-600 mr-1"></i> Officer Contacts</h3><div id="qvLeaders" class="space-y-2"></div></div>
+                    <div class="flex gap-3 mb-6">
+                        <button id="qvJoinBtn" onclick="joinCurrentClub()" class="flex-1 bg-indigo-600 text-white py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition"><i class="fa-solid fa-user-plus mr-1"></i> Join Club</button>
+                        <button id="qvDonateBtn" onclick="donateCurrentClub()" class="flex-1 bg-emerald-500 text-white py-2.5 rounded-lg font-semibold hover:bg-emerald-600 transition"><i class="fa-solid fa-heart mr-1"></i> Donate to Club</button>
+                    </div>
+                    <div class="border-t border-gray-200 pt-5">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-sm font-semibold text-gray-700"><i class="fa-solid fa-star text-amber-400 mr-1"></i> Member Reviews</h3>
+                            <span id="qvAvgRating" class="text-xs text-gray-500"></span>
+                        </div>
+                        <div id="reviewList" class="space-y-3 mb-5"></div>
+                        <div id="reviewForm" class="hidden bg-gray-50 border border-gray-200 rounded-xl p-4">
+                            <p class="text-sm font-semibold text-gray-700 mb-2">Write a Review</p>
+                            <div class="star-input text-2xl text-amber-400 mb-2" id="reviewStars" onmouseleave="updateStarUI()">
+                                <i class="fa-regular fa-star" onmouseover="highlightStars(1)" onclick="setReviewStars(1)"></i>
+                                <i class="fa-regular fa-star" onmouseover="highlightStars(2)" onclick="setReviewStars(2)"></i>
+                                <i class="fa-regular fa-star" onmouseover="highlightStars(3)" onclick="setReviewStars(3)"></i>
+                                <i class="fa-regular fa-star" onmouseover="highlightStars(4)" onclick="setReviewStars(4)"></i>
+                                <i class="fa-regular fa-star" onmouseover="highlightStars(5)" onclick="setReviewStars(5)"></i>
+                            </div>
+                            <textarea id="reviewText" rows="2" oninput="validateReview()" placeholder="Share your experience with this club..." class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-3 bg-white focus:outline-none focus:border-indigo-500 valid-ring resize-none"></textarea>
+                            <button id="reviewSubmit" onclick="submitReview()" disabled class="action-btn px-5 py-2 rounded-lg font-semibold text-sm">Submit Review</button>
+                        </div>
+                        <div id="reviewLoginPrompt" class="hidden bg-indigo-50 border border-indigo-100 rounded-xl p-4 text-center text-sm text-indigo-800">
+                            <a href="#" onclick="quickViewToLogin(event)" class="font-semibold underline">Log in</a> to write a review for this club.
                         </div>
                     </div>
-                    <button onclick="closeQuickView()" class="text-gray-400 hover:text-gray-700 text-lg"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-
-                <div class="mb-4">
-                    <h3 class="text-sm font-semibold text-gray-700 mb-1"><i class="fa-solid fa-bullseye text-indigo-600 mr-1"></i> Mission</h3>
-                    <p id="qvMission" class="text-sm text-gray-600"></p>
-                </div>
-
-                <div class="mb-4">
-                    <h3 class="text-sm font-semibold text-gray-700 mb-1"><i class="fa-regular fa-clock text-indigo-600 mr-1"></i> Meeting Schedule</h3>
-                    <p id="qvMeeting" class="text-sm text-gray-600"></p>
-                </div>
-
-                <div class="mb-6">
-                    <h3 class="text-sm font-semibold text-gray-700 mb-2"><i class="fa-solid fa-user-group text-indigo-600 mr-1"></i> Leadership Contacts</h3>
-                    <div id="qvLeaders" class="space-y-2"></div>
-                </div>
-
-                <div class="flex gap-3">
-                    <button onclick="supportThisClub()" class="flex-1 bg-emerald-500 text-white py-2.5 rounded-lg font-semibold hover:bg-emerald-600 transition">
-                        <i class="fa-solid fa-heart mr-1"></i> Support This Club
-                    </button>
-                    <button onclick="closeQuickView()" class="px-5 bg-gray-100 text-gray-700 py-2.5 rounded-lg font-semibold hover:bg-gray-200 transition">Close</button>
                 </div>
             </div>
         </div>
@@ -688,11 +792,16 @@
     <!-- Toast notification -->
     <div id="toast"></div>
 
-    <!-- ============================================================= -->
-    <!-- ==========================  SCRIPTS  ========================= -->
-    <!-- ============================================================= -->
     <script>
-    /* ---------------- Toast helper ---------------- */
+    /* ---------------- Global state ---------------- */
+    let isLoggedIn = false;
+    let currentUser = { name: '', email: '' };
+    let ledClubs = [];
+    let joinedClubs = [];
+    let drafts = [];
+    let editingDraftIndex = null;
+
+    /* ---------------- Helpers ---------------- */
     let toastTimer;
     function showToast(msg) {
         const t = document.getElementById('toast');
@@ -701,22 +810,70 @@
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
     }
-
-    /* Enable/disable action buttons (global rule) */
     function setBtn(id, enabled) {
         const btn = document.getElementById(id);
         if (!btn) return;
         btn.disabled = !enabled;
         btn.classList.toggle('enabled', enabled);
     }
-
     function lockScroll(lock) { document.body.style.overflow = lock ? 'hidden' : ''; }
-
-    /* =====================================================
-       LOG IN MODAL (single screen)
-    ===================================================== */
     const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    function requireLogin(cb) { if (isLoggedIn) { cb(); } else { openLoginModal(); } }
 
+    /* =================== VIEW CONTROLLER =================== */
+    const VIEWS = ['home', 'start-club', 'my-clubs', 'settings'];
+    function showView(name) {
+        if (name !== 'home' && !isLoggedIn) { openLoginModal(); return; }
+        VIEWS.forEach(v => document.getElementById('view-' + v).classList.toggle('hidden', v !== name));
+        document.querySelectorAll('.nav-link').forEach(b => {
+            const on = b.dataset.nav === name;
+            b.classList.toggle('bg-indigo-50', on);
+            b.classList.toggle('text-indigo-600', on);
+            b.classList.toggle('text-gray-600', !on);
+        });
+        if (name === 'my-clubs') renderMyClubs();
+        if (name === 'start-club' && editingDraftIndex === null) resetWizard();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function goToSection(id) {
+        showView('home');
+        setTimeout(() => { if (id) { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth' }); } }, 60);
+    }
+
+    /* =================== AUTH STATE =================== */
+    function setLoggedIn(name, email) {
+        isLoggedIn = true;
+        currentUser = { name: name, email: email || (name.toLowerCase().replace(/\s+/g, '.') + '@example.com') };
+        const initials = name.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'ME';
+        document.getElementById('authArea').innerHTML = `
+            <button onclick="showView('start-club')" class="hidden sm:inline text-indigo-600 border border-indigo-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition"><i class="fa-solid fa-plus mr-1"></i> Start a Club</button>
+            <div class="flex items-center gap-2 cursor-pointer" onclick="openLogoutModal()" title="Account menu / log out">
+                <div class="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">${initials}</div>
+                <span class="hidden sm:inline text-sm font-semibold text-gray-800">${name}</span>
+                <i class="fa-solid fa-arrow-right-from-bracket text-gray-400"></i>
+            </div>`;
+        document.getElementById('loggedInNav').classList.remove('hidden');
+        document.getElementById('heroDonateBtn').innerHTML = '<i class="fa-solid fa-heart mr-2"></i>Donate';
+        document.getElementById('setDisplayName').value = name;
+        document.getElementById('setEmail').value = currentUser.email;
+        document.getElementById('settingsAvatar').textContent = initials;
+    }
+    function openLogoutModal() { document.getElementById('logoutModal').classList.add('open'); lockScroll(true); }
+    function closeLogoutModal() { document.getElementById('logoutModal').classList.remove('open'); lockScroll(false); }
+    function confirmLogout() {
+        closeLogoutModal();
+        isLoggedIn = false;
+        currentUser = { name: '', email: '' };
+        document.getElementById('loggedInNav').classList.add('hidden');
+        showView('home');
+        document.getElementById('heroDonateBtn').innerHTML = '<i class="fa-solid fa-heart mr-2"></i>Donate as Guest';
+        document.getElementById('authArea').innerHTML = `
+            <button onclick="openLoginModal()" class="text-indigo-600 border border-indigo-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition">Log In</button>
+            <button onclick="openSignupModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Sign Up</button>`;
+        showToast('You have been logged out.');
+    }
+
+    /* =================== LOG IN MODAL =================== */
     function openLoginModal() {
         document.getElementById('loginModal').classList.add('open');
         lockScroll(true);
@@ -724,10 +881,7 @@
         document.getElementById('loginPassword').value = '';
         setBtn('loginSubmit', false);
     }
-    function closeLoginModal() {
-        document.getElementById('loginModal').classList.remove('open');
-        lockScroll(false);
-    }
+    function closeLoginModal() { document.getElementById('loginModal').classList.remove('open'); lockScroll(false); }
     function validateLogin() {
         const email = document.getElementById('loginEmail').value.trim();
         const pw = document.getElementById('loginPassword').value;
@@ -738,27 +892,16 @@
         const email = document.getElementById('loginEmail').value.trim();
         const name = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         closeLoginModal();
-        setLoggedIn(name);
+        setLoggedIn(name, email);
         showToast('Welcome back, ' + name + '!');
     }
     function loginToSignup(e) { e.preventDefault(); closeLoginModal(); openSignupModal(); }
 
-    /* =====================================================
-       SIGN UP MODAL (multi-step wizard)
-    ===================================================== */
+    /* =================== SIGN UP MODAL =================== */
     let authState = { currentStage: 1, history: [], role: null, demoCode: '', selectedSchool: '' };
-
-    function openSignupModal() {
-        document.getElementById('signupModal').classList.add('open');
-        lockScroll(true);
-        resetSignup();
-    }
-    function closeSignupModal() {
-        document.getElementById('signupModal').classList.remove('open');
-        lockScroll(false);
-    }
+    function openSignupModal() { document.getElementById('signupModal').classList.add('open'); lockScroll(true); resetSignup(); }
+    function closeSignupModal() { document.getElementById('signupModal').classList.remove('open'); lockScroll(false); }
     function signupToLogin(e) { e.preventDefault(); closeSignupModal(); openLoginModal(); }
-
     function resetSignup() {
         authState = { currentStage: 1, history: [], role: null, demoCode: '', selectedSchool: '' };
         document.getElementById('signupEmail').value = '';
@@ -768,43 +911,25 @@
         document.getElementById('otherSchool').value = '';
         document.getElementById('otherSchool').classList.add('hidden');
         document.querySelectorAll('#signupModal .code-box').forEach(b => b.value = '');
-        document.querySelectorAll('.select-card').forEach(c => c.classList.remove('selected'));
-        setBtn('stage1Next', false);
-        setBtn('stage3Next', false);
-        setBtn('createAccountBtn', false);
+        document.querySelectorAll('#signupModal .select-card').forEach(c => c.classList.remove('selected'));
+        setBtn('stage1Next', false); setBtn('stage3Next', false); setBtn('createAccountBtn', false);
         showStage(1);
     }
-
     function showStage(n) {
-        for (let i = 1; i <= 4; i++) {
-            document.getElementById('authStage' + i).classList.toggle('active', i === n);
-        }
+        for (let i = 1; i <= 4; i++) document.getElementById('authStage' + i).classList.toggle('active', i === n);
         authState.currentStage = n;
         document.getElementById('authStageLabel').textContent = 'Step ' + n + ' of 4';
         document.getElementById('authBackBtn').classList.toggle('invisible', authState.history.length === 0);
     }
-    function goToStage(n) {
-        authState.history.push(authState.currentStage);
-        showStage(n);
-        if (n === 2) prepareVerification();
-        if (n === 4) prepareProfile();
-    }
-    function authBack() {
-        if (authState.history.length === 0) return;
-        showStage(authState.history.pop());
-    }
-
-    /* Stage 1 validation */
+    function goToStage(n) { authState.history.push(authState.currentStage); showStage(n); if (n === 2) prepareVerification(); if (n === 4) prepareProfile(); }
+    function authBack() { if (authState.history.length === 0) return; showStage(authState.history.pop()); }
     function validateStage1() {
         const email = document.getElementById('signupEmail').value.trim();
         const pw = document.getElementById('signupPassword').value;
         const emailOk = EMAIL_RE.test(email);
-        document.getElementById('emailError').textContent =
-            (email.length > 0 && !emailOk) ? 'Please enter a valid email (user@domain.com).' : '';
+        document.getElementById('emailError').textContent = (email.length > 0 && !emailOk) ? 'Please enter a valid email (user@domain.com).' : '';
         setBtn('stage1Next', emailOk && pw.length >= 6);
     }
-
-    /* Stage 2: verification code */
     function genCode() { let c = ''; for (let i = 0; i < 6; i++) c += Math.floor(Math.random() * 10); return c; }
     function prepareVerification() {
         authState.demoCode = genCode();
@@ -820,31 +945,12 @@
             if (this.value && idx < boxes.length - 1) boxes[idx + 1].focus();
             if (Array.from(boxes).every(b => b.value.length === 1)) setTimeout(() => goToStage(3), 250);
         });
-        box.addEventListener('keydown', function (e) {
-            if (e.key === 'Backspace' && !this.value && idx > 0) boxes[idx - 1].focus();
-        });
+        box.addEventListener('keydown', function (e) { if (e.key === 'Backspace' && !this.value && idx > 0) boxes[idx - 1].focus(); });
     });
-    function resendCode(e) {
-        e.preventDefault();
-        authState.demoCode = genCode();
-        document.getElementById('demoCode').textContent = authState.demoCode;
-        showToast('A new 6-digit confirmation code was generated.');
-    }
+    function resendCode(e) { e.preventDefault(); authState.demoCode = genCode(); document.getElementById('demoCode').textContent = authState.demoCode; showToast('A new 6-digit confirmation code was generated.'); }
+    function selectRole(role) { authState.role = role; document.querySelectorAll('#signupModal .select-card').forEach(c => c.classList.toggle('selected', c.dataset.role === role)); setBtn('stage3Next', true); }
 
-    /* Stage 3: role selection */
-    function selectRole(role) {
-        authState.role = role;
-        document.querySelectorAll('.select-card').forEach(c => c.classList.toggle('selected', c.dataset.role === role));
-        setBtn('stage3Next', true);
-    }
-
-    /* Stage 4: profile + searchable school combobox */
-    const US_STATES = {
-        'CA': 'California', 'NY': 'New York', 'TX': 'Texas', 'FL': 'Florida', 'IL': 'Illinois',
-        'WA': 'Washington', 'MA': 'Massachusetts', 'GA': 'Georgia', 'PA': 'Pennsylvania',
-        'OH': 'Ohio', 'NC': 'North Carolina', 'MI': 'Michigan', 'NJ': 'New Jersey',
-        'VA': 'Virginia', 'AZ': 'Arizona', 'CO': 'Colorado'
-    };
+    const US_STATES = { 'CA': 'California', 'NY': 'New York', 'TX': 'Texas', 'FL': 'Florida', 'IL': 'Illinois', 'WA': 'Washington', 'MA': 'Massachusetts', 'GA': 'Georgia', 'PA': 'Pennsylvania', 'OH': 'Ohio', 'NC': 'North Carolina', 'MI': 'Michigan', 'NJ': 'New Jersey', 'VA': 'Virginia', 'AZ': 'Arizona', 'CO': 'Colorado' };
     const SCHOOLS_BY_STATE = {
         'CA': ['Lincoln High School (Public)', 'Harvard-Westlake School (Private)', 'Gateway Charter Academy (Charter)', 'Palo Alto High School (Public)', 'Lowell High School (Public)', 'Crossroads School (Private)', 'Aspire Charter HS (Charter)', 'Beverly Hills High School (Public)'],
         'NY': ['Stuyvesant High School (Public)', 'Trinity School (Private)', 'Success Academy HS (Charter)', 'Bronx Science (Public)', 'Brooklyn Technical HS (Public)', 'Horace Mann School (Private)', 'KIPP NYC College Prep (Charter)', 'Regis High School (Private)'],
@@ -864,7 +970,6 @@
         'CO': ['Cherry Creek HS (Public)', 'Kent Denver School (Private)', 'DSST Charter (Charter)', 'Fairview High School (Public)', 'Colorado Academy (Private)', 'Boulder High School (Public)', 'Denver School of the Arts (Public)', 'Ricardo Flores Magón (Charter)']
     };
     const GENERIC_SCHOOLS = ['Central High School (Public)', 'Northside High School (Public)', 'St. Mary Academy (Private)', 'Riverside Charter HS (Charter)', 'Westfield High School (Public)', 'Oakwood Preparatory (Private)'];
-
     function prepareProfile() {
         const isStudent = authState.role === 'student';
         document.getElementById('studentFields').classList.toggle('hidden', !isStudent);
@@ -875,157 +980,67 @@
     function onCountryChange() {
         const isUS = document.getElementById('countrySelect').value === 'US';
         document.getElementById('stateWrap').style.display = isUS ? 'block' : 'none';
-        if (isUS) {
-            const sel = document.getElementById('stateSelect');
-            sel.innerHTML = '<option value="">— Choose a state —</option>';
-            Object.keys(US_STATES).forEach(code => sel.innerHTML += `<option value="${code}">${US_STATES[code]}</option>`);
-        }
-        resetSchoolPicker();
-        validateStage4();
+        if (isUS) { const sel = document.getElementById('stateSelect'); sel.innerHTML = '<option value="">— Choose a state —</option>'; Object.keys(US_STATES).forEach(code => sel.innerHTML += `<option value="${code}">${US_STATES[code]}</option>`); }
+        resetSchoolPicker(); validateStage4();
     }
     function onStateChange() { resetSchoolPicker(); validateStage4(); }
-
-    function resetSchoolPicker() {
-        authState.selectedSchool = '';
-        document.getElementById('schoolSearch').value = '';
-        document.getElementById('otherSchool').value = '';
-        document.getElementById('otherSchool').classList.add('hidden');
-        document.getElementById('schoolDropdown').classList.add('hidden');
-    }
-    function currentSchoolList() {
-        const state = document.getElementById('stateSelect').value;
-        return (state && SCHOOLS_BY_STATE[state]) ? SCHOOLS_BY_STATE[state] : GENERIC_SCHOOLS;
-    }
+    function resetSchoolPicker() { authState.selectedSchool = ''; document.getElementById('schoolSearch').value = ''; document.getElementById('otherSchool').value = ''; document.getElementById('otherSchool').classList.add('hidden'); document.getElementById('schoolDropdown').classList.add('hidden'); }
+    function currentSchoolList() { const state = document.getElementById('stateSelect').value; return (state && SCHOOLS_BY_STATE[state]) ? SCHOOLS_BY_STATE[state] : GENERIC_SCHOOLS; }
     function onSchoolSearch() {
         const q = document.getElementById('schoolSearch').value.trim().toLowerCase();
-        authState.selectedSchool = ''; // typing invalidates a prior pick until re-selected
+        authState.selectedSchool = '';
         const list = currentSchoolList().filter(s => s.toLowerCase().includes(q));
         const dd = document.getElementById('schoolDropdown');
         let html = list.map(s => `<div class="combo-option" onclick="pickSchool('${s.replace(/'/g, "\\'")}')">${s}</div>`).join('');
         html += `<div class="combo-option font-semibold text-indigo-600" onclick="pickOtherSchool()"><i class="fa-solid fa-plus mr-1"></i> Other / Add My School</div>`;
-        dd.innerHTML = html;
-        dd.classList.remove('hidden');
-        validateStage4();
+        dd.innerHTML = html; dd.classList.remove('hidden'); validateStage4();
     }
-    function pickSchool(name) {
-        authState.selectedSchool = name;
-        document.getElementById('schoolSearch').value = name;
-        document.getElementById('schoolDropdown').classList.add('hidden');
-        document.getElementById('otherSchool').classList.add('hidden');
-        document.getElementById('otherSchool').value = '';
-        validateStage4();
-    }
-    function pickOtherSchool() {
-        authState.selectedSchool = '';
-        document.getElementById('schoolSearch').value = '';
-        document.getElementById('schoolDropdown').classList.add('hidden');
-        const other = document.getElementById('otherSchool');
-        other.classList.remove('hidden');
-        other.focus();
-        validateStage4();
-    }
-    // Close school dropdown when clicking elsewhere
-    document.addEventListener('click', function (e) {
-        const wrap = document.getElementById('schoolWrap');
-        if (wrap && !wrap.contains(e.target)) document.getElementById('schoolDropdown').classList.add('hidden');
-    });
-
+    function pickSchool(name) { authState.selectedSchool = name; document.getElementById('schoolSearch').value = name; document.getElementById('schoolDropdown').classList.add('hidden'); document.getElementById('otherSchool').classList.add('hidden'); document.getElementById('otherSchool').value = ''; validateStage4(); }
+    function pickOtherSchool() { authState.selectedSchool = ''; document.getElementById('schoolSearch').value = ''; document.getElementById('schoolDropdown').classList.add('hidden'); const other = document.getElementById('otherSchool'); other.classList.remove('hidden'); other.focus(); validateStage4(); }
+    document.addEventListener('click', function (e) { const wrap = document.getElementById('schoolWrap'); if (wrap && !wrap.contains(e.target)) document.getElementById('schoolDropdown').classList.add('hidden'); });
     function validateStage4() {
         const name = document.getElementById('displayName').value.trim();
         let ok = name.length > 0;
-        if (authState.role === 'student') {
-            if (document.getElementById('countrySelect').value === 'US') {
-                const state = document.getElementById('stateSelect').value;
-                const otherVisible = !document.getElementById('otherSchool').classList.contains('hidden');
-                const schoolOk = otherVisible
-                    ? document.getElementById('otherSchool').value.trim().length > 0
-                    : authState.selectedSchool.length > 0;
-                ok = ok && state.length > 0 && schoolOk;
-            }
+        if (authState.role === 'student' && document.getElementById('countrySelect').value === 'US') {
+            const state = document.getElementById('stateSelect').value;
+            const otherVisible = !document.getElementById('otherSchool').classList.contains('hidden');
+            const schoolOk = otherVisible ? document.getElementById('otherSchool').value.trim().length > 0 : authState.selectedSchool.length > 0;
+            ok = ok && state.length > 0 && schoolOk;
         }
         setBtn('createAccountBtn', ok);
     }
-
     function createAccount() {
         const name = document.getElementById('displayName').value.trim() || 'Member';
+        const email = document.getElementById('signupEmail').value.trim();
         closeSignupModal();
-        setLoggedIn(name);
+        setLoggedIn(name, email);
         showToast('Welcome to Student Club Hub, ' + name + '! 🎉');
     }
 
-    /* Shared logged-in header state */
-    function setLoggedIn(name) {
-        const initials = name.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'ME';
-        document.getElementById('authArea').innerHTML = `
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">${initials}</div>
-                <span class="hidden sm:inline text-sm font-semibold text-gray-800">${name}</span>
-                <button onclick="logOut()" class="text-gray-400 hover:text-gray-700 text-sm" title="Log out"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
-            </div>`;
-    }
-    function logOut() {
-        document.getElementById('authArea').innerHTML = `
-            <button onclick="openLoginModal()" class="text-indigo-600 border border-indigo-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition">Log In</button>
-            <button onclick="openSignupModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Sign Up</button>`;
-        showToast('You have been logged out.');
-    }
+    /* =================== DIRECTORY =================== */
+    const CATEGORY_STYLE = {
+        'STEM & Tech': { icon: 'fa-microchip', bg: 'bg-blue-100', text: 'text-blue-600' },
+        'Business & Entrepreneurship': { icon: 'fa-chart-line', bg: 'bg-amber-100', text: 'text-amber-600' },
+        'Arts, Media & Design': { icon: 'fa-palette', bg: 'bg-pink-100', text: 'text-pink-600' },
+        'Culture & Language': { icon: 'fa-language', bg: 'bg-indigo-100', text: 'text-indigo-600' },
+        'Volunteering & Community Service': { icon: 'fa-hand-holding-heart', bg: 'bg-emerald-100', text: 'text-emerald-600' },
+        'Humanities & Debate': { icon: 'fa-gavel', bg: 'bg-purple-100', text: 'text-purple-600' },
+        'Health & Medicine': { icon: 'fa-heart-pulse', bg: 'bg-red-100', text: 'text-red-600' },
+        'Hobbies & Niche Interests': { icon: 'fa-puzzle-piece', bg: 'bg-teal-100', text: 'text-teal-600' }
+    };
+    function styleForCategory(cat) { return CATEGORY_STYLE[cat] || { icon: 'fa-users', bg: 'bg-gray-100', text: 'text-gray-600' }; }
 
-    /* =====================================================
-       DIRECTORY: club data, rendering, filtering, quick view
-    ===================================================== */
     const CLUBS = [
-        {
-            name: 'Robotics & AI Society', category: 'STEM & Tech', tags: ['STEM', 'Robotics'],
-            school: 'West High School', icon: 'fa-microchip', bg: 'bg-blue-100', text: 'text-blue-600',
-            desc: 'Dedicated to building autonomous robots and competing in national STEM challenges.',
-            meeting: 'Tuesdays @ 3:30 PM, Engineering Lab (Rm 204)',
-            mission: 'To give every student hands-on experience with robotics, coding, and AI by building competition robots and mentoring middle-school teams.',
-            leaders: [{ n: 'Maya A.', r: 'President', c: 'maya.a@wesths.edu' }, { n: 'Leo T.', r: 'Lead Engineer', c: 'leo.t@wesths.edu' }]
-        },
-        {
-            name: 'Eco-Action Alliance', category: 'Volunteering & Community Service', tags: ['Volunteering', 'EcoFriendly'],
-            school: 'Global Chapter', icon: 'fa-leaf', bg: 'bg-emerald-100', text: 'text-emerald-600',
-            desc: 'Organizing beach cleanups, recycling drives, and community sustainability workshops.',
-            meeting: 'Thursdays @ 4:00 PM, Room 118 & monthly field events',
-            mission: 'To empower students to lead local environmental action — from cleanups to school-wide recycling programs — and build lifelong sustainability habits.',
-            leaders: [{ n: 'Priya S.', r: 'Founder', c: 'priya.s@ecoaction.org' }, { n: 'Noah K.', r: 'Events Coordinator', c: 'noah.k@ecoaction.org' }]
-        },
-        {
-            name: 'Young Entrepreneurs Club', category: 'Business & Entrepreneurship', tags: ['Business'],
-            school: 'Central High', icon: 'fa-chart-line', bg: 'bg-amber-100', text: 'text-amber-600',
-            desc: 'Helping high school students turn business ideas into real-world startups and pitches.',
-            meeting: 'Fridays @ 3:00 PM, Business Wing (Rm 301)',
-            mission: 'To teach entrepreneurship through real ventures — students build products, pitch to local mentors, and run a spring startup showcase.',
-            leaders: [{ n: 'Daniel R.', r: 'President', c: 'daniel.r@centralhigh.edu' }, { n: 'Sofia M.', r: 'Treasurer', c: 'sofia.m@centralhigh.edu' }]
-        },
-        {
-            name: 'Debate & Model UN', category: 'Humanities & Debate', tags: ['Debate'],
-            school: 'Lincoln High School', icon: 'fa-gavel', bg: 'bg-purple-100', text: 'text-purple-600',
-            desc: 'Competitive debate, public speaking, and Model United Nations delegations.',
-            meeting: 'Mondays & Wednesdays @ 3:45 PM, Library Forum',
-            mission: 'To sharpen students\' research, argumentation, and public-speaking skills while competing at regional debate and Model UN conferences.',
-            leaders: [{ n: 'Aisha B.', r: 'Captain', c: 'aisha.b@lincolnhs.edu' }, { n: 'Marcus W.', r: 'Secretary', c: 'marcus.w@lincolnhs.edu' }]
-        },
-        {
-            name: 'Film & Media Collective', category: 'Arts, Media & Design', tags: ['Arts'],
-            school: 'Palo Alto High', icon: 'fa-clapperboard', bg: 'bg-pink-100', text: 'text-pink-600',
-            desc: 'Producing short films, documentaries, and the school\'s digital news channel.',
-            meeting: 'Wednesdays @ 4:00 PM, Media Studio',
-            mission: 'To give student storytellers the gear, skills, and platform to produce films and run the school\'s student-led news channel.',
-            leaders: [{ n: 'Ivy C.', r: 'Director', c: 'ivy.c@paly.edu' }, { n: 'Ethan L.', r: 'Editor', c: 'ethan.l@paly.edu' }]
-        },
-        {
-            name: 'HOSA Future Health Pros', category: 'Health & Medicine', tags: ['Health', 'Volunteering'],
-            school: 'Miami Palmetto Senior High', icon: 'fa-heart-pulse', bg: 'bg-red-100', text: 'text-red-600',
-            desc: 'Exploring healthcare careers, first-aid training, and community health drives.',
-            meeting: 'Tuesdays @ 3:30 PM, Science Wing (Rm 210)',
-            mission: 'To prepare future healthcare leaders through CPR/first-aid certification, hospital volunteering, and HOSA competitive events.',
-            leaders: [{ n: 'Camila P.', r: 'President', c: 'camila.p@palmettohs.edu' }, { n: 'Jordan H.', r: 'Outreach Lead', c: 'jordan.h@palmettohs.edu' }]
-        }
+        { name: 'Robotics & AI Society', category: 'STEM & Tech', tags: ['STEM', 'Robotics'], school: 'West High School', icon: 'fa-microchip', bg: 'bg-blue-100', text: 'text-blue-600', tagline: 'Build. Code. Compete.', desc: 'Dedicated to building autonomous robots and competing in national STEM challenges.', meeting: 'Tuesdays @ 3:30 PM, Engineering Lab (Rm 204)', mission: 'To give every student hands-on experience with robotics, coding, and AI by building competition robots and mentoring middle-school teams.', privacy: 'Public (Open Join)', gallery: [], leaders: [{ n: 'Maya A.', r: 'President', c: 'maya.a@wesths.edu' }, { n: 'Leo T.', r: 'Lead Engineer', c: 'leo.t@wesths.edu' }] },
+        { name: 'Eco-Action Alliance', category: 'Volunteering & Community Service', tags: ['Volunteering', 'EcoFriendly'], school: 'Global Chapter', icon: 'fa-leaf', bg: 'bg-emerald-100', text: 'text-emerald-600', tagline: 'Act local, impact global.', desc: 'Organizing beach cleanups, recycling drives, and community sustainability workshops.', meeting: 'Thursdays @ 4:00 PM, Room 118 & monthly field events', mission: 'To empower students to lead local environmental action — from cleanups to school-wide recycling programs — and build lifelong sustainability habits.', privacy: 'Cross-School Alliance (Multi-School)', gallery: [], leaders: [{ n: 'Priya S.', r: 'Founder', c: 'priya.s@ecoaction.org' }, { n: 'Noah K.', r: 'Events Coordinator', c: 'noah.k@ecoaction.org' }] },
+        { name: 'Young Entrepreneurs Club', category: 'Business & Entrepreneurship', tags: ['Business'], school: 'Central High', icon: 'fa-chart-line', bg: 'bg-amber-100', text: 'text-amber-600', tagline: 'Ideas into ventures.', desc: 'Helping high school students turn business ideas into real-world startups and pitches.', meeting: 'Fridays @ 3:00 PM, Business Wing (Rm 301)', mission: 'To teach entrepreneurship through real ventures — students build products, pitch to local mentors, and run a spring startup showcase.', privacy: 'Public (Open Join)', gallery: [], leaders: [{ n: 'Daniel R.', r: 'President', c: 'daniel.r@centralhigh.edu' }, { n: 'Sofia M.', r: 'Treasurer', c: 'sofia.m@centralhigh.edu' }] },
+        { name: 'Debate & Model UN', category: 'Humanities & Debate', tags: ['Debate'], school: 'Lincoln High School', icon: 'fa-gavel', bg: 'bg-purple-100', text: 'text-purple-600', tagline: 'Speak. Persuade. Lead.', desc: 'Competitive debate, public speaking, and Model United Nations delegations.', meeting: 'Mondays & Wednesdays @ 3:45 PM, Library Forum', mission: "To sharpen students' research, argumentation, and public-speaking skills while competing at regional debate and Model UN conferences.", privacy: 'Private (Application Required)', gallery: [], leaders: [{ n: 'Aisha B.', r: 'Captain', c: 'aisha.b@lincolnhs.edu' }, { n: 'Marcus W.', r: 'Secretary', c: 'marcus.w@lincolnhs.edu' }] },
+        { name: 'Film & Media Collective', category: 'Arts, Media & Design', tags: ['Arts'], school: 'Palo Alto High', icon: 'fa-clapperboard', bg: 'bg-pink-100', text: 'text-pink-600', tagline: 'Tell stories that matter.', desc: "Producing short films, documentaries, and the school's digital news channel.", meeting: 'Wednesdays @ 4:00 PM, Media Studio', mission: "To give student storytellers the gear, skills, and platform to produce films and run the school's student-led news channel.", privacy: 'Public (Open Join)', gallery: [], leaders: [{ n: 'Ivy C.', r: 'Director', c: 'ivy.c@paly.edu' }, { n: 'Ethan L.', r: 'Editor', c: 'ethan.l@paly.edu' }] },
+        { name: 'HOSA Future Health Pros', category: 'Health & Medicine', tags: ['Health', 'Volunteering'], school: 'Miami Palmetto Senior High', icon: 'fa-heart-pulse', bg: 'bg-red-100', text: 'text-red-600', tagline: 'Care. Learn. Serve.', desc: 'Exploring healthcare careers, first-aid training, and community health drives.', meeting: 'Tuesdays @ 3:30 PM, Science Wing (Rm 210)', mission: 'To prepare future healthcare leaders through CPR/first-aid certification, hospital volunteering, and HOSA competitive events.', privacy: 'Public (Open Join)', gallery: [], leaders: [{ n: 'Camila P.', r: 'President', c: 'camila.p@palmettohs.edu' }, { n: 'Jordan H.', r: 'Outreach Lead', c: 'jordan.h@palmettohs.edu' }] }
     ];
 
     let activeTags = new Set();
-    let currentClubIndex = null;
+    let currentClub = null;
 
     function renderClubs(list) {
         const grid = document.getElementById('clubGrid');
@@ -1035,10 +1050,7 @@
             <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col">
                 <div class="flex items-center space-x-3 mb-4">
                     <div class="${club.bg} ${club.text} p-3 rounded-lg font-bold"><i class="fa-solid ${club.icon} text-xl"></i></div>
-                    <div>
-                        <h3 class="font-bold text-gray-900">${club.name}</h3>
-                        <p class="text-xs text-gray-500">${club.category} • ${club.school}</p>
-                    </div>
+                    <div><h3 class="font-bold text-gray-900">${club.name}</h3><p class="text-xs text-gray-500">${club.category} • ${club.school}</p></div>
                 </div>
                 <p class="text-sm text-gray-600 mb-4 flex-1">${club.desc}</p>
                 <div class="text-xs text-gray-500 mb-4"><i class="fa-regular fa-clock mr-1"></i> ${club.meeting.split(',')[0]}</div>
@@ -1050,73 +1062,294 @@
         }).join('');
         document.getElementById('noResults').classList.toggle('hidden', list.length > 0);
     }
-
     function applyFilters() {
         const q = document.getElementById('searchInput').value.trim().toLowerCase();
         const cat = document.getElementById('categorySelect').value;
         const filtered = CLUBS.filter(club => {
-            const matchesSearch = !q ||
-                club.name.toLowerCase().includes(q) ||
-                club.desc.toLowerCase().includes(q) ||
-                club.school.toLowerCase().includes(q) ||
-                club.tags.join(' ').toLowerCase().includes(q);
+            const matchesSearch = !q || club.name.toLowerCase().includes(q) || club.desc.toLowerCase().includes(q) || club.school.toLowerCase().includes(q) || (club.tags || []).join(' ').toLowerCase().includes(q);
             const matchesCat = cat === 'All Categories' || club.category === cat;
-            const matchesTags = activeTags.size === 0 || club.tags.some(t => activeTags.has(t));
+            const matchesTags = activeTags.size === 0 || (club.tags || []).some(t => activeTags.has(t));
             return matchesSearch && matchesCat && matchesTags;
         });
         renderClubs(filtered);
     }
+    function toggleTag(el) { const tag = el.dataset.tag; if (activeTags.has(tag)) { activeTags.delete(tag); el.classList.remove('active'); } else { activeTags.add(tag); el.classList.add('active'); } applyFilters(); }
 
-    function toggleTag(el) {
-        const tag = el.dataset.tag;
-        if (activeTags.has(tag)) { activeTags.delete(tag); el.classList.remove('active'); }
-        else { activeTags.add(tag); el.classList.add('active'); }
-        applyFilters();
-    }
-
-    /* Quick View */
-    function openQuickView(i) {
-        currentClubIndex = i;
-        const c = CLUBS[i];
-        document.getElementById('qvIcon').className = `${c.bg} ${c.text} p-3 rounded-lg text-xl`;
-        document.getElementById('qvIcon').innerHTML = `<i class="fa-solid ${c.icon}"></i>`;
-        document.getElementById('qvName').textContent = c.name;
-        document.getElementById('qvMeta').textContent = `${c.category} • ${c.school}`;
-        document.getElementById('qvMission').textContent = c.mission;
-        document.getElementById('qvMeeting').textContent = c.meeting;
-        document.getElementById('qvLeaders').innerHTML = c.leaders.map(l => `
+    /* =================== QUICK VIEW + REVIEWS =================== */
+    const reviewsByClub = {
+        'Robotics & AI Society': [{ name: 'Alex R.', rating: 5, text: 'Amazing robotics club! Great mentors and workshops.' }],
+        'Eco-Action Alliance': [{ name: 'Sam T.', rating: 4, text: 'Meaningful projects and a genuinely welcoming team.' }]
+    };
+    let reviewRating = 0;
+    function openQuickView(i) { renderQuickView(CLUBS[i], false); }
+    function renderQuickView(club, isPreview) {
+        currentClub = club;
+        const st = styleForCategory(club.category);
+        document.getElementById('qvBanner').style.background = club.banner ? `center/cover url(${club.banner})` : '';
+        document.getElementById('qvBanner').className = 'h-32 ' + (club.banner ? '' : (club.bg || 'bg-indigo-100').replace('100', '600'));
+        document.getElementById('qvIcon').className = `absolute -bottom-6 left-6 w-14 h-14 rounded-xl shadow-md flex items-center justify-center text-2xl bg-white ${club.text || st.text}`;
+        document.getElementById('qvIcon').innerHTML = `<i class="fa-solid ${club.icon || st.icon}"></i>`;
+        document.getElementById('qvName').textContent = club.name || 'Untitled Club';
+        document.getElementById('qvMeta').textContent = `${club.category || 'Uncategorized'} • ${club.school || 'School TBD'}`;
+        document.getElementById('qvTagline').textContent = club.tagline || '';
+        document.getElementById('qvMission').textContent = club.mission || club.desc || 'No description provided yet.';
+        document.getElementById('qvMeeting').textContent = club.meeting || 'Meeting schedule to be announced.';
+        const badge = document.getElementById('qvPrivacyBadge');
+        if (club.privacy) { badge.textContent = club.privacy; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
+        const gal = document.getElementById('qvGallery');
+        if (club.gallery && club.gallery.length) { gal.innerHTML = club.gallery.map(src => `<img src="${src}" class="w-full h-16 object-cover rounded-lg">`).join(''); }
+        else { gal.innerHTML = Array.from({ length: 4 }).map(() => `<div class="w-full h-16 rounded-lg bg-gray-100 flex items-center justify-center text-gray-300"><i class="fa-solid fa-image"></i></div>`).join(''); }
+        document.getElementById('qvLeaders').innerHTML = (club.leaders && club.leaders.length ? club.leaders : [{ n: 'TBD', r: 'Officer', c: club.officerEmail || 'contact@club.org' }]).map(l => `
             <div class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
-                <div>
-                    <p class="text-sm font-medium text-gray-800">${l.n}</p>
-                    <p class="text-xs text-gray-500">${l.r}</p>
-                </div>
+                <div><p class="text-sm font-medium text-gray-800">${l.n}</p><p class="text-xs text-gray-500">${l.r}</p></div>
                 <a href="mailto:${l.c}" class="text-xs text-indigo-600 font-semibold hover:underline"><i class="fa-regular fa-envelope mr-1"></i>${l.c}</a>
             </div>`).join('');
+        document.getElementById('qvJoinBtn').disabled = isPreview;
+        document.getElementById('qvDonateBtn').disabled = isPreview;
+        document.getElementById('qvJoinBtn').classList.toggle('opacity-50', isPreview);
+        document.getElementById('qvDonateBtn').classList.toggle('opacity-50', isPreview);
+        renderReviews(club.name, isPreview);
         document.getElementById('quickViewModal').classList.add('open');
         lockScroll(true);
     }
-    function closeQuickView() {
-        document.getElementById('quickViewModal').classList.remove('open');
-        lockScroll(false);
-    }
-    function supportThisClub() {
-        const i = currentClubIndex;
-        closeQuickView();
-        openDonationModal(i);
-    }
-
-    /* =====================================================
-       GUEST DONATION MODAL
-    ===================================================== */
-    let donationState = { amount: 0 };
-
-    function openDonationModal(clubIndex) {
-        const line = document.getElementById('donationClubLine');
-        if (typeof clubIndex === 'number' && CLUBS[clubIndex]) {
-            line.innerHTML = `You're supporting <span class="font-semibold text-indigo-600">${CLUBS[clubIndex].name}</span>. 100% of your contribution goes to their initiatives.`;
+    function renderReviews(clubName, isPreview) {
+        const list = reviewsByClub[clubName] || [];
+        const container = document.getElementById('reviewList');
+        if (list.length) {
+            container.innerHTML = list.map(r => `
+                <div class="bg-white border border-gray-200 rounded-lg p-3">
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-sm font-semibold text-gray-800">${r.name}</p>
+                        <div class="text-amber-400 text-xs">${starString(r.rating)}</div>
+                    </div>
+                    <p class="text-sm text-gray-600">${r.text}</p>
+                </div>`).join('');
+            const avg = (list.reduce((s, r) => s + r.rating, 0) / list.length).toFixed(1);
+            document.getElementById('qvAvgRating').textContent = `${avg} ★ (${list.length} review${list.length > 1 ? 's' : ''})`;
         } else {
-            line.textContent = '100% of your contribution helps high school students fund their initiatives.';
+            container.innerHTML = `<p class="text-sm text-gray-400">No reviews yet — be the first to leave one!</p>`;
+            document.getElementById('qvAvgRating').textContent = '';
         }
+        const form = document.getElementById('reviewForm');
+        const prompt = document.getElementById('reviewLoginPrompt');
+        if (isPreview) { form.classList.add('hidden'); prompt.classList.add('hidden'); }
+        else if (isLoggedIn) { form.classList.remove('hidden'); prompt.classList.add('hidden'); reviewRating = 0; updateStarUI(); document.getElementById('reviewText').value = ''; validateReview(); }
+        else { form.classList.add('hidden'); prompt.classList.remove('hidden'); }
+    }
+    function starString(n) { let s = ''; for (let i = 1; i <= 5; i++) s += (i <= n ? '★' : '☆'); return s; }
+    function highlightStars(n) { document.querySelectorAll('#reviewStars i').forEach((s, i) => s.className = (i < n ? 'fa-solid' : 'fa-regular') + ' fa-star'); }
+    function updateStarUI() { highlightStars(reviewRating); }
+    function setReviewStars(n) { reviewRating = n; updateStarUI(); validateReview(); }
+    function validateReview() { setBtn('reviewSubmit', reviewRating > 0 && document.getElementById('reviewText').value.trim().length > 0); }
+    function submitReview() {
+        if (document.getElementById('reviewSubmit').disabled) return;
+        const text = document.getElementById('reviewText').value.trim();
+        const key = currentClub.name;
+        if (!reviewsByClub[key]) reviewsByClub[key] = [];
+        reviewsByClub[key].unshift({ name: currentUser.name || 'You', rating: reviewRating, text: text });
+        renderReviews(key, false);
+        showToast('Thanks! Your review has been posted.');
+    }
+    function closeQuickView() { document.getElementById('quickViewModal').classList.remove('open'); lockScroll(false); }
+    function joinCurrentClub() {
+        if (!isLoggedIn) { closeQuickView(); openLoginModal(); return; }
+        if (!joinedClubs.includes(currentClub)) joinedClubs.push(currentClub);
+        showToast('You joined ' + currentClub.name + '! 🎉');
+    }
+    function donateCurrentClub() { const c = currentClub; closeQuickView(); openDonationModal(c); }
+    function quickViewToLogin(e) { e.preventDefault(); closeQuickView(); openLoginModal(); }
+
+    /* =================== START A CLUB WIZARD =================== */
+    let wizardPrivacy = '';
+    let wizardBanner = '';
+    let wizardGallery = [];
+    function resetWizard() {
+        editingDraftIndex = null;
+        document.getElementById('wizardHeading').textContent = 'Start a Club';
+        ['clubTitle', 'clubTagline', 'clubSchool', 'clubMission', 'meetingDays', 'meetingLocation', 'officerEmail', 'inviteEmails', 'discordLink', 'websiteLink'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('clubCategory').value = '';
+        document.getElementById('enableDonations').checked = true;
+        document.querySelectorAll('[data-privacy]').forEach(c => c.classList.remove('selected'));
+        wizardPrivacy = ''; wizardBanner = ''; wizardGallery = [];
+        document.getElementById('bannerPreview').innerHTML = '<i class="fa-solid fa-image text-2xl"></i>';
+        document.getElementById('galleryPreview').innerHTML = '';
+        validateWizard();
+    }
+    function selectPrivacy(el) { wizardPrivacy = el.dataset.privacy; document.querySelectorAll('[data-privacy]').forEach(c => c.classList.remove('selected')); el.classList.add('selected'); }
+    function previewBanner(e) {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => { wizardBanner = ev.target.result; document.getElementById('bannerPreview').innerHTML = `<img src="${ev.target.result}" class="w-full h-full object-cover">`; };
+        reader.readAsDataURL(file);
+    }
+    function previewGallery(e) {
+        Array.from(e.target.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = ev => { wizardGallery.push(ev.target.result); renderGalleryPreview(); };
+            reader.readAsDataURL(file);
+        });
+    }
+    function renderGalleryPreview() {
+        document.getElementById('galleryPreview').innerHTML = wizardGallery.map((src, i) => `
+            <div class="relative group"><img src="${src}" class="w-full h-16 object-cover rounded-lg">
+            <button onclick="removeGalleryImg(${i})" class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs hidden group-hover:flex items-center justify-center">×</button></div>`).join('');
+    }
+    function removeGalleryImg(i) { wizardGallery.splice(i, 1); renderGalleryPreview(); }
+    function validateWizard() {
+        const ok = document.getElementById('clubTitle').value.trim().length > 0 && document.getElementById('clubCategory').value.length > 0;
+        setBtn('publishBtn', ok);
+    }
+    function buildClubFromForm() {
+        const cat = document.getElementById('clubCategory').value;
+        const st = styleForCategory(cat);
+        const officerEmail = document.getElementById('officerEmail').value.trim();
+        return {
+            name: document.getElementById('clubTitle').value.trim() || 'Untitled Club',
+            tagline: document.getElementById('clubTagline').value.trim(),
+            category: cat || 'Hobbies & Niche Interests',
+            school: document.getElementById('clubSchool').value.trim() || 'Your School',
+            desc: document.getElementById('clubMission').value.trim() || 'A brand-new club on Student Club Hub.',
+            mission: document.getElementById('clubMission').value.trim() || 'A brand-new club on Student Club Hub.',
+            meeting: [document.getElementById('meetingDays').value.trim(), document.getElementById('meetingLocation').value.trim()].filter(Boolean).join(', ') || 'Schedule TBD',
+            privacy: wizardPrivacy || 'Public (Open Join)',
+            icon: st.icon, bg: st.bg, text: st.text,
+            tags: [cat ? cat.split(' ')[0] : 'New'],
+            banner: wizardBanner,
+            gallery: wizardGallery.slice(),
+            officerEmail: officerEmail,
+            discord: document.getElementById('discordLink').value.trim(),
+            website: document.getElementById('websiteLink').value.trim(),
+            donations: document.getElementById('enableDonations').checked,
+            leaders: officerEmail ? [{ n: currentUser.name || 'Club Officer', r: 'Officer', c: officerEmail }] : []
+        };
+    }
+    function saveDraft() {
+        const draft = buildClubFromForm();
+        draft.isDraft = true;
+        if (editingDraftIndex !== null) { drafts[editingDraftIndex] = draft; }
+        else { drafts.push(draft); }
+        showToast('Draft saved. Find it under My Clubs → Saved Drafts.');
+        showView('my-clubs');
+        myClubsTab('drafts');
+    }
+    function previewClub() { renderQuickView(buildClubFromForm(), true); }
+    function publishClub() {
+        if (document.getElementById('publishBtn').disabled) return;
+        const club = buildClubFromForm();
+        CLUBS.push(club);
+        ledClubs.push(club);
+        if (editingDraftIndex !== null) { drafts.splice(editingDraftIndex, 1); editingDraftIndex = null; }
+        applyFilters();
+        showToast('🎉 "' + club.name + '" is now live in the directory!');
+        goToSection('directory');
+    }
+    function loadDraft(i) {
+        const d = drafts[i];
+        editingDraftIndex = i;
+        showView('start-club');
+        document.getElementById('wizardHeading').textContent = 'Resume Editing Draft';
+        document.getElementById('clubTitle').value = d.name === 'Untitled Club' ? '' : d.name;
+        document.getElementById('clubTagline').value = d.tagline || '';
+        document.getElementById('clubCategory').value = d.category || '';
+        document.getElementById('clubSchool').value = d.school === 'Your School' ? '' : d.school;
+        document.getElementById('clubMission').value = d.mission === 'A brand-new club on Student Club Hub.' ? '' : d.mission;
+        const mp = (d.meeting || '').split(', ');
+        document.getElementById('meetingDays').value = mp[0] && mp[0] !== 'Schedule TBD' ? mp[0] : '';
+        document.getElementById('meetingLocation').value = mp[1] || '';
+        document.getElementById('officerEmail').value = d.officerEmail || '';
+        document.getElementById('discordLink').value = d.discord || '';
+        document.getElementById('websiteLink').value = d.website || '';
+        document.getElementById('enableDonations').checked = d.donations !== false;
+        wizardPrivacy = d.privacy || '';
+        document.querySelectorAll('[data-privacy]').forEach(c => c.classList.toggle('selected', c.dataset.privacy === wizardPrivacy));
+        wizardBanner = d.banner || '';
+        document.getElementById('bannerPreview').innerHTML = wizardBanner ? `<img src="${wizardBanner}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-image text-2xl"></i>';
+        wizardGallery = (d.gallery || []).slice();
+        renderGalleryPreview();
+        validateWizard();
+    }
+
+    /* =================== MY CLUBS DASHBOARD =================== */
+    function myClubsTab(tab) {
+        ['lead', 'joined', 'drafts'].forEach(t => document.getElementById('mc-' + t).classList.toggle('hidden', t !== tab));
+        document.querySelectorAll('.mc-tab').forEach(b => {
+            const on = b.dataset.mctab === tab;
+            b.classList.toggle('border-indigo-600', on);
+            b.classList.toggle('text-indigo-600', on);
+            b.classList.toggle('border-transparent', !on);
+            b.classList.toggle('text-gray-500', !on);
+        });
+    }
+    function emptyState(icon, msg, btnLabel, btnAction) {
+        return `<div class="col-span-full text-center py-12 text-gray-400">
+            <i class="fa-solid ${icon} text-3xl mb-3"></i><p class="mb-4">${msg}</p>
+            ${btnLabel ? `<button onclick="${btnAction}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">${btnLabel}</button>` : ''}
+        </div>`;
+    }
+    function clubMiniCard(club, actionsHtml) {
+        const st = styleForCategory(club.category);
+        return `<div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="${club.bg || st.bg} ${club.text || st.text} p-3 rounded-lg"><i class="fa-solid ${club.icon || st.icon}"></i></div>
+                <div><h3 class="font-bold text-gray-900 text-sm">${club.name}</h3><p class="text-xs text-gray-500">${club.category} • ${club.school}</p></div>
+            </div>
+            <p class="text-xs text-gray-500 mb-4 flex-1"><i class="fa-regular fa-clock mr-1"></i>${(club.meeting || 'Schedule TBD').split(',')[0]}</p>
+            ${actionsHtml}
+        </div>`;
+    }
+    function renderMyClubs() {
+        const lead = document.getElementById('mc-lead');
+        lead.innerHTML = ledClubs.length ? ledClubs.map(c => clubMiniCard(c, `
+            <div class="grid grid-cols-3 gap-1.5">
+                <button onclick="manageClub('${escq(c.name)}')" class="bg-gray-100 text-gray-700 text-xs font-semibold py-1.5 rounded hover:bg-gray-200">Manage</button>
+                <button onclick="inviteMembers('${escq(c.name)}')" class="bg-gray-100 text-indigo-600 text-xs font-semibold py-1.5 rounded hover:bg-indigo-50">Invite</button>
+                <button onclick="startFundraiserFor('${escq(c.name)}')" class="bg-emerald-500 text-white text-xs font-semibold py-1.5 rounded hover:bg-emerald-600">Fundraise</button>
+            </div>`)).join('') : emptyState('fa-layer-group', "You don't lead any clubs yet.", '+ Start a Club', "showView('start-club')");
+
+        const joined = document.getElementById('mc-joined');
+        joined.innerHTML = joinedClubs.length ? joinedClubs.map(c => clubMiniCard(c, `
+            <button onclick="openQuickViewByName('${escq(c.name)}')" class="w-full bg-gray-100 text-indigo-600 text-xs font-semibold py-1.5 rounded hover:bg-indigo-50">View Club</button>`)).join('') : emptyState('fa-user-group', "You haven't joined any clubs yet.", 'Browse Directory', "goToSection('directory')");
+
+        const dr = document.getElementById('mc-drafts');
+        dr.innerHTML = drafts.length ? drafts.map((d, i) => `
+            <div class="bg-white p-5 rounded-xl border border-dashed border-gray-300 shadow-sm flex flex-col">
+                <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded self-start mb-2">DRAFT</span>
+                <h3 class="font-bold text-gray-900 text-sm mb-1">${d.name || 'Untitled Club'}</h3>
+                <p class="text-xs text-gray-500 mb-4 flex-1">${d.category || 'No category'} ${d.school ? '• ' + d.school : ''}</p>
+                <button onclick="loadDraft(${i})" class="w-full bg-indigo-600 text-white text-xs font-semibold py-1.5 rounded hover:bg-indigo-700"><i class="fa-solid fa-pen mr-1"></i> Resume Editing</button>
+            </div>`).join('') : emptyState('fa-file-lines', 'No saved drafts.', '+ Start a Club', "showView('start-club')");
+    }
+    function escq(s) { return (s || '').replace(/'/g, "\\'"); }
+    function findClubByName(name) { return CLUBS.find(c => c.name === name) || ledClubs.find(c => c.name === name) || joinedClubs.find(c => c.name === name); }
+    function openQuickViewByName(name) { const c = findClubByName(name); if (c) renderQuickView(c, false); }
+    function manageClub(name) { showToast('Management dashboard for "' + name + '" coming soon.'); }
+    function inviteMembers(name) { showToast('Invite links for "' + name + '" copied to clipboard (demo).'); }
+    function startFundraiserFor(name) { const c = findClubByName(name); openDonationModal(c); }
+
+    /* =================== SETTINGS =================== */
+    function settingsTab(tab) {
+        ['profile', 'security', 'notifications', 'privacy'].forEach(t => document.getElementById('settings-' + t).classList.toggle('hidden', t !== tab));
+        document.querySelectorAll('.settings-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+    }
+    function previewAvatar(e) {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => { document.getElementById('settingsAvatar').innerHTML = `<img src="${ev.target.result}" class="w-full h-full object-cover">`; };
+        reader.readAsDataURL(file);
+    }
+    function saveSettings() {
+        const newName = document.getElementById('setDisplayName').value.trim();
+        if (newName) { currentUser.name = newName; setLoggedIn(newName, document.getElementById('setEmail').value.trim()); }
+        showToast('Your changes have been saved.');
+    }
+
+    /* =================== GUEST DONATION MODAL =================== */
+    let donationState = { amount: 0 };
+    function openDonationModal(ref) {
+        let club = (typeof ref === 'number') ? CLUBS[ref] : (ref && ref.name ? ref : null);
+        const line = document.getElementById('donationClubLine');
+        if (club) line.innerHTML = `You're supporting <span class="font-semibold text-indigo-600">${club.name}</span>. 100% of your contribution goes to their initiatives.`;
+        else line.textContent = '100% of your contribution helps high school students fund their initiatives.';
         document.getElementById('donationModal').classList.add('open');
         lockScroll(true);
         document.getElementById('donationBody').classList.remove('hidden');
@@ -1125,71 +1358,32 @@
         document.getElementById('donationThankYou').classList.add('hidden');
         resetDonation();
     }
-    function closeDonationModal() {
-        document.getElementById('donationModal').classList.remove('open');
-        lockScroll(false);
-    }
+    function closeDonationModal() { document.getElementById('donationModal').classList.remove('open'); lockScroll(false); }
     function resetDonation() {
         donationState.amount = 0;
         document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('selected'));
-        ['customAmount','donorName','donorNote','cardNumber','cardExp','cardCvv','cardZip'].forEach(id => document.getElementById(id).value = '');
+        ['customAmount', 'donorName', 'donorNote', 'cardNumber', 'cardExp', 'cardCvv', 'cardZip'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('anonCheck').checked = false;
         document.getElementById('wordCount').textContent = '0';
         document.getElementById('confettiContainer').innerHTML = '';
         document.getElementById('anonPopup').classList.remove('show');
+        if (isLoggedIn) document.getElementById('donorName').value = currentUser.name;
         validateDonation();
     }
     function donationToLogin(e) { e.preventDefault(); closeDonationModal(); openLoginModal(); }
-
-    function selectAmount(amt, el) {
-        donationState.amount = amt;
-        document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('selected'));
-        el.classList.add('selected');
-        document.getElementById('customAmount').value = '';
-        validateDonation();
-    }
-    function onCustomAmount() {
-        const val = parseFloat(document.getElementById('customAmount').value);
-        document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('selected'));
-        donationState.amount = (!isNaN(val) && val > 0) ? val : 0;
-        validateDonation();
-    }
-    function countWords() {
-        const ta = document.getElementById('donorNote');
-        let words = ta.value.trim().split(/\s+/).filter(Boolean);
-        if (words.length > 200) { words = words.slice(0, 200); ta.value = words.join(' '); }
-        document.getElementById('wordCount').textContent = ta.value.trim() === '' ? 0 : words.length;
-    }
+    function selectAmount(amt, el) { donationState.amount = amt; document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('selected')); el.classList.add('selected'); document.getElementById('customAmount').value = ''; validateDonation(); }
+    function onCustomAmount() { const val = parseFloat(document.getElementById('customAmount').value); document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('selected')); donationState.amount = (!isNaN(val) && val > 0) ? val : 0; validateDonation(); }
+    function countWords() { const ta = document.getElementById('donorNote'); let words = ta.value.trim().split(/\s+/).filter(Boolean); if (words.length > 200) { words = words.slice(0, 200); ta.value = words.join(' '); } document.getElementById('wordCount').textContent = ta.value.trim() === '' ? 0 : words.length; }
     function onDonorNameOrAnon() {
         const hasName = document.getElementById('donorName').value.trim().length > 0;
         const anon = document.getElementById('anonCheck').checked;
         const popup = document.getElementById('anonPopup');
-        if (hasName && anon) {
-            popup.classList.add('show');
-            clearTimeout(window._anonTimer);
-            window._anonTimer = setTimeout(() => popup.classList.remove('show'), 5000);
-        } else {
-            popup.classList.remove('show');
-        }
+        if (hasName && anon) { popup.classList.add('show'); clearTimeout(window._anonTimer); window._anonTimer = setTimeout(() => popup.classList.remove('show'), 5000); }
+        else popup.classList.remove('show');
     }
-    function formatCard() {
-        const el = document.getElementById('cardNumber');
-        let v = el.value.replace(/\D/g, '').substring(0, 16);
-        el.value = v.replace(/(.{4})/g, '$1 ').trim();
-        validateDonation();
-    }
-    function formatExp() {
-        const el = document.getElementById('cardExp');
-        let v = el.value.replace(/\D/g, '').substring(0, 4);
-        if (v.length >= 3) v = v.substring(0, 2) + '/' + v.substring(2);
-        el.value = v;
-        validateDonation();
-    }
-    function onPaymentInput() {
-        document.getElementById('cardCvv').value = document.getElementById('cardCvv').value.replace(/\D/g, '');
-        document.getElementById('cardZip').value = document.getElementById('cardZip').value.replace(/\D/g, '');
-        validateDonation();
-    }
+    function formatCard() { const el = document.getElementById('cardNumber'); let v = el.value.replace(/\D/g, '').substring(0, 16); el.value = v.replace(/(.{4})/g, '$1 ').trim(); validateDonation(); }
+    function formatExp() { const el = document.getElementById('cardExp'); let v = el.value.replace(/\D/g, '').substring(0, 4); if (v.length >= 3) v = v.substring(0, 2) + '/' + v.substring(2); el.value = v; validateDonation(); }
+    function onPaymentInput() { document.getElementById('cardCvv').value = document.getElementById('cardCvv').value.replace(/\D/g, ''); document.getElementById('cardZip').value = document.getElementById('cardZip').value.replace(/\D/g, ''); validateDonation(); }
     function validateDonation() {
         const amountOk = donationState.amount > 0;
         const cardOk = document.getElementById('cardNumber').value.replace(/\s/g, '').length === 16;
@@ -1203,11 +1397,9 @@
         const amt = donationState.amount;
         document.getElementById('donationBody').classList.add('hidden');
         const loading = document.getElementById('donationLoading');
-        loading.classList.remove('hidden');
-        loading.classList.add('flex');
+        loading.classList.remove('hidden'); loading.classList.add('flex');
         setTimeout(() => {
-            loading.classList.add('hidden');
-            loading.classList.remove('flex');
+            loading.classList.add('hidden'); loading.classList.remove('flex');
             document.getElementById('donationThankYou').classList.remove('hidden');
             document.getElementById('thankYouAmount').textContent = 'Your gift of $' + amt.toFixed(2) + ' is on its way to student clubs.';
             launchConfetti();
@@ -1232,19 +1424,11 @@
     }
 
     /* Close modals on overlay click + Escape */
-    ['loginModal', 'signupModal', 'donationModal', 'quickViewModal'].forEach(id => {
-        document.getElementById(id).addEventListener('click', function (e) {
-            if (e.target === this) {
-                this.classList.remove('open');
-                lockScroll(false);
-            }
-        });
+    ['logoutModal', 'loginModal', 'signupModal', 'donationModal', 'quickViewModal'].forEach(id => {
+        document.getElementById(id).addEventListener('click', function (e) { if (e.target === this) { this.classList.remove('open'); lockScroll(false); } });
     });
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            ['loginModal', 'signupModal', 'donationModal', 'quickViewModal'].forEach(id => document.getElementById(id).classList.remove('open'));
-            lockScroll(false);
-        }
+        if (e.key === 'Escape') { ['logoutModal', 'loginModal', 'signupModal', 'donationModal', 'quickViewModal'].forEach(id => document.getElementById(id).classList.remove('open')); lockScroll(false); }
     });
 
     /* Initial render */
