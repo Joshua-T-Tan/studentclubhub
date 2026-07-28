@@ -106,38 +106,39 @@
         /* Interactive stars */
         .star-input i { cursor: pointer; transition: transform 0.1s ease; }
         .star-input i:hover { transform: scale(1.15); }
+
+        /* Custom gradient rocket progress bar (orange -> deep red) */
+        .rocket-track { position: relative; width: 100%; background: rgba(0,0,0,0.12); border-radius: 9999px; overflow: visible; }
+        .rocket-fill {
+            position: relative; height: 100%; border-radius: 9999px; min-width: 0;
+            background: linear-gradient(90deg, #fb923c 0%, #f97316 35%, #ef4444 70%, #b91c1c 100%);
+            transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .rocket-tip { position: absolute; right: -10px; top: 50%; transform: translateY(-50%); font-size: 1.1em; line-height: 1; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25)); }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
 
     <!-- Navigation Header -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <span class="text-xl font-bold text-gray-900 cursor-pointer" onclick="goToSection(null)">Student Club Hub</span>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative">
+            <span class="text-xl font-bold text-gray-900 cursor-pointer z-10" onclick="showView('home')">Student Club Hub</span>
 
-            <nav class="hidden md:flex space-x-8 text-sm font-medium text-gray-600">
-                <a href="javascript:void(0)" onclick="goToSection('directory')" class="hover:text-indigo-600">Directory</a>
-                <a href="javascript:void(0)" onclick="goToSection('how-it-works')" class="hover:text-indigo-600">How It Works</a>
-                <a href="javascript:void(0)" onclick="goToSection('fundraising')" class="hover:text-indigo-600">Fundraising &amp; Sponsorship</a>
-                <a href="javascript:void(0)" onclick="goToSection('resources')" class="hover:text-indigo-600">Resource Hub</a>
+            <!-- Centered main navigation tabs -->
+            <nav class="hidden lg:flex absolute left-1/2 -translate-x-1/2 gap-1 text-sm font-medium">
+                <button data-nav="home" onclick="showView('home')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Main Page</button>
+                <button data-nav="browse" onclick="showView('browse')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Browse Clubs</button>
+                <button data-nav="home" onclick="goToSection('fundraising')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Fundraising &amp; Sponsorship</button>
+                <button data-nav="my-clubs" onclick="showView('my-clubs')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">My Clubs</button>
+                <button data-nav="home" onclick="goToSection('resources')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Resource Hub</button>
             </nav>
 
-            <div id="authArea" class="flex items-center gap-3">
+            <div id="authArea" class="flex items-center gap-3 z-10">
                 <button onclick="openLoginModal()" class="text-indigo-600 border border-indigo-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition">Log In</button>
                 <button onclick="openSignupModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Sign Up</button>
             </div>
         </div>
     </header>
-
-    <!-- Logged-in sub navigation bar -->
-    <div id="loggedInNav" class="hidden bg-white border-b border-gray-200 sticky top-16 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-center gap-2 text-sm font-medium">
-            <button data-nav="home" onclick="showView('home')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100"><i class="fa-solid fa-house mr-1"></i> Home</button>
-            <button data-nav="my-clubs" onclick="showView('my-clubs')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100"><i class="fa-solid fa-layer-group mr-1"></i> My Clubs</button>
-            <button data-nav="start-club" onclick="showView('start-club')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100"><i class="fa-solid fa-plus mr-1"></i> Start a Club</button>
-            <button data-nav="settings" onclick="showView('settings')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100"><i class="fa-solid fa-gear mr-1"></i> Settings</button>
-        </div>
-    </div>
 
     <!-- ============================================================= -->
     <!-- ======================  VIEW: HOME  ========================= -->
@@ -146,7 +147,6 @@
         <!-- Hero Section -->
         <section class="bg-indigo-900 text-white py-20 px-4 text-center">
             <div class="max-w-4xl mx-auto">
-                <span class="bg-indigo-800 text-indigo-200 text-xs uppercase tracking-widest px-3 py-1 rounded-full font-semibold">Non-Profit Platform</span>
                 <h1 class="text-4xl md:text-6xl font-extrabold mt-4 mb-6">Discover, Support, and Grow High School Clubs Worldwide</h1>
                 <p class="text-lg md:text-xl text-indigo-200 mb-8">Connecting student leaders with new members, sponsorship toolkits, and community supporters.</p>
                 <div class="max-w-xl mx-auto">
@@ -162,6 +162,17 @@
                         <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>✨ Start a Club
                     </button>
                 </div>
+            </div>
+        </section>
+
+        <!-- My Clubs purple banner strip (logged-in creators) -->
+        <section id="myClubsStrip" class="hidden bg-gradient-to-r from-indigo-700 to-purple-700 py-6">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-white font-bold text-lg"><i class="fa-solid fa-rocket mr-2"></i>My Clubs</h2>
+                    <button onclick="showView('my-clubs')" class="text-indigo-100 text-sm font-semibold hover:text-white">View all →</button>
+                </div>
+                <div id="myClubsStripCards" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
             </div>
         </section>
 
@@ -202,48 +213,7 @@
             </div>
         </section>
 
-        <!-- Club Directory -->
-        <section id="directory" class="py-16 bg-gray-100">
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
-                <div>
-                    <h2 class="text-3xl font-bold text-gray-900">Global &amp; Local Club Directory</h2>
-                    <p class="text-gray-600 mt-2">Discover, filter, and connect with high school clubs near you or around the globe.</p>
-                </div>
-                <button onclick="requireLogin(() => showView('start-club'))" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition"><i class="fa-solid fa-plus mr-1"></i> Start a Club</button>
-            </div>
-
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4 flex flex-col md:flex-row gap-4">
-                <input id="searchInput" type="text" oninput="applyFilters()" placeholder="Search by club name, keyword, or location..." class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                <select id="categorySelect" onchange="applyFilters()" class="border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-700">
-                    <option>All Categories</option>
-                    <option>STEM &amp; Tech</option>
-                    <option>Business &amp; Entrepreneurship</option>
-                    <option>Arts, Media &amp; Design</option>
-                    <option>Culture &amp; Language</option>
-                    <option>Volunteering &amp; Community Service</option>
-                    <option>Humanities &amp; Debate</option>
-                    <option>Health &amp; Medicine</option>
-                    <option>Hobbies &amp; Niche Interests</option>
-                </select>
-            </div>
-
-            <div class="flex flex-wrap gap-2 mb-8" id="filterTags">
-                <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="STEM" onclick="toggleTag(this)">#STEM</span>
-                <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="Volunteering" onclick="toggleTag(this)">#Volunteering</span>
-                <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="Debate" onclick="toggleTag(this)">#Debate</span>
-                <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="Robotics" onclick="toggleTag(this)">#Robotics</span>
-                <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="EcoFriendly" onclick="toggleTag(this)">#EcoFriendly</span>
-            </div>
-
-            <div id="profileResults" class="hidden mb-8">
-                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">People</h3>
-                <div id="profileGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-            </div>
-            <div id="clubGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-            <p id="noResults" class="hidden text-center text-gray-500 py-10"><i class="fa-solid fa-magnifying-glass mr-2"></i>No clubs match your filters yet. Try clearing a tag.</p>
-          </div>
-        </section>
+        <!-- (Club Directory moved to the Browse Clubs page — see #view-browse below) -->
 
         <!-- Fundraising -->
         <section id="fundraising" class="bg-white py-16">
@@ -343,6 +313,70 @@
                     <button id="siteReviewSubmit" onclick="submitSiteReview()" disabled class="action-btn px-6 py-2.5 rounded-lg font-semibold">Post Review</button>
                 </div>
             </div>
+        </section>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- ====================  VIEW: BROWSE CLUBS  =================== -->
+    <!-- ============================================================= -->
+    <div id="view-browse" class="app-view hidden">
+        <section class="bg-indigo-900 text-white py-12 px-4 text-center">
+            <div class="max-w-4xl mx-auto">
+                <h1 class="text-3xl md:text-4xl font-extrabold mb-2">Browse Clubs</h1>
+                <p class="text-indigo-200">Search by club name, keyword, category, or exact 6-digit Club ID (e.g. <span class="font-mono">#SCH-9A2</span>).</p>
+            </div>
+        </section>
+
+        <!-- Top Funded Clubs -->
+        <section class="py-12 bg-white border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-1">🔥 Top Funded Clubs</h2>
+                <p class="text-gray-600 mb-6">Clubs raising the most for their student initiatives right now.</p>
+                <div id="topFundedGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+            </div>
+        </section>
+
+        <!-- Directory -->
+        <section class="py-12 bg-gray-100">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">Global &amp; Local Club Directory</h2>
+                    <p class="text-gray-600 mt-2">Discover, filter, and connect with high school clubs near you or around the globe.</p>
+                </div>
+                <button onclick="requireLogin(() => showView('start-club'))" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition"><i class="fa-solid fa-plus mr-1"></i> Start a Club</button>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4 flex flex-col md:flex-row gap-4">
+                <input id="searchInput" type="text" oninput="applyFilters()" placeholder="Search by club name, keyword, or Club ID (#SCH-...)..." class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <select id="categorySelect" onchange="applyFilters()" class="border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-700">
+                    <option>All Categories</option>
+                    <option>STEM &amp; Tech</option>
+                    <option>Business &amp; Entrepreneurship</option>
+                    <option>Arts, Media &amp; Design</option>
+                    <option>Culture &amp; Language</option>
+                    <option>Volunteering &amp; Community Service</option>
+                    <option>Humanities &amp; Debate</option>
+                    <option>Health &amp; Medicine</option>
+                    <option>Hobbies &amp; Niche Interests</option>
+                </select>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mb-8" id="filterTags">
+                <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="STEM" onclick="toggleTag(this)">#STEM</span>
+                <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="Volunteering" onclick="toggleTag(this)">#Volunteering</span>
+                <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="Debate" onclick="toggleTag(this)">#Debate</span>
+                <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="Robotics" onclick="toggleTag(this)">#Robotics</span>
+                <span class="filter-pill text-sm font-medium px-3 py-1.5 rounded-full" data-tag="EcoFriendly" onclick="toggleTag(this)">#EcoFriendly</span>
+            </div>
+
+            <div id="profileResults" class="hidden mb-8">
+                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">People</h3>
+                <div id="profileGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+            </div>
+            <div id="clubGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+            <p id="noResults" class="hidden text-center text-gray-500 py-10"><i class="fa-solid fa-magnifying-glass mr-2"></i>No clubs match your filters yet. Try clearing a tag.</p>
+          </div>
         </section>
     </div>
 
@@ -758,6 +792,8 @@
                     <div class="border border-gray-200 rounded-xl p-4 mb-6 bg-gray-50">
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Your name <span class="text-gray-400 font-normal">(Optional)</span></label>
                         <input id="donorName" type="text" oninput="onDonorNameOrAnon()" placeholder="Leave blank to stay unnamed" class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 bg-white focus:outline-none focus:border-indigo-500 valid-ring">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Shoutout a Club Member <span class="text-gray-400 font-normal">(Optional)</span></label>
+                        <input id="donorShoutout" type="text" placeholder="Who inspired your gift? e.g. Maya A." class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 bg-white focus:outline-none focus:border-indigo-500 valid-ring">
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Note to the club <span class="text-gray-400 font-normal">(Optional)</span></label>
                         <textarea id="donorNote" rows="3" oninput="countWords()" placeholder="Add a message of encouragement..." class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-indigo-500 valid-ring resize-none"></textarea>
                         <p class="text-xs text-gray-400 mt-1 mb-4">Word count: <span id="wordCount">0</span> / 200</p>
@@ -1014,6 +1050,121 @@
         </div>
     </div>
 
+    <!-- FUNDRAISER CAMPAIGN PAGE MODAL -->
+    <div id="campaignModal" class="modal-overlay">
+        <div class="modal-card max-w-3xl overflow-hidden">
+            <div class="max-h-[88vh] overflow-y-auto">
+                <div class="relative">
+                    <div id="campBanner" class="h-32 bg-indigo-600"></div>
+                    <button onclick="closeCampaign()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 text-gray-600 hover:text-gray-900 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- LEFT: story, gallery -->
+                    <div>
+                        <p id="campClubName" class="text-xs text-indigo-600 font-semibold mb-1"></p>
+                        <h2 id="campTitle" class="text-2xl font-bold text-gray-900 mb-2"></h2>
+                        <p id="campMission" class="text-sm text-gray-600 mb-4"></p>
+                        <h3 class="text-sm font-semibold text-gray-700 mb-2"><i class="fa-solid fa-images text-indigo-600 mr-1"></i> Gallery</h3>
+                        <div id="campGallery" class="grid grid-cols-3 gap-2 mb-4"></div>
+                        <!-- Leader inline edit -->
+                        <div id="campLeaderEdit" class="hidden bg-gray-50 border border-gray-200 rounded-xl p-4">
+                            <p class="text-sm font-semibold text-gray-700 mb-2"><i class="fa-solid fa-pen text-indigo-500 mr-1"></i>Edit Campaign</p>
+                            <input id="campEditTitle" type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:border-indigo-500 valid-ring" placeholder="Campaign title">
+                            <textarea id="campEditMission" rows="2" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:border-indigo-500 valid-ring resize-none" placeholder="Mission / story"></textarea>
+                            <div class="relative mb-3"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span><input id="campEditTarget" type="number" min="1" class="w-full border border-gray-300 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:border-indigo-500 valid-ring" placeholder="Goal amount"></div>
+                            <button onclick="saveCampaignEdit()" class="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Save Campaign</button>
+                        </div>
+                    </div>
+                    <!-- RIGHT: progress, amount, payment, analytics -->
+                    <div>
+                        <div class="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
+                            <div id="campProgress" class="mb-2"></div>
+                            <p id="campRaisedLine" class="text-sm text-gray-700 font-semibold"></p>
+                            <p class="text-[11px] text-gray-400 mt-1"><i class="fa-solid fa-heart text-red-400 mr-1"></i>100% of funds raised go directly to this student organization.</p>
+                        </div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Choose an amount</label>
+                        <div class="grid grid-cols-4 gap-2 mb-3">
+                            <div class="amount-chip camp-chip rounded-lg py-2 text-center font-semibold text-gray-700 text-sm" onclick="campPick(10,this)">$10</div>
+                            <div class="amount-chip camp-chip rounded-lg py-2 text-center font-semibold text-gray-700 text-sm" onclick="campPick(25,this)">$25</div>
+                            <div class="amount-chip camp-chip rounded-lg py-2 text-center font-semibold text-gray-700 text-sm" onclick="campPick(50,this)">$50</div>
+                            <div class="amount-chip camp-chip rounded-lg py-2 text-center font-semibold text-gray-700 text-sm" onclick="campPick(100,this)">$100</div>
+                        </div>
+                        <button onclick="campDonate()" class="w-full bg-emerald-500 text-white py-2.5 rounded-lg font-semibold hover:bg-emerald-600 transition mb-2"><i class="fa-solid fa-heart mr-1"></i> Donate to this Campaign</button>
+                        <button onclick="openLeaderboardForCampaign()" class="w-full bg-amber-100 text-amber-800 py-2.5 rounded-lg font-semibold hover:bg-amber-200 transition mb-4"><i class="fa-solid fa-trophy mr-1"></i> View Top 50 Donors</button>
+                        <!-- Analytics (leaders only) -->
+                        <div id="campAnalytics" class="hidden">
+                            <h3 class="text-sm font-semibold text-gray-700 mb-2"><i class="fa-solid fa-chart-simple text-indigo-600 mr-1"></i> Analytics</h3>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="bg-indigo-50 rounded-lg p-3 text-center"><p id="campImpr" class="text-lg font-bold text-indigo-700">0</p><p class="text-[11px] text-gray-500">Impressions</p></div>
+                                <div class="bg-emerald-50 rounded-lg p-3 text-center"><p id="campVis" class="text-lg font-bold text-emerald-700">0</p><p class="text-[11px] text-gray-500">Visitors</p></div>
+                                <div class="bg-amber-50 rounded-lg p-3 text-center"><p id="campTot" class="text-lg font-bold text-amber-700">$0</p><p class="text-[11px] text-gray-500">Total Raised</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MEMBER PORTAL & MANAGEMENT HUB MODAL -->
+    <div id="portalModal" class="modal-overlay">
+        <div class="modal-card max-w-2xl overflow-hidden">
+            <div class="max-h-[88vh] overflow-y-auto">
+                <div id="portalBanner" class="h-28 relative bg-indigo-600">
+                    <button onclick="closePortal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 text-gray-600 hover:text-gray-900 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                    <div id="portalLogo" class="absolute -bottom-6 left-6 w-16 h-16 rounded-xl shadow-md bg-white flex items-center justify-center text-3xl overflow-hidden"></div>
+                    <button id="portalBell" onclick="toggleBell()" title="Notification bell" class="absolute -bottom-4 right-6 w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center text-gray-400 hover:scale-105 transition"><i class="fa-solid fa-bell text-xl"></i></button>
+                </div>
+                <div class="p-6 pt-9">
+                    <h2 id="portalName" class="text-2xl font-bold text-gray-900"></h2>
+                    <p id="portalMeta" class="text-xs text-gray-500 font-mono mb-3"></p>
+
+                    <div id="portalLeaderBtns" class="hidden flex gap-2 mb-4">
+                        <button onclick="portalOpenManage()" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition"><i class="fa-solid fa-sliders mr-1"></i> Manage Club</button>
+                        <button onclick="portalOpenCampaign()" class="flex-1 bg-emerald-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-emerald-600 transition"><i class="fa-solid fa-bullhorn mr-1"></i> Campaign</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-700 mb-2"><i class="fa-solid fa-user-group text-indigo-600 mr-1"></i> Leadership</h3>
+                            <div id="portalLeaders" class="space-y-2"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-700 mb-2"><i class="fa-solid fa-users text-indigo-600 mr-1"></i> Team Roster</h3>
+                            <div id="portalRoster" class="space-y-2"></div>
+                        </div>
+                    </div>
+
+                    <!-- Live Chat -->
+                    <div class="border-t border-gray-200 pt-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-semibold text-gray-700"><i class="fa-solid fa-comments text-indigo-600 mr-1"></i> Live Club Chat</h3>
+                            <label id="portalChatToggleWrap" class="hidden flex items-center gap-2 text-xs text-gray-600 cursor-pointer">Allow Member Chat Posts <span id="portalChatToggle" class="toggle on" onclick="toggleMemberChat()"></span></label>
+                        </div>
+                        <div id="portalChat" class="bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-3 max-h-56 overflow-y-auto mb-3"></div>
+                        <div id="portalChatInputRow" class="flex gap-2">
+                            <input id="portalChatInput" type="text" onkeydown="if(event.key==='Enter')postChat()" placeholder="Write a message..." class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 valid-ring">
+                            <button onclick="postChat()" class="bg-indigo-600 text-white px-4 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Send</button>
+                        </div>
+                        <p id="portalChatLocked" class="hidden text-xs text-gray-400 text-center py-2">Member posting is turned off by the club officers.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOP 50 DONOR LEADERBOARD MODAL -->
+    <div id="leaderboardModal" class="modal-overlay">
+        <div class="modal-card max-w-md overflow-hidden">
+            <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-4 flex items-center justify-between">
+                <h2 class="text-lg font-bold"><i class="fa-solid fa-trophy mr-2"></i>Top 50 Donors</h2>
+                <button onclick="closeLeaderboard()" class="text-white/80 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p id="lbClubLine" class="text-xs text-gray-500 px-6 pt-3"></p>
+            <div id="leaderboardList" class="max-h-[65vh] overflow-y-auto p-6 pt-3 space-y-2"></div>
+        </div>
+    </div>
+
     <!-- Toast notification -->
     <div id="toast"></div>
 
@@ -1075,9 +1226,10 @@
     /* =====================================================
        VIEW CONTROLLER
     ===================================================== */
-    const VIEWS = ['home', 'start-club', 'my-clubs', 'settings'];
+    const VIEWS = ['home', 'browse', 'start-club', 'my-clubs', 'settings'];
+    const LOGIN_REQUIRED_VIEWS = ['my-clubs', 'start-club', 'settings'];
     function showView(name) {
-        if (name !== 'home' && !isLoggedIn) { openLoginModal(); return; }
+        if (LOGIN_REQUIRED_VIEWS.includes(name) && !isLoggedIn) { openLoginModal(); return; }
         VIEWS.forEach(v => document.getElementById('view-' + v).classList.toggle('hidden', v !== name));
         document.querySelectorAll('.nav-link').forEach(b => {
             const on = b.dataset.nav === name;
@@ -1085,12 +1237,14 @@
             b.classList.toggle('text-indigo-600', on);
             b.classList.toggle('text-gray-600', !on);
         });
+        if (name === 'browse') { applyFilters(); renderTopFunded(); }
         if (name === 'my-clubs') renderMyClubs();
         if (name === 'start-club' && editingDraftIndex === null) resetWizard();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    // Jump to a home section (works from any view)
+    // Jump to a home section, or map legacy section ids to their new views
     function goToSection(id) {
+        if (id === 'directory') { showView('browse'); return; }
         showView('home');
         setTimeout(() => {
             if (id) { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth' }); }
@@ -1109,19 +1263,18 @@
         };
         const initials = name.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'ME';
         document.getElementById('authArea').innerHTML = `
-            <button onclick="showView('start-club')" class="hidden sm:inline text-indigo-600 border border-indigo-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition"><i class="fa-solid fa-plus mr-1"></i> Start a Club</button>
-            <div class="flex items-center gap-2 cursor-pointer" onclick="openLogoutModal()" title="Account menu / log out">
+            <div class="flex items-center gap-2 cursor-pointer hover:bg-gray-100 rounded-lg px-2 py-1 transition" onclick="showView('settings')" title="Account settings">
                 <div class="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">${initials}</div>
                 <span class="hidden sm:inline text-sm font-semibold text-gray-800">${name}</span>
-                <i class="fa-solid fa-arrow-right-from-bracket text-gray-400"></i>
-            </div>`;
-        document.getElementById('loggedInNav').classList.remove('hidden');
+            </div>
+            <button onclick="openLogoutModal()" title="Log out" class="w-9 h-9 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>`;
         // Hero button: "Donate as Guest" -> "Donate"
         document.getElementById('heroDonateBtn').innerHTML = '<i class="fa-solid fa-heart mr-2"></i>Donate';
         // Prefill settings
         document.getElementById('setDisplayName').value = name;
         document.getElementById('setEmail').value = currentUser.email;
         document.getElementById('settingsAvatar').textContent = initials;
+        renderMyClubsStrip();
     }
     function openLogoutModal() { document.getElementById('logoutModal').classList.add('open'); lockScroll(true); }
     function closeLogoutModal() { document.getElementById('logoutModal').classList.remove('open'); lockScroll(false); }
@@ -1129,7 +1282,7 @@
         closeLogoutModal();
         isLoggedIn = false;
         currentUser = { name: '', email: '', password: '' };
-        document.getElementById('loggedInNav').classList.add('hidden');
+        document.getElementById('myClubsStrip').classList.add('hidden');
         showView('home');
         document.getElementById('heroDonateBtn').innerHTML = '<i class="fa-solid fa-heart mr-2"></i>Donate as Guest';
         document.getElementById('authArea').innerHTML = `
@@ -1376,6 +1529,55 @@
     }
     function toggleTag(el) { const tag = el.dataset.tag; if (activeTags.has(tag)) { activeTags.delete(tag); el.classList.remove('active'); } else { activeTags.add(tag); el.classList.add('active'); } applyFilters(); }
 
+    /* ---- Fundraiser totals (single active fundraiser per club) ---- */
+    function clubActiveFundraiser(club) { return (club.fundraisers || []).find(f => !f.isDraft) || null; }
+    function clubRaised(club) { const f = clubActiveFundraiser(club); return f ? (f.raised || 0) : 0; }
+    function clubGoal(club) { const f = clubActiveFundraiser(club); return f ? (f.target || 0) : 0; }
+
+    /* ---- Custom gradient rocket progress bar ---- */
+    function rocketBar(pct, small) {
+        pct = Math.max(0, Math.min(100, Math.round(pct)));
+        return `<div class="rocket-track ${small ? 'h-2.5' : 'h-4'}"><div class="rocket-fill" style="width:${pct}%"><span class="rocket-tip">🚀</span></div></div>`;
+    }
+
+    /* ---- My Clubs purple banner strip (top 3 by donations) ---- */
+    function renderMyClubsStrip() {
+        const strip = document.getElementById('myClubsStrip');
+        const wrap = document.getElementById('myClubsStripCards');
+        if (!isLoggedIn || ledClubs.length === 0) { strip.classList.add('hidden'); return; }
+        const top3 = ledClubs.slice().sort((a, b) => clubRaised(b) - clubRaised(a)).slice(0, 3);
+        wrap.innerHTML = top3.map(c => {
+            const raised = clubRaised(c), goal = clubGoal(c), pct = goal ? (raised / goal * 100) : 0;
+            const bar = goal
+                ? `${rocketBar(pct, true)}<p class="text-indigo-100 text-xs mt-1">$${raised.toLocaleString()} / $${goal.toLocaleString()}</p>`
+                : '<p class="text-indigo-200 text-xs mt-1">No active fundraiser yet</p>';
+            return `<div onclick="openPortalByName('${escq(c.name)}')" class="bg-white/10 hover:bg-white/20 rounded-xl p-4 cursor-pointer transition">
+                <div class="flex items-center justify-between mb-1"><p class="font-bold text-white text-sm">${c.name}</p><span class="text-indigo-100 text-[11px] font-mono">${c.id || ''}</span></div>
+                <p class="text-indigo-200 text-xs mb-2">${c.tagline || 'Your club'}</p>
+                ${bar}
+                <span class="text-white text-xs font-semibold mt-2 inline-block">Open Management Hub →</span>
+            </div>`;
+        }).join('');
+        strip.classList.remove('hidden');
+    }
+
+    /* ---- Top Funded Clubs (Browse page) ---- */
+    function renderTopFunded() {
+        const grid = document.getElementById('topFundedGrid');
+        if (!grid) return;
+        const funded = CLUBS.filter(c => clubRaised(c) > 0).sort((a, b) => clubRaised(b) - clubRaised(a)).slice(0, 3);
+        if (!funded.length) { grid.innerHTML = '<p class="text-gray-400 col-span-full">No active fundraisers yet.</p>'; return; }
+        grid.innerHTML = funded.map(c => {
+            const i = CLUBS.indexOf(c), raised = clubRaised(c), goal = clubGoal(c), pct = goal ? (raised / goal * 100) : 0;
+            return `<div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                <div class="flex items-center gap-3 mb-3"><div class="${c.bg} ${c.text} p-3 rounded-lg"><i class="fa-solid ${c.icon} text-xl"></i></div><div><h3 class="font-bold text-gray-900">${c.name}</h3><p class="text-xs text-gray-500">${c.category}</p></div></div>
+                ${rocketBar(pct, false)}
+                <p class="text-sm text-gray-600 mt-2 mb-3">$${raised.toLocaleString()} raised of $${goal.toLocaleString()} <span class="font-semibold text-gray-800">(${Math.round(pct)}%)</span></p>
+                <div class="flex gap-2"><button onclick="openQuickView(${i})" class="flex-1 bg-gray-100 text-indigo-600 font-semibold py-2 rounded-lg text-sm hover:bg-indigo-50">Quick View</button><button onclick="openDonationModal(${i})" class="flex-1 bg-indigo-600 text-white font-semibold py-2 rounded-lg text-sm hover:bg-indigo-700">Donate</button></div>
+            </div>`;
+        }).join('');
+    }
+
     /* =====================================================
        QUICK VIEW + REVIEWS
     ===================================================== */
@@ -1478,6 +1680,7 @@
         }
         if (!joinedClubs.includes(currentClub)) joinedClubs.push(currentClub);
         showToast('You joined ' + currentClub.name + '! 🎉');
+        const c = currentClub; closeQuickView(); openPortal(c);
     }
     function donateCurrentClub() { const c = currentClub; closeQuickView(); openDonationModal(c); }
     function quickViewToLogin(e) { e.preventDefault(); closeQuickView(); openLoginModal(); }
@@ -1620,6 +1823,7 @@
         ledClubs.push(club);
         if (editingDraftIndex !== null) { drafts.splice(editingDraftIndex, 1); editingDraftIndex = null; }
         applyFilters();
+        renderMyClubsStrip();
         // Launch screen
         document.getElementById('publishClubId').textContent = club.id;
         document.getElementById('publishShareLink').value = club.shareLink;
@@ -1718,10 +1922,11 @@
     }
     function escq(s) { return (s || '').replace(/'/g, "\\'"); }
     function findClubByName(name) { return CLUBS.find(c => c.name === name) || ledClubs.find(c => c.name === name) || joinedClubs.find(c => c.name === name); }
-    function openQuickViewByName(name) { const c = findClubByName(name); if (c) renderQuickView(c, false); }
+    function openQuickViewByName(name) { const c = findClubByName(name); if (c) openPortal(c); }
+    function openPortalByName(name) { const c = findClubByName(name); if (c) openPortal(c); }
     function manageClub(name) { openManage(findClubByName(name)); }
     function inviteMembers(name) { const c = findClubByName(name); const link = c && c.shareLink ? c.shareLink : 'https://studentclubhub.org/c/' + (c && c.id ? c.id.replace('#SCH-', '').toLowerCase() : ''); showToast('Invite link copied: ' + link); }
-    function startFundraiserFor(name) { openManage(findClubByName(name)); setTimeout(openFundraiser, 300); }
+    function startFundraiserFor(name) { openCampaign(findClubByName(name)); }
 
     /* =====================================================
        SETTINGS
@@ -1746,8 +1951,10 @@
        GUEST DONATION MODAL
     ===================================================== */
     let donationState = { amount: 0 };
+    let donationClub = null;
     function openDonationModal(ref) {
         let club = (typeof ref === 'number') ? CLUBS[ref] : (ref && ref.name ? ref : null);
+        donationClub = club;
         const line = document.getElementById('donationClubLine');
         if (club) line.innerHTML = `You're supporting <span class="font-semibold text-indigo-600">${club.name}</span>. 100% of your contribution goes to their initiatives.`;
         else line.textContent = '100% of your contribution helps high school students fund their initiatives.';
@@ -1763,7 +1970,7 @@
     function resetDonation() {
         donationState.amount = 0;
         document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('selected'));
-        ['customAmount', 'donorName', 'donorNote', 'cardNumber', 'cardExp', 'cardCvv', 'cardZip'].forEach(id => document.getElementById(id).value = '');
+        ['customAmount', 'donorName', 'donorShoutout', 'donorNote', 'cardNumber', 'cardExp', 'cardCvv', 'cardZip'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('anonCheck').checked = false;
         document.getElementById('wordCount').textContent = '0';
         document.getElementById('confettiContainer').innerHTML = '';
@@ -1805,6 +2012,22 @@
             document.getElementById('donationThankYou').classList.remove('hidden');
             document.getElementById('thankYouAmount').textContent = 'Your gift of $' + amt.toFixed(2) + ' is on its way to student clubs.';
             launchConfetti();
+            // Attribute the gift to the club's active fundraiser
+            if (donationClub) {
+                const f = clubActiveFundraiser(donationClub);
+                if (f) {
+                    const before = f.raised || 0;
+                    f.raised = before + amt;
+                    const goal = f.target || 0;
+                    if (goal && before < goal && f.raised >= goal) {
+                        owlBotSay(donationClub, '🚀 GOAL REACHED! We raised $' + f.raised.toLocaleString() + ' for our club!');
+                        setTimeout(() => showToast('🎉 ' + donationClub.name + ' hit its goal! Donations stay open for overflow funding.'), 400);
+                    }
+                    renderMyClubsStrip();
+                    renderTopFunded();
+                    if (currentCampaignClub === donationClub) renderCampaign();
+                }
+            }
         }, 1800);
     }
     function launchConfetti(containerId) {
@@ -1942,7 +2165,7 @@
     function activeFundraiserCount(club) { return (club.fundraisers || []).filter(f => !f.isDraft).length; }
     function openFundraiser() {
         if (!currentManageClub) return;
-        if (activeFundraiserCount(currentManageClub) >= 3) { showToast('Limit reached: max 3 active fundraisers per club.'); return; }
+        if (activeFundraiserCount(currentManageClub) >= 1) { showToast('Each club can run only 1 active fundraiser at a time.'); return; }
         frDraftIndex = null;
         frPhotos = [];
         document.getElementById('frTitle').value = '';
@@ -1980,6 +2203,9 @@
             target: target,
             raised: Math.floor(Math.random() * target * 0.7), // demo progress
             photos: frPhotos.slice(),
+            impressions: Math.floor(Math.random() * 200 + 40),
+            visitors: Math.floor(Math.random() * 80 + 15),
+            hideLeaderboard: false,
             isPublic: document.getElementById('frPublicToggle').classList.contains('on')
         };
     }
@@ -1994,9 +2220,10 @@
     }
     function publishFundraiser() {
         if (document.getElementById('frPublishBtn').disabled) return;
-        if (activeFundraiserCount(currentManageClub) >= 3) { showToast('Limit reached: max 3 active fundraisers per club.'); return; }
+        if (activeFundraiserCount(currentManageClub) >= 1) { showToast('Each club can run only 1 active fundraiser at a time.'); return; }
         const f = buildFundraiser();
         f.isDraft = false;
+        f.hideLeaderboard = false;
         f.link = 'https://studentclubhub.org/f/' + f.id;
         currentManageClub.fundraisers = currentManageClub.fundraisers || [];
         currentManageClub.fundraisers.push(f);
@@ -2006,17 +2233,214 @@
         document.getElementById('frShareLink').value = f.link;
         drawQR(document.getElementById('frQR'), f.link);
         launchConfetti('frConfetti');
+        owlBotSay(currentManageClub, '🎉 Fundraiser Started! Click [HERE to Donate] and support our project!');
         renderManageFundraisers();
+        renderMyClubsStrip();
+        renderTopFunded();
     }
     function closeFundraiserSuccess() { closeFundraiser(); }
     function copyFrLink() { const el = document.getElementById('frShareLink'); el.select(); try { document.execCommand('copy'); } catch (e) {} showToast('Fundraiser link copied!'); }
     function progressColor(pct) { return pct < 34 ? '#ef4444' : (pct < 67 ? '#f59e0b' : '#16a34a'); }
+
+    /* =================== TOP 50 DONOR LEADERBOARD =================== */
+    const LB_FIRST = ['Alex', 'Jordan', 'Taylor', 'Sam', 'Riley', 'Casey', 'Morgan', 'Jamie', 'Avery', 'Quinn', 'Drew', 'Skyler', 'Reese', 'Parker', 'Rowan', 'Emerson', 'Charlie', 'Finley', 'Harper', 'Kai'];
+    const LB_LAST = ['R.', 'M.', 'T.', 'K.', 'S.', 'B.', 'L.', 'C.', 'W.', 'H.', 'P.', 'N.', 'D.', 'G.', 'F.'];
+    // Deterministic top-50 donor list per club (demo)
+    function leaderboardFor(club) {
+        let seed = 0; const key = club.name || 'club';
+        for (let i = 0; i < key.length; i++) seed = (seed * 31 + key.charCodeAt(i)) & 0x7fffffff;
+        function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+        const donors = [];
+        let amt = 500;
+        for (let i = 0; i < 50; i++) {
+            amt = Math.max(5, Math.round((amt - (rnd() * 18 + 2)) / 1) );
+            donors.push({ name: LB_FIRST[Math.floor(rnd() * LB_FIRST.length)] + ' ' + LB_LAST[Math.floor(rnd() * LB_LAST.length)], amount: amt + Math.floor(rnd() * 5) });
+        }
+        return donors.sort((a, b) => b.amount - a.amount);
+    }
+    function openLeaderboard(clubName) {
+        const club = findClubByName(clubName);
+        if (!club) return;
+        document.getElementById('lbClubLine').textContent = club.name + ' — ranked by total contribution';
+        const donors = leaderboardFor(club);
+        const medal = ['🥇', '🥈', '🥉'];
+        document.getElementById('leaderboardList').innerHTML = donors.map((d, i) => {
+            const rankCell = i < 3 ? `<span class="text-xl">${medal[i]}</span>` : `<span class="text-sm font-semibold text-gray-400 w-6 text-center inline-block">${i + 1}</span>`;
+            const hi = i < 3 ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-100';
+            return `<div class="flex items-center justify-between border ${hi} rounded-lg px-3 py-2">
+                <div class="flex items-center gap-3">${rankCell}<span class="text-sm font-medium text-gray-800">${d.name}</span></div>
+                <span class="text-sm font-bold text-indigo-600">$${d.amount.toLocaleString()}</span>
+            </div>`;
+        }).join('');
+        document.getElementById('leaderboardModal').classList.add('open');
+        lockScroll(true);
+    }
+    function closeLeaderboard() { document.getElementById('leaderboardModal').classList.remove('open'); lockScroll(false); }
+    function toggleHideLeaderboard(clubName, hidden) {
+        const club = findClubByName(clubName); const f = club && clubActiveFundraiser(club);
+        if (f) { f.hideLeaderboard = hidden; showToast(hidden ? 'Leaderboard hidden from donors.' : 'Leaderboard visible to donors.'); }
+    }
+
+    /* =================== FUNDRAISER CAMPAIGN PAGE =================== */
+    let currentCampaignClub = null;
+    function openCampaign(club) {
+        if (!club) return;
+        const f = clubActiveFundraiser(club);
+        if (!f) { showToast('No active fundraiser yet — create one to launch a campaign.'); openManage(club); setTimeout(openFundraiser, 300); return; }
+        currentCampaignClub = club;
+        f.visitors = (f.visitors || 0) + 1;
+        f.impressions = (f.impressions || 0) + Math.floor(Math.random() * 3 + 1);
+        renderCampaign();
+        document.getElementById('campaignModal').classList.add('open');
+        lockScroll(true);
+    }
+    function closeCampaign() { document.getElementById('campaignModal').classList.remove('open'); lockScroll(false); }
+    function renderCampaign() {
+        const club = currentCampaignClub; if (!club) return;
+        const f = clubActiveFundraiser(club); if (!f) { closeCampaign(); return; }
+        const st = styleForCategory(club.category);
+        const banner = document.getElementById('campBanner');
+        banner.style.background = club.banner ? `center/cover url(${club.banner})` : '';
+        banner.className = 'h-32 ' + (club.banner ? '' : (club.bg || 'bg-indigo-100').replace('100', '600'));
+        document.getElementById('campClubName').textContent = club.name + '  •  ' + (club.id || '');
+        document.getElementById('campTitle').textContent = f.title;
+        document.getElementById('campMission').textContent = f.mission || 'Help us reach our goal!';
+        const gal = document.getElementById('campGallery');
+        const pics = (f.photos && f.photos.length) ? f.photos : (club.gallery || []);
+        gal.innerHTML = pics.length ? pics.slice(0, 6).map(src => `<img src="${src}" class="w-full h-20 object-cover rounded-lg">`).join('')
+            : Array.from({ length: 3 }).map(() => `<div class="w-full h-20 rounded-lg bg-gray-100 flex items-center justify-center text-gray-300"><i class="fa-solid fa-image"></i></div>`).join('');
+        const raised = f.raised || 0, goal = f.target || 0, pct = goal ? (raised / goal * 100) : 0;
+        document.getElementById('campProgress').innerHTML = rocketBar(pct, false) + (pct >= 100 ? '<p class="text-emerald-600 text-xs font-semibold mt-1">🎉 Goal reached — donations stay open for overflow funding!</p>' : '');
+        document.getElementById('campRaisedLine').textContent = `$${raised.toLocaleString()} raised of $${goal.toLocaleString()} (${Math.round(pct)}%)`;
+        // Analytics + inline edit: leaders only
+        const isLeader = ledClubs.includes(club);
+        document.getElementById('campAnalytics').classList.toggle('hidden', !isLeader);
+        document.getElementById('campLeaderEdit').classList.toggle('hidden', !isLeader);
+        if (isLeader) {
+            document.getElementById('campImpr').textContent = (f.impressions || 0).toLocaleString();
+            document.getElementById('campVis').textContent = (f.visitors || 0).toLocaleString();
+            document.getElementById('campTot').textContent = '$' + raised.toLocaleString();
+            document.getElementById('campEditTitle').value = f.title || '';
+            document.getElementById('campEditMission').value = f.mission || '';
+            document.getElementById('campEditTarget').value = f.target || '';
+        }
+    }
+    function campPick(amt, el) { document.querySelectorAll('.camp-chip').forEach(c => c.classList.remove('selected')); el.classList.add('selected'); window._campAmt = amt; }
+    function campDonate() { const club = currentCampaignClub; closeCampaign(); openDonationModal(club); if (window._campAmt) { setTimeout(() => { const chips = document.querySelectorAll('#donationModal .amount-chip'); const map = { 10: 0, 25: 1, 50: 2, 100: 3 }; const idx = map[window._campAmt]; if (idx != null && chips[idx]) chips[idx].click(); }, 150); } }
+    function openLeaderboardForCampaign() { if (currentCampaignClub) openLeaderboard(currentCampaignClub.name); }
+    function saveCampaignEdit() {
+        const club = currentCampaignClub; const f = clubActiveFundraiser(club); if (!f) return;
+        f.title = document.getElementById('campEditTitle').value.trim() || f.title;
+        f.mission = document.getElementById('campEditMission').value.trim();
+        const t = parseFloat(document.getElementById('campEditTarget').value); if (t > 0) f.target = t;
+        renderCampaign(); renderMyClubsStrip(); renderTopFunded();
+        showToast('Campaign updated.');
+    }
+
+    /* =================== OWL BOT + MEMBER PORTAL =================== */
+    function owlBotSay(club, text) {
+        club.chat = club.chat || [];
+        club.chat.push({ bot: true, who: 'Owl Bot', text: text });
+        if (currentPortalClub === club) renderChat();
+    }
+    let currentPortalClub = null;
+    function seedPortal(club) {
+        if (club.allowMemberChat === undefined) club.allowMemberChat = true;
+        if (club.bellOn === undefined) club.bellOn = false;
+        if (!club.roster) {
+            club.roster = [
+                { n: 'Jamie Lee', r: 'Member' }, { n: 'Priya Nair', r: 'Member' },
+                { n: 'Diego Torres', r: 'Member' }, { n: 'Hana Kim', r: 'New Member' }
+            ];
+        }
+        if (!club.chatSeeded) {
+            club.chatSeeded = true;
+            club.chat = club.chat || [];
+            club.chat.push({ who: (club.leaders && club.leaders[0] ? club.leaders[0].n : 'President'), text: 'Welcome everyone! Great to have you in the club. 👋' });
+            if (clubActiveFundraiser(club)) owlBotSay(club, '🎉 Fundraiser Started! Click [HERE to Donate] and support our project!');
+        }
+    }
+    function openPortal(club) {
+        if (!club) return;
+        currentPortalClub = club;
+        seedPortal(club);
+        const st = styleForCategory(club.category);
+        const banner = document.getElementById('portalBanner');
+        banner.style.background = club.banner ? `center/cover url(${club.banner})` : '';
+        banner.className = 'h-28 relative ' + (club.banner ? '' : (club.bg || 'bg-indigo-100').replace('100', '600'));
+        const logo = document.getElementById('portalLogo');
+        logo.innerHTML = club.banner ? `<img src="${club.banner}" class="w-full h-full object-cover">` : `<i class="fa-solid ${club.icon || st.icon} ${club.text || st.text}"></i>`;
+        document.getElementById('portalName').textContent = club.name;
+        document.getElementById('portalMeta').textContent = `${club.category} • ${club.id || ''}`;
+        const isLeader = ledClubs.includes(club);
+        document.getElementById('portalLeaderBtns').classList.toggle('hidden', !isLeader);
+        document.getElementById('portalChatToggleWrap').classList.toggle('hidden', !isLeader);
+        document.getElementById('portalChatToggle').classList.toggle('on', club.allowMemberChat);
+        // Leadership
+        document.getElementById('portalLeaders').innerHTML = (club.leaders && club.leaders.length ? club.leaders : [{ n: 'TBD', r: 'Officer' }]).map(l =>
+            `<div class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2"><div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">${(l.n || '?').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}</div><div><p class="text-sm font-medium text-gray-800">${l.n}</p><p class="text-[11px] text-gray-500">${l.r}</p></div></div>`).join('');
+        // Roster
+        document.getElementById('portalRoster').innerHTML = club.roster.map(m =>
+            `<div class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2"><div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold">${m.n.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}</div><div><p class="text-sm font-medium text-gray-800">${m.n}</p><p class="text-[11px] text-gray-500">${m.r}</p></div></div>`).join('');
+        updateBell();
+        renderChat();
+        document.getElementById('portalModal').classList.add('open');
+        lockScroll(true);
+    }
+    function closePortal() { document.getElementById('portalModal').classList.remove('open'); lockScroll(false); }
+    function portalOpenManage() { const c = currentPortalClub; closePortal(); openManage(c); }
+    function portalOpenCampaign() { const c = currentPortalClub; closePortal(); openCampaign(c); }
+    function updateBell() {
+        const club = currentPortalClub; const bell = document.getElementById('portalBell');
+        const on = club && club.bellOn;
+        bell.classList.toggle('text-amber-400', on);
+        bell.classList.toggle('text-gray-400', !on);
+        bell.querySelector('i').className = (on ? 'fa-solid fa-bell' : 'fa-regular fa-bell') + ' text-xl';
+    }
+    function toggleBell() {
+        const club = currentPortalClub; if (!club) return;
+        club.bellOn = !club.bellOn; updateBell();
+        showToast(club.bellOn ? '🔔 Notifications on — you\'ll get officer alerts.' : 'Notifications off.');
+    }
+    function toggleMemberChat() {
+        const club = currentPortalClub; if (!club) return;
+        club.allowMemberChat = !club.allowMemberChat;
+        document.getElementById('portalChatToggle').classList.toggle('on', club.allowMemberChat);
+        renderChat();
+        showToast(club.allowMemberChat ? 'Members can now post in chat.' : 'Member posting turned off.');
+    }
+    function renderChat() {
+        const club = currentPortalClub; if (!club) return;
+        const feed = document.getElementById('portalChat');
+        feed.innerHTML = (club.chat || []).map(m => {
+            if (m.bot) {
+                const text = m.text.replace('[HERE to Donate]', '<a href="#" onclick="portalDonate(event)" class="underline font-semibold">HERE to Donate</a>');
+                return `<div class="flex items-start gap-2"><div class="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-sm flex-shrink-0">🦉</div><div class="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-sm text-amber-900"><p class="text-[11px] font-semibold text-amber-700 mb-0.5">Owl Bot</p>${text}</div></div>`;
+            }
+            return `<div class="flex items-start gap-2"><div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold flex-shrink-0">${(m.who || '?').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}</div><div class="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700"><p class="text-[11px] font-semibold text-gray-500 mb-0.5">${m.who}</p>${m.text}</div></div>`;
+        }).join('') || '<p class="text-xs text-gray-400 text-center py-2">No messages yet.</p>';
+        feed.scrollTop = feed.scrollHeight;
+        // Posting allowed for club leaders always, or members if enabled
+        const canPost = ledClubs.includes(club) || club.allowMemberChat;
+        document.getElementById('portalChatInputRow').classList.toggle('hidden', !canPost);
+        document.getElementById('portalChatLocked').classList.toggle('hidden', canPost);
+    }
+    function postChat() {
+        const club = currentPortalClub; if (!club) return;
+        const input = document.getElementById('portalChatInput');
+        const text = input.value.trim(); if (!text) return;
+        club.chat = club.chat || [];
+        club.chat.push({ who: currentUser.name || 'You', text: text });
+        input.value = '';
+        renderChat();
+    }
+    function portalDonate(e) { if (e) e.preventDefault(); const c = currentPortalClub; closePortal(); openDonationModal(c); }
     function renderManageFundraisers() {
         const list = document.getElementById('mgFundraiserList');
         const fs = currentManageClub.fundraisers || [];
         const active = activeFundraiserCount(currentManageClub);
-        document.getElementById('mgFundraiserCount').textContent = `(${active}/3 active)`;
-        document.getElementById('mgCreateFundraiserBtn').classList.toggle('opacity-50', active >= 3);
+        document.getElementById('mgFundraiserCount').textContent = `(${active}/1 active)`;
+        document.getElementById('mgCreateFundraiserBtn').classList.toggle('opacity-50', active >= 1);
         list.innerHTML = fs.length ? fs.map(f => {
             if (f.isDraft) {
                 return `<div class="border border-dashed border-gray-300 rounded-lg p-3">
@@ -2026,15 +2450,18 @@
             }
             const pct = f.target ? Math.min(100, Math.round(f.raised / f.target * 100)) : 0;
             return `<div class="border border-gray-200 rounded-lg p-3">
-                <div class="flex items-center justify-between mb-1">
-                    <p class="text-sm font-semibold text-gray-800">${f.title}</p>
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-sm font-semibold text-gray-800">${f.title}${pct >= 100 ? ' <span class="text-emerald-600">🎉 Goal reached!</span>' : ''}</p>
                     <span class="text-xs ${f.isPublic ? 'text-emerald-600' : 'text-gray-500'}">${f.isPublic ? 'Public' : 'Private'}</span>
                 </div>
-                <div class="w-full bg-gray-100 rounded-full h-2.5 mb-1">
-                    <div class="h-2.5 rounded-full transition-all" style="width:${pct}%;background:${progressColor(pct)}"></div>
+                ${rocketBar(pct, true)}
+                <p class="text-xs text-gray-500 mt-1">$${(f.raised || 0).toLocaleString()} raised of $${(f.target || 0).toLocaleString()} (${pct}%)</p>
+                <p class="text-[11px] text-gray-400 mb-1"><i class="fa-solid fa-heart text-red-400 mr-1"></i>100% of funds raised go directly to this student organization.</p>
+                <div class="flex items-center gap-3">
+                    <a href="${f.link}" target="_blank" class="text-xs text-indigo-600 font-semibold hover:underline"><i class="fa-solid fa-link mr-1"></i>Donation link</a>
+                    <button onclick="openLeaderboard('${escq(currentManageClub.name)}')" class="text-xs text-amber-600 font-semibold hover:underline"><i class="fa-solid fa-trophy mr-1"></i>Top 50 Donors</button>
                 </div>
-                <p class="text-xs text-gray-500">$${(f.raised || 0).toLocaleString()} raised of $${(f.target || 0).toLocaleString()} (${pct}%)</p>
-                <a href="${f.link}" target="_blank" class="text-xs text-indigo-600 font-semibold hover:underline"><i class="fa-solid fa-link mr-1"></i>Donation link</a>
+                <label class="flex items-center gap-2 mt-2 text-xs text-gray-600 cursor-pointer"><input type="checkbox" ${f.hideLeaderboard ? 'checked' : ''} onchange="toggleHideLeaderboard('${escq(currentManageClub.name)}', this.checked)" class="h-3.5 w-3.5 text-indigo-600 rounded border-gray-300"> Hide Leaderboard from Donors</label>
             </div>`;
         }).join('') : '<p class="text-xs text-gray-400">No fundraisers yet.</p>';
     }
@@ -2087,7 +2514,7 @@
     }
 
     /* Close modals on overlay click + Escape */
-    const ALL_MODALS = ['logoutModal', 'loginModal', 'signupModal', 'donationModal', 'quickViewModal', 'mascotModal', 'deleteModal', 'publishModal', 'manageModal', 'fundraiserModal'];
+    const ALL_MODALS = ['logoutModal', 'loginModal', 'signupModal', 'donationModal', 'quickViewModal', 'mascotModal', 'deleteModal', 'publishModal', 'manageModal', 'fundraiserModal', 'leaderboardModal', 'campaignModal', 'portalModal'];
     ALL_MODALS.forEach(id => {
         document.getElementById(id).addEventListener('click', function (e) { if (e.target === this) { this.classList.remove('open'); lockScroll(false); } });
     });
@@ -2095,8 +2522,17 @@
         if (e.key === 'Escape') { ALL_MODALS.forEach(id => document.getElementById(id).classList.remove('open')); lockScroll(false); }
     });
 
+    /* Seed one active fundraiser per demo club (single-fundraiser model) */
+    const SEED_FR = [
+        { title: 'Nationals Robot Build Fund', target: 5000, raised: 3200 },
+        { title: 'Beach Cleanup Gear Drive', target: 1500, raised: 1200 },
+        { title: 'Startup Showcase Fund', target: 2000, raised: 650 },
+        { title: 'Debate Nationals Travel', target: 3000, raised: 2850 },
+        { title: 'Student Film Equipment', target: 2500, raised: 900 },
+        { title: 'CPR Training Kits', target: 1800, raised: 450 }
+    ];
     /* Initialize club records with IDs + management fields */
-    CLUBS.forEach(c => {
+    CLUBS.forEach((c, idx) => {
         c.id = c.id || genClubId();
         c.officers = c.officers || {};
         c.fundraisers = c.fundraisers || [];
@@ -2105,6 +2541,10 @@
             c.pending = (c.privacy === 'Private')
                 ? [{ name: 'Riley Chen', email: 'riley.c@school.edu' }, { name: 'Sam Okafor', email: 'sam.o@school.edu' }]
                 : [];
+        }
+        if (c.fundraisers.length === 0 && SEED_FR[idx]) {
+            const s = SEED_FR[idx];
+            c.fundraisers.push({ id: 'F' + (1000 + idx), title: s.title, mission: 'Help us reach our goal and support this student initiative!', target: s.target, raised: s.raised, photos: [], isPublic: true, isDraft: false, link: 'https://studentclubhub.org/f/F' + (1000 + idx), hideLeaderboard: false, impressions: 120 + idx * 55, visitors: 40 + idx * 12 });
         }
     });
 
