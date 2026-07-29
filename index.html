@@ -350,6 +350,35 @@
     </div>
 
     <!-- ============================================================= -->
+    <!-- ==================  VIEW: USER PROFILE  ==================== -->
+    <!-- ============================================================= -->
+    <div id="view-profile" class="app-view hidden">
+        <div class="relative">
+            <div id="profileCover" class="h-32 bg-indigo-600"></div>
+            <button onclick="closeProfile()" class="absolute top-4 left-4 bg-white/90 text-gray-700 hover:text-gray-900 rounded-lg px-3 py-1.5 text-sm font-medium"><i class="fa-solid fa-xmark mr-1"></i> Back</button>
+        </div>
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-10">
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                <div class="flex items-start gap-4">
+                    <div id="profileAvatar" class="w-20 h-20 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl font-bold overflow-hidden flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0 pt-1">
+                        <h1 id="profileName" class="text-2xl font-bold text-gray-900"></h1>
+                        <p id="profileMeta" class="text-sm text-gray-500"></p>
+                        <p id="profileHeadline" class="text-sm text-indigo-600 font-medium mt-1"></p>
+                    </div>
+                </div>
+                <p id="profileBio" class="text-sm text-gray-600 mt-4"></p>
+                <div id="profileSocials" class="flex flex-wrap gap-2 mt-3"></div>
+            </div>
+            <div class="mt-8 pb-16">
+                <h2 class="text-lg font-bold text-gray-900 mb-4"><i class="fa-solid fa-layer-group text-indigo-600 mr-2"></i>Joined Clubs</h2>
+                <div id="profileClubs" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                <div id="profileClubsPrivate" class="hidden text-center py-10 text-gray-400"><i class="fa-solid fa-lock text-2xl mb-2"></i><p class="text-sm">This account is private — their joined clubs are hidden.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
     <!-- ==================  VIEW: START A CLUB  ===================== -->
     <!-- ============================================================= -->
     <div id="view-start-club" class="app-view hidden max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -464,31 +493,6 @@
             </div>
         </div>
 
-        <!-- Links -->
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
-            <h2 class="font-bold text-gray-900 text-lg mb-1"><i class="fa-solid fa-link text-indigo-600 mr-2"></i>Links</h2>
-            <p class="text-sm text-gray-500 mb-4">You'll get a shareable invite link &amp; Club ID after publishing.</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Discord Link</label>
-                    <input id="discordLink" type="url" placeholder="https://discord.gg/..." class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Website Link</label>
-                    <input id="websiteLink" type="url" placeholder="https://myclub.org" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
-                </div>
-            </div>
-        </div>
-
-        <!-- Fundraising Settings -->
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
-            <h2 class="font-bold text-gray-900 text-lg mb-4"><i class="fa-solid fa-hand-holding-dollar text-indigo-600 mr-2"></i>Fundraising Settings</h2>
-            <label class="flex items-center gap-3 cursor-pointer">
-                <input id="enableDonations" type="checkbox" checked class="h-4 w-4 text-indigo-600 rounded border-gray-300">
-                <span class="text-sm text-gray-700">Enable Direct Donations for this Club</span>
-            </label>
-        </div>
-
         <!-- Footer Actions -->
         <p class="text-xs text-gray-500 mb-3"><span class="text-blue-500">*</span> Blue asterisk indicates a required field</p>
         <div class="flex flex-col sm:flex-row gap-3 justify-end">
@@ -600,17 +604,13 @@
                     <h2 class="font-bold text-gray-900 text-lg mb-1">Privacy &amp; Data</h2>
                     <p class="text-sm text-gray-500 mb-6">Control who can find you and what they can see. Each setting is a simple on/off switch.</p>
 
-                    <!-- Who can find me -->
+                    <!-- Account privacy -->
                     <div class="bg-gray-50 rounded-xl border border-gray-200 p-4 mb-4">
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Who can find me</p>
-                        <div class="flex items-center justify-between mb-1">
-                            <div class="pr-4"><p class="font-medium text-gray-800 text-sm">Show my profile in search</p><p class="text-xs text-gray-500">When ON, other users can find you by searching your name. When OFF, your profile is completely hidden from search.</p></div>
-                            <div id="toggleSearchable" class="toggle on" onclick="this.classList.toggle('on')"></div>
+                        <div class="flex items-center justify-between">
+                            <div class="pr-4"><p class="font-medium text-gray-800 text-sm">Set Account to Private</p></div>
+                            <div id="togglePrivate" class="toggle" onclick="this.classList.toggle('on')"></div>
                         </div>
-                        <div class="flex items-center justify-between border-t border-gray-200 pt-3 mt-3">
-                            <div class="pr-4"><p class="font-medium text-gray-800 text-sm">Include my joined clubs</p><p class="text-xs text-gray-500">Also list the clubs you've joined on your profile. <span class="italic">(Only applies when the setting above is ON.)</span></p></div>
-                            <div id="toggleShowJoined" class="toggle on" onclick="this.classList.toggle('on')"></div>
-                        </div>
+                        <p class="text-xs text-gray-500 mt-2">When your account is set to private, other users will not be able to see the list of clubs you have joined on your profile. Your profile details remain visible.</p>
                     </div>
 
                     <!-- Donation privacy -->
@@ -703,15 +703,36 @@
                         <h3 class="text-sm font-semibold text-gray-700 mb-2"><i class="fa-solid fa-user-group text-indigo-600 mr-1"></i>Leadership</h3>
                         <div id="clubLeaders2" class="space-y-2 mb-5"></div>
                         <h3 class="text-sm font-semibold text-gray-700 mb-2"><i class="fa-solid fa-users text-indigo-600 mr-1"></i>Team Roster</h3>
-                        <div id="clubRoster2" class="space-y-2"></div>
+                        <div id="clubRosterGate" class="hidden text-xs text-gray-400 bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">Members only — join this club to view the roster.</div>
+                        <div id="clubRosterBox">
+                            <div class="relative mb-2">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                                <input id="rosterSearch" oninput="filterRoster()" placeholder="Search roster by name..." class="w-full border border-gray-300 rounded-lg pl-8 pr-3 py-2 text-sm focus:outline-none focus:border-indigo-500 valid-ring">
+                            </div>
+                            <div id="clubRoster2" class="space-y-2 max-h-[19rem] overflow-y-auto pr-1"></div>
+                        </div>
                     </div>
                 </div>
-                <!-- Member & supporter reviews -->
+                <!-- Club Reviews -->
                 <div class="border-t border-gray-200 mt-8 pt-6">
                     <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-sm font-semibold text-gray-700"><i class="fa-solid fa-star text-amber-400 mr-1"></i>Member &amp; Supporter Reviews</h3>
+                        <h3 class="text-base font-bold text-gray-900"><i class="fa-solid fa-star text-amber-400 mr-1"></i>Club Reviews</h3>
                         <span id="clubReviewAvg" class="text-xs text-gray-500"></span>
                     </div>
+                    <!-- Write a review (logged-in members) -->
+                    <div id="clubReviewForm" class="hidden bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4 max-w-2xl">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Write a Review</p>
+                        <div class="star-input text-2xl text-amber-400 mb-2" id="clubReviewStars" onmouseleave="updateClubStarUI()">
+                            <i class="fa-regular fa-star" onmouseover="highlightClubStars(1)" onclick="setClubStars(1)"></i>
+                            <i class="fa-regular fa-star" onmouseover="highlightClubStars(2)" onclick="setClubStars(2)"></i>
+                            <i class="fa-regular fa-star" onmouseover="highlightClubStars(3)" onclick="setClubStars(3)"></i>
+                            <i class="fa-regular fa-star" onmouseover="highlightClubStars(4)" onclick="setClubStars(4)"></i>
+                            <i class="fa-regular fa-star" onmouseover="highlightClubStars(5)" onclick="setClubStars(5)"></i>
+                        </div>
+                        <textarea id="clubReviewText" rows="2" oninput="validateClubReview()" placeholder="Share your experience with this club..." class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-3 bg-white focus:outline-none focus:border-indigo-500 valid-ring resize-none"></textarea>
+                        <button id="clubReviewSubmit" onclick="submitClubReview()" disabled class="action-btn px-5 py-2 rounded-lg font-semibold text-sm">Submit Review</button>
+                    </div>
+                    <div id="clubReviewLoginPrompt" class="hidden bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-4 max-w-2xl text-sm text-indigo-800">Join this club and log in to write a review.</div>
                     <div id="clubReviews2" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
                 </div>
             </div>
@@ -1583,7 +1604,7 @@
     /* =====================================================
        VIEW CONTROLLER
     ===================================================== */
-    const VIEWS = ['home', 'browse', 'saved', 'donate', 'club', 'club-settings', 'start-club', 'my-clubs', 'settings'];
+    const VIEWS = ['home', 'browse', 'saved', 'profile', 'donate', 'club', 'club-settings', 'start-club', 'my-clubs', 'settings'];
     const LOGIN_REQUIRED_VIEWS = ['my-clubs', 'start-club', 'settings', 'club-settings'];
     function showView(name) {
         if (LOGIN_REQUIRED_VIEWS.includes(name) && !isLoggedIn) { openLoginModal(); return; }
@@ -1630,11 +1651,19 @@
             <button onclick="openLogoutModal()" title="Log out" class="w-9 h-9 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>`;
         // Hero button: "Donate as Guest" -> "Donate"
         document.getElementById('heroDonateBtn').innerHTML = '<i class="fa-solid fa-heart mr-2"></i>Donate';
-        // Prefill settings
+        // Prefill settings (name/email + saved profile fields)
         document.getElementById('setDisplayName').value = name;
         document.getElementById('setEmail').value = currentUser.email;
         document.getElementById('settingsAvatar').textContent = initials;
         document.getElementById('setMemberId').textContent = currentUser.userId || '—';
+        document.getElementById('setSchool').value = (rec && rec.school) || '';
+        document.getElementById('setGradYear').value = (rec && rec.gradYear) || '';
+        document.getElementById('setHeadline').value = (rec && rec.headline) || '';
+        document.getElementById('setBio').value = (rec && rec.bio) || '';
+        document.getElementById('setInstagram').value = (rec && rec.instagram) || '';
+        document.getElementById('setLinkedin').value = (rec && rec.linkedin) || '';
+        currentUser.private = !!(rec && rec.private);
+        document.getElementById('togglePrivate').classList.toggle('on', currentUser.private);
         rebuildUserClubState();
         renderMyClubsStrip();
         updateSiteReviewAccess();
@@ -1953,11 +1982,10 @@
     let activeTags = new Set();
     let currentClub = null;
 
-    function renderClubs(list) {
-        const grid = document.getElementById('clubGrid');
-        grid.innerHTML = list.map(club => {
-            const i = CLUBS.indexOf(club);
-            return `
+    // Shared Browse-style club card (Quick View + Support), reused in Browse, Saved, and Profiles
+    function browseCardHTML(club) {
+        const i = CLUBS.indexOf(club);
+        return `
             <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col">
                 <div onclick="openPortalByName('${escq(club.name)}')" class="flex items-center space-x-3 mb-3 cursor-pointer group" title="Open club page">
                     ${clubThumb(club, 'w-12 h-12')}
@@ -1965,14 +1993,17 @@
                 </div>
                 <p class="text-[11px] font-mono text-gray-400 mb-3">${club.id || ''}${club.privacy === 'Private' ? ' • <i class="fa-solid fa-lock"></i> Private' : ''}</p>
                 <p class="text-sm text-gray-600 mb-4 flex-1">${club.desc}</p>
-                <div class="text-xs text-gray-500 mb-3"><i class="fa-regular fa-clock mr-1"></i> ${club.meeting.split(',')[0]}</div>
+                <div class="text-xs text-gray-500 mb-3"><i class="fa-regular fa-clock mr-1"></i> ${(club.meeting || 'Schedule TBD').split(',')[0]}</div>
                 ${cardProgress(club)}
                 <div class="flex gap-2">
                     <button onclick="openQuickView(${i})" class="flex-1 bg-gray-100 text-indigo-600 font-semibold py-2 rounded-lg text-sm hover:bg-indigo-50 transition"><i class="fa-regular fa-eye mr-1"></i> Quick View</button>
                     <button onclick="openDonationModal(${i})" class="flex-1 bg-indigo-600 text-white font-semibold py-2 rounded-lg text-sm hover:bg-indigo-700 transition">Support</button>
                 </div>
             </div>`;
-        }).join('');
+    }
+    function renderClubs(list) {
+        const grid = document.getElementById('clubGrid');
+        grid.innerHTML = list.map(browseCardHTML).join('');
         document.getElementById('noResults').classList.toggle('hidden', list.length > 0);
     }
     function applyFilters() {
@@ -1993,21 +2024,16 @@
         const wrap = document.getElementById('profileResults');
         const grid = document.getElementById('profileGrid');
         if (!q || q.length < 2) { wrap.classList.add('hidden'); return; }
-        // Build searchable people list (demo profiles + current user if searchable)
         let people = PROFILES.slice();
-        if (isLoggedIn && document.getElementById('toggleSearchable').classList.contains('on')) {
-            people.unshift({ name: currentUser.name, school: document.getElementById('setSchool').value || 'Your School', role: 'You', joined: joinedClubs.map(c => c.name) });
-        }
-        const showJoined = document.getElementById('toggleShowJoined').classList.contains('on');
-        const matches = people.filter(p => p.name.toLowerCase().includes(q) || p.school.toLowerCase().includes(q));
+        if (isLoggedIn) people.unshift({ name: currentUser.name, school: (document.getElementById('setSchool').value || 'Your School'), role: 'You' });
+        const matches = people.filter(p => p.name.toLowerCase().includes(q) || (p.school || '').toLowerCase().includes(q));
         if (!matches.length) { wrap.classList.add('hidden'); return; }
         grid.innerHTML = matches.map(p => {
             const initials = p.name.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase();
-            const joinedLine = (showJoined && p.joined && p.joined.length) ? `<p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-layer-group mr-1"></i>${p.joined.join(', ')}</p>` : '';
-            return `<div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
+            return `<button onclick="openProfile('${escq(p.name)}')" class="w-full text-left bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3 hover:shadow-md transition">
                 <div class="w-11 h-11 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">${initials}</div>
-                <div><p class="font-semibold text-gray-900 text-sm">${p.name}</p><p class="text-xs text-gray-500">${p.role} • ${p.school}</p>${joinedLine}</div>
-            </div>`;
+                <div><p class="font-semibold text-gray-900 text-sm">${p.name}</p><p class="text-xs text-gray-500">${p.role} • ${p.school}</p></div>
+            </button>`;
         }).join('');
         wrap.classList.remove('hidden');
     }
@@ -2263,6 +2289,81 @@
             : `<div class="${size} ${club.bg || st.bg} ${club.text || st.text} rounded-lg flex items-center justify-center flex-shrink-0"><i class="fa-solid ${club.icon || st.icon} text-xl"></i></div>`;
     }
 
+    /* ===== Full-page public user profiles ===== */
+    let profileReturnView = 'home';
+    const PROFILE_ROLE_ORDER = { 'President': 0, 'Co-President': 1, 'Vice President': 2, 'Secretary': 3, 'Treasurer': 4, 'Member': 5, 'New Member': 5 };
+    function personRoleInClub(club, name) {
+        const l = (club.leaders || []).find(x => x.n === name); if (l) return l.r;
+        const m = (club.roster || []).find(x => x.n === name); if (m) return m.r || 'Member';
+        return null;
+    }
+    function socialsFromSettings() {
+        const arr = [];
+        const ig = (document.getElementById('setInstagram').value || '').trim();
+        const li = (document.getElementById('setLinkedin').value || '').trim();
+        if (ig) arr.push(/^https?:\/\//.test(ig) ? ig : 'https://instagram.com/' + ig.replace(/^@/, ''));
+        if (li) arr.push(/^https?:\/\//.test(li) ? li : 'https://' + li.replace(/^@/, ''));
+        return arr;
+    }
+    function getProfile(name) {
+        const self = isLoggedIn && name === currentUser.name;
+        let rec = null; try { rec = Object.values(loadUsers()).find(u => u.name === name) || null; } catch (e) {}
+        const demo = PROFILES.find(p => p.name === name);
+        if (self) {
+            const av = document.getElementById('settingsAvatar'); const img = av && av.querySelector('img');
+            return {
+                name, isSelf: true, private: !!currentUser.private,
+                school: (document.getElementById('setSchool').value || '').trim() || (rec && rec.school) || '',
+                grad: (document.getElementById('setGradYear').value || '').trim() || (rec && rec.gradYear) || '',
+                headline: (document.getElementById('setHeadline').value || '').trim() || (rec && rec.headline) || '',
+                bio: (document.getElementById('setBio').value || '').trim() || (rec && rec.bio) || '',
+                socials: socialsFromSettings(), avatar: img ? img.src : null
+            };
+        }
+        if (rec) return { name, private: !!rec.private, school: rec.school || '', grad: rec.gradYear || '', headline: rec.headline || '', bio: rec.bio || '', socials: rec.socials || [], avatar: null };
+        if (demo) return { name, private: false, school: demo.school || '', grad: '', headline: demo.role || '', bio: '', socials: [], avatar: null };
+        return { name, private: false, school: '', grad: '', headline: '', bio: '', socials: [], avatar: null };
+    }
+    function openProfile(name) {
+        if (!name || name === 'TBD' || name === 'Anonymous' || name === 'Owl Bot') return;
+        const cur = currentViewName(); if (cur !== 'profile') profileReturnView = cur;
+        renderProfile(getProfile(name));
+        VIEWS.forEach(v => document.getElementById('view-' + v).classList.toggle('hidden', v !== 'profile'));
+        document.querySelectorAll('.nav-link').forEach(b => { b.classList.remove('bg-indigo-50', 'text-indigo-600'); b.classList.add('text-gray-600'); });
+        lockScroll(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function closeProfile() { showView(profileReturnView || 'home'); }
+    function renderProfile(p) {
+        const av = document.getElementById('profileAvatar');
+        av.innerHTML = p.avatar ? `<img src="${p.avatar}" class="w-full h-full object-cover">` : initialsOf(p.name);
+        document.getElementById('profileName').textContent = p.name;
+        const metaBits = [p.school, p.grad ? 'Class of ' + p.grad : ''].filter(Boolean);
+        document.getElementById('profileMeta').textContent = metaBits.join('  •  ') || 'Student Club Hub member';
+        document.getElementById('profileHeadline').textContent = p.headline || '';
+        document.getElementById('profileBio').textContent = p.bio || 'No bio yet.';
+        document.getElementById('profileSocials').innerHTML = (p.socials || []).map(u => {
+            const m = inferSocial(u); const ic = m.icon ? `<i class="fa-brands ${m.icon}"></i>` : '<i class="fa-solid fa-link"></i>';
+            return `<a href="${socialHref(u)}" target="_blank" rel="noopener" class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-full px-3 py-1 text-sm ${m.color} hover:bg-gray-100">${ic}<span>${m.label}</span></a>`;
+        }).join('');
+        // Joined clubs: leadership first, then Members alphabetically
+        const grid = document.getElementById('profileClubs');
+        const privWrap = document.getElementById('profileClubsPrivate');
+        const hideClubs = p.private && !p.isSelf;   // private accounts hide joined clubs from others
+        grid.classList.toggle('hidden', hideClubs);
+        privWrap.classList.toggle('hidden', !hideClubs);
+        if (!hideClubs) {
+            const clubs = CLUBS.filter(c => personRoleInClub(c, p.name)).slice().sort((a, b) => {
+                const ra = PROFILE_ROLE_ORDER[personRoleInClub(a, p.name)] ?? 9, rb = PROFILE_ROLE_ORDER[personRoleInClub(b, p.name)] ?? 9;
+                const la = ra < 5, lb = rb < 5;
+                if (la !== lb) return la ? -1 : 1;
+                if (la && lb && ra !== rb) return ra - rb;
+                return a.name.localeCompare(b.name);
+            });
+            grid.innerHTML = clubs.length ? clubs.map(browseCardHTML).join('') : '<p class="text-sm text-gray-400 col-span-full">Not a member of any clubs yet.</p>';
+        }
+    }
+
     /* =====================================================
        START A CLUB WIZARD
     ===================================================== */
@@ -2275,9 +2376,8 @@
     function resetWizard() {
         editingDraftIndex = null;
         document.getElementById('wizardHeading').textContent = 'Start a Club';
-        ['clubTitle', 'clubTagline', 'clubSchool', 'clubMission', 'meetingLocation', 'officerEmail', 'discordLink', 'websiteLink', 'meetingRepeat'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        ['clubTitle', 'clubTagline', 'clubSchool', 'clubMission', 'meetingLocation', 'officerEmail', 'meetingRepeat'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
         document.getElementById('clubCategory').value = '';
-        document.getElementById('enableDonations').checked = true;
         document.querySelectorAll('[data-privacy]').forEach(c => c.classList.remove('selected'));
         wizardPrivacy = ''; wizardBanner = ''; wizardGallery = []; wizardMeetings = []; wizardAffiliated = [];
         document.getElementById('bannerPreview').innerHTML = '<i class="fa-solid fa-image text-2xl"></i>';
@@ -2373,9 +2473,9 @@
             gallery: wizardGallery.slice(),
             affiliated: wizardAffiliated.slice(),
             officerEmail: officerEmail,
-            discord: document.getElementById('discordLink').value.trim(),
-            website: document.getElementById('websiteLink').value.trim(),
-            donations: document.getElementById('enableDonations').checked,
+            discord: '',
+            website: '',
+            donations: true,
             officers: {},
             pending: [],
             fundraisers: [],
@@ -2435,9 +2535,6 @@
         wizardMeetings = (d.meetings || []).slice();
         document.getElementById('meetingLocation').value = (d.meeting && d.meeting.includes(' — ')) ? d.meeting.split(' — ')[1] : '';
         document.getElementById('officerEmail').value = d.officerEmail || '';
-        document.getElementById('discordLink').value = d.discord || '';
-        document.getElementById('websiteLink').value = d.website || '';
-        document.getElementById('enableDonations').checked = d.donations !== false;
         wizardPrivacy = d.privacy || '';
         document.querySelectorAll('[data-privacy]').forEach(c => c.classList.toggle('selected', c.dataset.privacy === wizardPrivacy));
         wizardBanner = d.banner || '';
@@ -2526,27 +2623,36 @@
         reader.readAsDataURL(file);
     }
     function saveSettings() {
-        const newName = document.getElementById('setDisplayName').value.trim();
-        const newEmail = document.getElementById('setEmail').value.trim();
-        if (newName) {
-            const oldEmail = (currentUser.email || '').toLowerCase();
-            const users = loadUsers();
-            const rec = users[oldEmail];
-            if (rec) {
-                rec.name = newName;
-                if (newEmail && newEmail.toLowerCase() !== oldEmail) { rec.email = newEmail; delete users[oldEmail]; users[newEmail.toLowerCase()] = rec; }
-                saveUsers(users);
-                startSession(rec);   // refresh the saved session token with the new name/email
-            }
-            currentUser.name = newName;
-            if (newEmail) currentUser.email = newEmail;
-            // Reflect the new name on any clubs where this user is listed
-            CLUBS.forEach(c => {
-                (c.members || []).forEach(m => { if (m.userId === currentUser.userId) m.name = newName; });
-                (c.leaders || []).forEach(l => { if (l.c && l.c.toLowerCase() === oldEmail) l.n = newName; });
-            });
-            setLoggedIn(newName, currentUser.email, currentUser.password);
+        const newName = document.getElementById('setDisplayName').value.trim() || currentUser.name;
+        const newEmail = document.getElementById('setEmail').value.trim() || currentUser.email;
+        const oldEmail = (currentUser.email || '').toLowerCase();
+        const priv = document.getElementById('togglePrivate').classList.contains('on');
+        const profileFields = {
+            school: document.getElementById('setSchool').value.trim(),
+            gradYear: document.getElementById('setGradYear').value.trim(),
+            headline: document.getElementById('setHeadline').value.trim(),
+            bio: document.getElementById('setBio').value.trim(),
+            instagram: document.getElementById('setInstagram').value.trim(),
+            linkedin: document.getElementById('setLinkedin').value.trim(),
+            socials: socialsFromSettings(),
+            private: priv
+        };
+        const users = loadUsers();
+        const rec = users[oldEmail];
+        if (rec) {
+            rec.name = newName; Object.assign(rec, profileFields);
+            if (newEmail && newEmail.toLowerCase() !== oldEmail) { rec.email = newEmail; delete users[oldEmail]; users[newEmail.toLowerCase()] = rec; }
+            saveUsers(users);
+            startSession(rec);   // refresh the saved session token
         }
+        currentUser.name = newName; currentUser.email = newEmail; currentUser.private = priv;
+        // Reflect the new name everywhere this user is listed
+        CLUBS.forEach(c => {
+            (c.members || []).forEach(m => { if (m.userId === currentUser.userId) m.name = newName; });
+            (c.roster || []).forEach(m => { if (m.uid && m.uid === currentUser.userId) m.n = newName; });
+            (c.leaders || []).forEach(l => { if (l.c && l.c.toLowerCase() === oldEmail) l.n = newName; });
+        });
+        setLoggedIn(newName, currentUser.email, currentUser.password);
         showToast('Your changes have been saved.');
     }
 
@@ -2982,7 +3088,7 @@
             const rankCell = i < 3 ? `<span class="text-xl">${medal[i]}</span>` : `<span class="text-sm font-semibold text-gray-400 w-6 text-center inline-block">${i + 1}</span>`;
             const hi = i < 3 ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-100';
             return `<div class="flex items-center justify-between border ${hi} rounded-lg px-3 py-2">
-                <div class="flex items-center gap-3">${rankCell}<span class="text-sm font-medium text-gray-800">${d.name}</span></div>
+                <div class="flex items-center gap-3">${rankCell}<span onclick="openProfile('${escq(d.name)}')" class="text-sm font-medium text-gray-800 cursor-pointer hover:text-indigo-600">${d.name}</span></div>
                 <span class="text-sm font-bold text-indigo-600">$${d.amount.toLocaleString()}</span>
             </div>`;
         }).join('');
@@ -3280,19 +3386,30 @@
             }).join('')
             : Array.from({ length: 4 }).map(() => `<div class="w-full h-16 rounded-lg bg-gray-100 flex items-center justify-center text-gray-300"><i class="fa-solid fa-image"></i></div>`).join('');
         // Leadership + roster are VIEW-ONLY here — role changes happen in Club Settings → Members.
+        const member = isMemberOf(club);
         const leaders = (club.leaders && club.leaders.length ? club.leaders : [{ n: 'TBD', r: 'Officer' }]);
-        document.getElementById('clubLeaders2').innerHTML = leaders.map(l => {
-            const initials = (l.n || '?').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-            return `<div class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2"><div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">${initials}</div><div class="flex-1 min-w-0"><p class="text-sm font-medium text-gray-800 truncate">${l.n}</p><p class="text-[11px] text-gray-500">${l.r}</p></div></div>`;
-        }).join('');
-        document.getElementById('clubRoster2').innerHTML = (club.roster || []).length ? (club.roster || []).map(m => {
-            const initials = m.n.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-            return `<div class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2"><div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold">${initials}</div><div class="flex-1 min-w-0"><p class="text-sm font-medium text-gray-800 truncate">${m.n}</p><p class="text-[11px] text-gray-500">${m.r || 'Member'}</p></div></div>`;
-        }).join('') : '<p class="text-xs text-gray-400">No members yet.</p>';
+        document.getElementById('clubLeaders2').innerHTML = leaders.map(l => profileRow(l.n, l.r, 'indigo')).join('');
+        // Roster is members-only (auth/privacy)
+        document.getElementById('clubRosterGate').classList.toggle('hidden', member);
+        document.getElementById('clubRosterBox').classList.toggle('hidden', !member);
+        if (member) { const rs = document.getElementById('rosterSearch'); if (rs) rs.value = ''; renderClubRoster(club, ''); }
         renderClubSocials(club);
         renderClubReviews(club);
         renderClubChat();
     }
+    function profileRow(name, role, color) {
+        const bg = color === 'emerald' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600';
+        return `<button onclick="openProfile('${escq(name)}')" class="w-full flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 hover:bg-gray-100 text-left transition"><div class="w-7 h-7 rounded-full ${bg} flex items-center justify-center text-xs font-bold flex-shrink-0">${initialsOf(name)}</div><div class="flex-1 min-w-0"><p class="text-sm font-medium text-gray-800 truncate hover:text-indigo-600">${name}</p><p class="text-[11px] text-gray-500">${role}</p></div></button>`;
+    }
+    function renderClubRoster(club, filter) {
+        const q = (filter || '').trim().toLowerCase();
+        const all = club.roster || [];
+        const list = all.filter(m => !q || m.n.toLowerCase().includes(q));
+        const el = document.getElementById('clubRoster2');
+        el.innerHTML = list.length ? list.map(m => profileRow(m.n, m.r || 'Member', 'emerald')).join('')
+            : `<p class="text-xs text-gray-400 text-center py-2">${all.length ? 'No members match your search.' : 'No members yet.'}</p>`;
+    }
+    function filterRoster() { if (currentClubPage) renderClubRoster(currentClubPage, document.getElementById('rosterSearch').value); }
     function removeClubMedia(i) { const club = currentClubPage; if (!canEditClub(club)) return; (club.gallery || []).splice(i, 1); renderClubInfo(club); }
     // Change a club's logo/PFP (used from Club Settings) — syncs across the whole directory
     function changeClubLogo(e) {
@@ -3344,10 +3461,30 @@
         document.getElementById('clubSocialEdit').classList.add('hidden');
         renderClubSocials(club); showToast('Social links saved.');
     }
+    let clubReviewRating = 0;
+    function highlightClubStars(n) { document.querySelectorAll('#clubReviewStars i').forEach((s, i) => s.className = (i < n ? 'fa-solid' : 'fa-regular') + ' fa-star'); }
+    function updateClubStarUI() { highlightClubStars(clubReviewRating); }
+    function setClubStars(n) { clubReviewRating = n; updateClubStarUI(); validateClubReview(); }
+    function validateClubReview() { setBtn('clubReviewSubmit', clubReviewRating > 0 && document.getElementById('clubReviewText').value.trim().length > 0); }
+    function submitClubReview() {
+        const club = currentClubPage; if (!club) return;
+        if (!(isLoggedIn && isMemberOf(club))) { showToast('Join this club to write a review.'); return; }
+        if (document.getElementById('clubReviewSubmit').disabled) return;
+        const text = document.getElementById('clubReviewText').value.trim();
+        reviewsByClub[club.name] = reviewsByClub[club.name] || [];
+        reviewsByClub[club.name].unshift({ name: currentUser.name || 'You', rating: clubReviewRating, text: text });
+        renderClubReviews(club);
+        showToast('Thanks! Your review has been posted.');
+    }
     function renderClubReviews(club) {
         const list = (reviewsByClub[club.name] || []);
         const wrap = document.getElementById('clubReviews2');
         const avg = document.getElementById('clubReviewAvg');
+        // Write form is for logged-in members only
+        const canReview = isLoggedIn && isMemberOf(club);
+        document.getElementById('clubReviewForm').classList.toggle('hidden', !canReview);
+        document.getElementById('clubReviewLoginPrompt').classList.toggle('hidden', canReview);
+        if (canReview) { clubReviewRating = 0; updateClubStarUI(); const t = document.getElementById('clubReviewText'); if (t) t.value = ''; validateClubReview(); }
         if (!list.length) { wrap.innerHTML = '<p class="text-xs text-gray-400">No reviews yet.</p>'; avg.textContent = ''; return; }
         avg.textContent = (list.reduce((s, r) => s + r.rating, 0) / list.length).toFixed(1) + ' ★ (' + list.length + ')';
         wrap.innerHTML = list.map(r => `<div class="bg-white border border-gray-200 rounded-lg p-3"><div class="flex items-center justify-between mb-1"><p class="text-sm font-semibold text-gray-800">${r.name}</p><div class="text-amber-400 text-xs">${starString(r.rating)}</div></div><p class="text-sm text-gray-600">${r.text}</p></div>`).join('');
@@ -3404,6 +3541,16 @@
     function renderClubChat() {
         const club = currentClubPage; if (!club) return;
         const feed = document.getElementById('clubChat2');
+        // AUTH/PRIVACY: only logged-in members can read the live chat
+        if (!isMemberOf(club)) {
+            feed.innerHTML = `<div class="text-center py-6 text-gray-400"><i class="fa-solid fa-lock text-2xl mb-2"></i><p class="text-sm">${isLoggedIn ? 'Join this club to view the live chat.' : 'Log in and join this club to view the live chat.'}</p></div>`;
+            document.getElementById('clubChatRow').classList.add('hidden');
+            const lk = document.getElementById('clubChatLocked');
+            lk.classList.remove('hidden');
+            lk.textContent = isLoggedIn ? 'Members only — join this club to participate.' : 'Log in and join this club to participate.';
+            document.getElementById('clubChatToggle').classList.toggle('on', club.allowMemberChat);
+            return;
+        }
         feed.innerHTML = (club.chat || []).map((m, i) => {
             const time = m.ts ? `<span class="text-gray-400 font-normal ml-1">${formatChatTime(m.ts)}</span>` : '';
             if (m.bot) { const text = m.text.replace('[HERE to Donate]', '<a href="#" onclick="clubFundDonateFromChat(event)" class="underline font-semibold">HERE to Donate</a>'); return `<div class="flex items-start gap-2"><div class="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-sm flex-shrink-0">🦉</div><div class="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-sm text-amber-900"><p class="text-[11px] font-semibold text-amber-700 mb-0.5">Owl Bot${time}</p>${text}</div></div>`; }
@@ -3411,7 +3558,7 @@
             const mine = isLoggedIn && ((m.uid && m.uid === currentUser.userId) || (!m.uid && m.who === currentUser.name));
             const controls = mine ? `<div class="flex gap-2 mt-0.5 ml-1"><button onclick="editChatMsg(${i})" class="text-[11px] text-gray-400 hover:text-indigo-600">Edit</button><button onclick="deleteChatMsg(${i})" class="text-[11px] text-gray-400 hover:text-red-600">Delete</button></div>` : '';
             const edited = m.edited ? ' <span class="text-[11px] text-gray-400">(edited)</span>' : '';
-            return `<div class="flex items-start gap-2"><div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold flex-shrink-0">${initialsOf(m.who)}</div><div class="min-w-0"><div class="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 inline-block"><p class="text-[11px] font-semibold text-gray-500 mb-0.5">${m.who}${time}</p>${m.text}${edited}</div>${controls}</div></div>`;
+            return `<div class="flex items-start gap-2"><button onclick="openProfile('${escq(m.who)}')" class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold flex-shrink-0 hover:ring-2 hover:ring-indigo-300">${initialsOf(m.who)}</button><div class="min-w-0"><div class="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 inline-block"><p class="text-[11px] font-semibold text-gray-500 mb-0.5"><span onclick="openProfile('${escq(m.who)}')" class="cursor-pointer hover:text-indigo-600">${m.who}</span>${time}</p>${m.text}${edited}</div>${controls}</div></div>`;
         }).join('') || '<p class="text-xs text-gray-400 text-center py-2">No messages yet.</p>';
         feed.scrollTop = feed.scrollHeight;
         document.getElementById('clubChatToggle').classList.toggle('on', club.allowMemberChat);
@@ -3514,13 +3661,13 @@
         document.getElementById('cfPodium').innerHTML = order.map((d, i) => d ? `
             <div class="flex flex-col items-center w-1/3 max-w-[130px]">
                 <div class="text-2xl leading-none">${meta[i].medal}</div>
-                <div class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold my-1">${initialsOf(d.name)}</div>
-                <p class="text-[11px] font-semibold text-gray-800 text-center truncate w-full">${d.name}</p>
+                <button onclick="openProfile('${escq(d.name)}')" class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold my-1 hover:ring-2 hover:ring-indigo-300">${initialsOf(d.name)}</button>
+                <p onclick="openProfile('${escq(d.name)}')" class="text-[11px] font-semibold text-gray-800 text-center truncate w-full cursor-pointer hover:text-indigo-600">${d.name}</p>
                 <p class="text-[11px] text-emerald-600 font-bold mb-1">$${d.amount.toLocaleString()}</p>
                 <div class="${meta[i].h} ${meta[i].bg} w-full rounded-t-lg flex items-start justify-center pt-1 text-[10px] font-bold text-gray-700">${meta[i].label}</div>
             </div>` : `<div class="w-1/3 max-w-[130px]"></div>`).join('');
         document.getElementById('cfRunnersUp').innerHTML = donors.slice(3, 6).map((d, i) =>
-            `<div class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-1.5"><span class="text-sm text-gray-700"><span class="text-gray-400 mr-2 font-semibold">#${i + 4}</span>${d.name}</span><span class="text-sm font-semibold text-emerald-600">$${d.amount.toLocaleString()}</span></div>`
+            `<div class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-1.5"><span class="text-sm text-gray-700"><span class="text-gray-400 mr-2 font-semibold">#${i + 4}</span><span onclick="openProfile('${escq(d.name)}')" class="cursor-pointer hover:text-indigo-600">${d.name}</span></span><span class="text-sm font-semibold text-emerald-600">$${d.amount.toLocaleString()}</span></div>`
         ).join('') || (donors.length <= 3 ? '' : '');
     }
     function renderCfFeed(club, f) {
