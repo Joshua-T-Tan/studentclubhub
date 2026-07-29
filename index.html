@@ -496,7 +496,7 @@
         <!-- Footer Actions -->
         <p class="text-xs text-gray-500 mb-3"><span class="text-blue-500">*</span> Blue asterisk indicates a required field</p>
         <div class="flex flex-col sm:flex-row gap-3 justify-end">
-            <button onclick="saveDraft()" class="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition"><i class="fa-regular fa-floppy-disk mr-1"></i> Save as Draft</button>
+            <button onclick="saveDraft()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"><i class="fa-regular fa-floppy-disk mr-1"></i> Save as Draft</button>
             <button onclick="previewClub()" class="bg-white border border-indigo-200 text-indigo-600 px-6 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition"><i class="fa-regular fa-eye mr-1"></i> Preview</button>
             <button id="publishBtn" onclick="publishClub()" disabled class="action-btn px-6 py-3 rounded-lg font-semibold"><i class="fa-solid fa-rocket mr-1"></i> Publish Club</button>
         </div>
@@ -810,13 +810,13 @@
             <button id="csSaveBtn" onclick="saveClubSettings()" class="hidden bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Save Changes</button>
         </div>
         <h1 class="text-3xl font-bold text-gray-900 mb-1">Club Settings — <span id="csClubName"></span></h1>
-        <p class="text-gray-600 mb-8">Manage your club's profile, officers, and fundraiser.</p>
+        <p id="csSubtitle" class="text-gray-600 mb-8">Manage your club's profile, officers, and fundraiser.</p>
         <div class="flex flex-col md:flex-row gap-8">
             <aside class="md:w-52 flex-shrink-0">
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-2 flex md:flex-col gap-1 text-sm">
-                    <div class="settings-tab active px-4 py-2.5 rounded-lg text-gray-700" data-cstab="general" onclick="clubSettingsTab('general')"><i class="fa-solid fa-circle-info w-5 mr-1"></i> General</div>
-                    <div class="settings-tab px-4 py-2.5 rounded-lg text-gray-700" data-cstab="members" onclick="clubSettingsTab('members')"><i class="fa-solid fa-users w-5 mr-1"></i> Members</div>
-                    <div class="settings-tab px-4 py-2.5 rounded-lg text-gray-700" data-cstab="fundraiser" onclick="clubSettingsTab('fundraiser')"><i class="fa-solid fa-bullhorn w-5 mr-1"></i> Fundraiser</div>
+                    <div id="csTabGeneral" class="settings-tab active px-4 py-2.5 rounded-lg text-gray-700" data-cstab="general" onclick="clubSettingsTab('general')"><i class="fa-solid fa-circle-info w-5 mr-1"></i> General</div>
+                    <div id="csTabMembers" class="settings-tab px-4 py-2.5 rounded-lg text-gray-700" data-cstab="members" onclick="clubSettingsTab('members')"><i class="fa-solid fa-users w-5 mr-1"></i> Members</div>
+                    <div id="csTabFundraiser" class="settings-tab px-4 py-2.5 rounded-lg text-gray-700" data-cstab="fundraiser" onclick="clubSettingsTab('fundraiser')"><i class="fa-solid fa-bullhorn w-5 mr-1"></i> Fundraiser</div>
                 </div>
             </aside>
             <div class="flex-1">
@@ -928,7 +928,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input id="loginPassword" type="password" oninput="validateLogin()" placeholder="••••••••" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-1 focus:outline-none focus:border-indigo-500 valid-ring">
             <div class="flex justify-end mb-3"><a href="#" onclick="openForgot(event)" class="text-xs text-indigo-600 font-semibold hover:underline">Forgot password?</a></div>
-            <p id="loginError" class="text-xs text-red-500 mb-2 h-4"></p>
+            <div id="loginError" class="hidden bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2 mb-3"></div>
             <button id="loginSubmit" onclick="doLogin()" disabled class="action-btn w-full py-3 rounded-lg font-semibold">Log In</button>
             <p class="text-center text-sm text-gray-500 mt-4">Don't have an account? <a href="#" onclick="loginToSignup(event)" class="text-indigo-600 font-semibold hover:underline">Sign Up</a></p>
         </div>
@@ -1503,6 +1503,15 @@
     <!-- Global top-left Back button for full-screen modal views -->
     <button id="globalModalBack" onclick="closeTopModal()" class="hidden fixed top-4 left-4 z-[130] bg-white border border-gray-200 shadow-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg px-3 py-1.5 text-sm font-semibold flex items-center gap-1"><i class="fa-solid fa-xmark"></i> Back to Main Page</button>
 
+    <!-- MEDIA LIGHTBOX / CAROUSEL -->
+    <div id="lightbox" class="hidden fixed inset-0 z-[140] bg-black/90 flex items-center justify-center" onclick="closeLightbox()">
+        <button onclick="event.stopPropagation(); closeLightbox()" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xl"><i class="fa-solid fa-xmark"></i></button>
+        <button id="lbPrev" onclick="lbPrev(event)" class="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xl"><i class="fa-solid fa-chevron-left"></i></button>
+        <button id="lbNext" onclick="lbNext(event)" class="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xl"><i class="fa-solid fa-chevron-right"></i></button>
+        <div id="lightboxContent" onclick="event.stopPropagation()" class="flex items-center justify-center px-16"></div>
+        <span id="lightboxCounter" class="absolute bottom-5 left-1/2 -translate-x-1/2 text-white/80 text-sm bg-white/10 rounded-full px-3 py-1"></span>
+    </div>
+
     <div id="toast"></div>
 
     <!-- ============================================================= -->
@@ -1665,6 +1674,7 @@
         currentUser.private = !!(rec && rec.private);
         document.getElementById('togglePrivate').classList.toggle('on', currentUser.private);
         rebuildUserClubState();
+        loadSavedClubs(rec);   // restore bookmarked clubs from the account record
         renderMyClubsStrip();
         updateSiteReviewAccess();
     }
@@ -1696,19 +1706,24 @@
     /* =====================================================
        LOG IN MODAL
     ===================================================== */
+    function setLoginError(msg) {
+        const el = document.getElementById('loginError');
+        el.textContent = msg || '';
+        el.classList.toggle('hidden', !msg);
+    }
     function openLoginModal() {
         document.getElementById('loginModal').classList.add('open');
         lockScroll(true);
         document.getElementById('loginEmail').value = '';
         document.getElementById('loginPassword').value = '';
-        document.getElementById('loginError').textContent = '';
+        setLoginError('');
         setBtn('loginSubmit', false);
     }
     function closeLoginModal() { document.getElementById('loginModal').classList.remove('open'); lockScroll(false); }
     function validateLogin() {
         const email = document.getElementById('loginEmail').value.trim();
         const pw = document.getElementById('loginPassword').value;
-        document.getElementById('loginError').textContent = '';
+        setLoginError('');
         setBtn('loginSubmit', EMAIL_RE.test(email) && pw.length >= 1);
     }
     function doLogin() {
@@ -1718,7 +1733,7 @@
         // Simulated server-side credential verification (lookup by email + hash compare)
         const res = verifyCredentials(email, pw);
         if (res.status === 401) {
-            document.getElementById('loginError').textContent = '401 Unauthorized — that email and password don\'t match an account. Try again or sign up.';
+            setLoginError('401 Unauthorized — that email and password don\'t match an account. Try again or sign up.');
             return;
         }
         startSession(res.user);
@@ -1982,9 +1997,12 @@
     let activeTags = new Set();
     let currentClub = null;
 
-    // Shared Browse-style club card (Quick View + Support), reused in Browse, Saved, and Profiles
-    function browseCardHTML(club) {
+    // Shared Browse-style club card (Quick View + Support), reused in Browse, Saved, and Profiles.
+    // opts.noEye omits the eye icon on the Quick View button (used on profile cards to keep them clean).
+    function browseCardHTML(club, opts) {
+        opts = opts || {};
         const i = CLUBS.indexOf(club);
+        const eye = opts.noEye ? '' : '<i class="fa-regular fa-eye mr-1"></i> ';
         return `
             <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col">
                 <div onclick="openPortalByName('${escq(club.name)}')" class="flex items-center space-x-3 mb-3 cursor-pointer group" title="Open club page">
@@ -1996,7 +2014,7 @@
                 <div class="text-xs text-gray-500 mb-3"><i class="fa-regular fa-clock mr-1"></i> ${(club.meeting || 'Schedule TBD').split(',')[0]}</div>
                 ${cardProgress(club)}
                 <div class="flex gap-2">
-                    <button onclick="openQuickView(${i})" class="flex-1 bg-gray-100 text-indigo-600 font-semibold py-2 rounded-lg text-sm hover:bg-indigo-50 transition"><i class="fa-regular fa-eye mr-1"></i> Quick View</button>
+                    <button onclick="openQuickView(${i})" class="flex-1 bg-gray-100 text-indigo-600 font-semibold py-2 rounded-lg text-sm hover:bg-indigo-50 transition">${eye}Quick View</button>
                     <button onclick="openDonationModal(${i})" class="flex-1 bg-indigo-600 text-white font-semibold py-2 rounded-lg text-sm hover:bg-indigo-700 transition">Support</button>
                 </div>
             </div>`;
@@ -2006,6 +2024,35 @@
         grid.innerHTML = list.map(browseCardHTML).join('');
         document.getElementById('noResults').classList.toggle('hidden', list.length > 0);
     }
+
+    /* ===== Media lightbox / carousel ===== */
+    let lightboxSet = [], lightboxIndex = 0;
+    function lightboxMediaFor(which) {
+        if (which === 'club') return (currentClubPage && currentClubPage.gallery) ? currentClubPage.gallery.slice() : [];
+        if (which === 'fund') { const f = currentClubPage && clubActiveFundraiser(currentClubPage); if (!f) return []; return (f.banner ? [f.banner] : []).concat(f.photos || []); }
+        return [];
+    }
+    function openLightbox(which, index) {
+        const set = lightboxMediaFor(which); if (!set.length) return;
+        lightboxSet = set; lightboxIndex = Math.max(0, Math.min(index || 0, set.length - 1));
+        renderLightbox();
+        document.getElementById('lightbox').classList.remove('hidden');
+        lockScroll(true);
+    }
+    function renderLightbox() {
+        const src = lightboxSet[lightboxIndex];
+        document.getElementById('lightboxContent').innerHTML = isVideoSrc(src)
+            ? `<video src="${src}" controls autoplay class="max-h-[85vh] max-w-full rounded-lg"></video>`
+            : `<img src="${src}" class="max-h-[85vh] max-w-full rounded-lg object-contain">`;
+        document.getElementById('lightboxCounter').textContent = (lightboxIndex + 1) + ' / ' + lightboxSet.length;
+        const multi = lightboxSet.length > 1;
+        document.getElementById('lbPrev').classList.toggle('hidden', !multi);
+        document.getElementById('lbNext').classList.toggle('hidden', !multi);
+    }
+    function lbPrev(e) { if (e) e.stopPropagation(); if (!lightboxSet.length) return; lightboxIndex = (lightboxIndex - 1 + lightboxSet.length) % lightboxSet.length; renderLightbox(); }
+    function lbNext(e) { if (e) e.stopPropagation(); if (!lightboxSet.length) return; lightboxIndex = (lightboxIndex + 1) % lightboxSet.length; renderLightbox(); }
+    function closeLightbox() { document.getElementById('lightbox').classList.add('hidden'); document.getElementById('lightboxContent').innerHTML = ''; lockScroll(false); }
+    function lightboxOpen() { return !document.getElementById('lightbox').classList.contains('hidden'); }
     function applyFilters() {
         const q = document.getElementById('searchInput').value.trim().toLowerCase();
         const cat = document.getElementById('categorySelect').value;
@@ -2243,10 +2290,22 @@
     /* ===== Saved / bookmarked clubs ===== */
     let savedClubs = [];
     function isSaved(club) { return savedClubs.includes(club); }
+    // Persist saved-club IDs inside the logged-in user's account record
+    function persistSavedClubs() {
+        if (!isLoggedIn) return;
+        const key = (currentUser.email || '').toLowerCase();
+        const users = loadUsers();
+        if (users[key]) { users[key].savedClubIds = savedClubs.map(c => c.id).filter(Boolean); saveUsers(users); }
+    }
+    function loadSavedClubs(rec) {
+        const ids = (rec && rec.savedClubIds) || [];
+        savedClubs = CLUBS.filter(c => ids.includes(c.id));
+    }
     function toggleSaveClub(club) {
         if (!club) return;
         if (isSaved(club)) { savedClubs = savedClubs.filter(c => c !== club); showToast('Removed from Saved Clubs.'); }
         else { savedClubs.push(club); showToast('Saved! Find it under the Saved Clubs tab.'); }
+        persistSavedClubs();
         updateQvBookmark();
         if (currentViewName() === 'saved') renderSaved();
     }
@@ -2360,7 +2419,7 @@
                 if (la && lb && ra !== rb) return ra - rb;
                 return a.name.localeCompare(b.name);
             });
-            grid.innerHTML = clubs.length ? clubs.map(browseCardHTML).join('') : '<p class="text-sm text-gray-400 col-span-full">Not a member of any clubs yet.</p>';
+            grid.innerHTML = clubs.length ? clubs.map(c => browseCardHTML(c, { noEye: true })).join('') : '<p class="text-sm text-gray-400 col-span-full">Not a member of any clubs yet.</p>';
         }
     }
 
@@ -3290,14 +3349,23 @@
     function isLeadership(role) { return LEADERSHIP_ROLES.includes(role); }
     function canEditClub(club) { return isLeadership(userRole(club)); }
     function canManageRoster(club) { const r = userRole(club); return r === 'President' || r === 'Co-President'; }
+    function canOpenSettings(club) { const r = userRole(club); return r === 'President' || r === 'Co-President' || r === 'Vice President'; }
     function isMemberOf(club) { return userRole(club) != null; }
-    // Who can a given actor-role remove? Pres/Co-Pres: anyone but a President. VP: Members/Secretary/Treasurer.
+    // Who can a given actor-role remove? Pres/Co-Pres: anyone but a President/Co-President. VP: Members/Secretaries/Treasurers.
     function canRemove(actorRole, targetRole) {
-        // Pres/Co-Pres: kick anyone EXCEPT a President or Co-President.
         if (actorRole === 'President' || actorRole === 'Co-President') return !(targetRole === 'President' || targetRole === 'Co-President');
-        // Vice Presidents: kick regular Members ONLY (not Pres, Co-Pres, Secretary, or Treasurer).
-        if (actorRole === 'Vice President') return targetRole === 'Member' || targetRole === 'New Member';
+        if (actorRole === 'Vice President') return ['Member', 'New Member', 'Secretary', 'Treasurer'].includes(targetRole);
         return false;
+    }
+    // Who can change WHOSE role, and to which options
+    function canChangeRole(actorRole, targetRole, isSelf) {
+        if (actorRole === 'President' || actorRole === 'Co-President') return targetRole !== 'President';
+        if (actorRole === 'Vice President') return !isSelf && ['Member', 'New Member', 'Secretary', 'Treasurer'].includes(targetRole);
+        return false;
+    }
+    function changeRoleOptionsFor(actorRole) {
+        if (actorRole === 'Vice President') return ['Secretary', 'Treasurer', 'Member'];
+        return ['Co-President', 'Vice President', 'Secretary', 'Treasurer', 'Member'];
     }
 
     function openClub(club, tab) {
@@ -3341,7 +3409,7 @@
         // RBAC: only leadership sees edit controls, the settings gear, and the chat toggle
         const canEdit = canEditClub(club);
         document.getElementById('clubNameEditBtn').classList.toggle('hidden', !canEdit);
-        document.getElementById('clubGearBtn').classList.toggle('hidden', !canEdit);
+        document.getElementById('clubGearBtn').classList.toggle('hidden', !canOpenSettings(club));
         document.getElementById('clubDescEditBtn').classList.toggle('hidden', !canEdit);
         document.getElementById('clubAddImgLabel').classList.toggle('hidden', !canEdit);
         document.getElementById('clubSocialEditBtn').classList.toggle('hidden', !canEdit);
@@ -3381,8 +3449,8 @@
         document.getElementById('clubImages2').innerHTML = media.length
             ? media.map((s, i) => {
                 const inner = isVideoSrc(s) ? `<video src="${s}" class="w-full h-16 object-cover rounded-lg" muted playsinline></video>` : `<img src="${s}" class="w-full h-16 object-cover rounded-lg">`;
-                const rm = canEdit ? `<button onclick="removeClubMedia(${i})" title="Remove" class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] hidden group-hover:flex items-center justify-center">×</button>` : '';
-                return `<div class="relative group">${inner}${rm}</div>`;
+                const rm = canEdit ? `<button onclick="event.stopPropagation(); removeClubMedia(${i})" title="Remove" class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] hidden group-hover:flex items-center justify-center">×</button>` : '';
+                return `<div class="relative group cursor-pointer" onclick="openLightbox('club', ${i})">${inner}${rm}</div>`;
             }).join('')
             : Array.from({ length: 4 }).map(() => `<div class="w-full h-16 rounded-lg bg-gray-100 flex items-center justify-center text-gray-300"><i class="fa-solid fa-image"></i></div>`).join('');
         // Leadership + roster are VIEW-ONLY here — role changes happen in Club Settings → Members.
@@ -3616,15 +3684,19 @@
             'Campaign started ' + (started === 0 ? 'today' : started + ' day' + (started === 1 ? '' : 's') + ' ago');
         // Main Banner Photo (exactly one, stored on f.banner)
         const hero = document.getElementById('cfHero');
+        const heroHasMedia = !!(f.banner || (f.photos && f.photos.length));
+        hero.classList.toggle('cursor-pointer', heroHasMedia);
+        hero.onclick = heroHasMedia ? function () { openLightbox('fund', 0); } : null;
         if (f.banner) hero.innerHTML = `<img src="${f.banner}" class="w-full h-full object-cover">`;
         else { const st = styleForCategory(club.category); hero.innerHTML = `<div class="w-full h-full ${(club.bg || 'bg-indigo-100').replace('100', '500')} flex items-center justify-center text-white text-5xl"><i class="fa-solid ${club.icon || st.icon}"></i></div>`; }
         // Campaign gallery (photos + videos), separate from the banner
         const pics = f.photos || [];
+        const bannerOffset = f.banner ? 1 : 0;
         document.getElementById('cfImages').innerHTML = pics.length
             ? pics.map((s, i) => {
                 const inner = isVideoSrc(s) ? `<video src="${s}" class="w-full h-20 object-cover rounded-lg" muted playsinline></video>` : `<img src="${s}" class="w-full h-20 object-cover rounded-lg">`;
-                const rm = canEdit ? `<button onclick="removeFundImage(${i})" title="Remove" class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] hidden group-hover:flex items-center justify-center">×</button>` : '';
-                return `<div class="relative group">${inner}${rm}</div>`;
+                const rm = canEdit ? `<button onclick="event.stopPropagation(); removeFundImage(${i})" title="Remove" class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] hidden group-hover:flex items-center justify-center">×</button>` : '';
+                return `<div class="relative group cursor-pointer" onclick="openLightbox('fund', ${i + bannerOffset})">${inner}${rm}</div>`;
             }).join('')
             : '<p class="text-xs text-gray-400 col-span-4">No gallery photos or videos yet.</p>';
         const raised = f.raised || 0, goal = f.target || 0, pct = goal ? (raised / goal * 100) : 0;
@@ -3762,8 +3834,12 @@
         document.getElementById('csPrivacy').value = (club.privacy || '').indexOf('Private') === 0 ? 'Private' : 'Public';
         document.getElementById('csMission').value = club.mission || '';
         renderClubSettingsLogo();
-        clubSettingsTab('general');
-        renderCsFundraiser();
+        // VP-scoped settings: Members tab only + officer-focused subtitle
+        const vpOnly = userRole(club) === 'Vice President';
+        document.getElementById('csTabGeneral').classList.toggle('hidden', vpOnly);
+        document.getElementById('csTabFundraiser').classList.toggle('hidden', vpOnly);
+        document.getElementById('csSubtitle').textContent = vpOnly ? "Manage your club's officers" : "Manage your club's profile, officers, and fundraiser.";
+        if (vpOnly) { clubSettingsTab('members'); } else { clubSettingsTab('general'); renderCsFundraiser(); }
         renderCsMembers();
         VIEWS.forEach(v => document.getElementById('view-' + v).classList.toggle('hidden', v !== 'club-settings'));
         document.querySelectorAll('.nav-link').forEach(b => { b.classList.remove('bg-indigo-50', 'text-indigo-600'); b.classList.add('text-gray-600'); });
@@ -3800,8 +3876,9 @@
         wrap.innerHTML = members.map(m => {
             const initials = (m.name || '?').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
             const isPres = m.role === 'President';
-            const canChange = canManageRoster(c) && !isPres;   // Pres/Co-Pres change roles; never a President's
-            const canKick = canRemove(myRole, m.role);
+            const isSelf = m.name === currentUser.name;
+            const canChange = canChangeRole(myRole, m.role, isSelf);
+            const canKick = !isSelf && canRemove(myRole, m.role);
             let btns = '';
             if (canChange) btns += `<button onclick="askChangeRole('${escq(m.name)}')" class="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2 py-1 rounded hover:bg-indigo-100">Change Role</button>`;
             if (canKick) btns += `<button onclick="askKick('${escq(m.name)}')" class="text-xs bg-red-50 text-red-600 font-semibold px-2 py-1 rounded hover:bg-red-100">Kick</button>`;
@@ -3844,11 +3921,15 @@
     let changeRoleName = null;
     function askChangeRole(name) {
         const c = currentSettingsClub; const m = memberByName(c, name); if (!m) return;
+        const myRole = userRole(c);
+        if (!canChangeRole(myRole, m.role, name === currentUser.name)) { showToast('You do not have permission to change this member\'s role.'); return; }
         changeRoleName = name;
         document.getElementById('changeRoleName').textContent = name;
         const sel = document.getElementById('changeRoleSelect');
-        // Default the dropdown to the member's current role (falls back to Vice President)
-        sel.value = ['Co-President', 'Vice President', 'Secretary', 'Treasurer', 'Member'].includes(m.role) ? m.role : 'Vice President';
+        // Options depend on the actor's role (VPs cannot assign President/Co-President)
+        const opts = changeRoleOptionsFor(myRole);
+        sel.innerHTML = opts.map(o => `<option>${o}</option>`).join('');
+        sel.value = opts.includes(m.role) ? m.role : opts[0];
         updateChangeRoleMsg();
         document.getElementById('changeRoleModal').classList.add('open'); lockScroll(true);
     }
@@ -4067,7 +4148,15 @@
         if (!el) return;
         new MutationObserver(updateGlobalBack).observe(el, { attributes: true, attributeFilter: ['class'] });
     });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeTopModal(); });
+    document.addEventListener('keydown', function (e) {
+        if (lightboxOpen()) {
+            if (e.key === 'Escape') closeLightbox();
+            else if (e.key === 'ArrowLeft') lbPrev();
+            else if (e.key === 'ArrowRight') lbNext();
+            return;
+        }
+        if (e.key === 'Escape') closeTopModal();
+    });
 
     /* Seed one active fundraiser per demo club (single-fundraiser model) */
     const SEED_FR = [
