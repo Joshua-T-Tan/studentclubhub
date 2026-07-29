@@ -131,9 +131,9 @@
             <!-- Centered main navigation tabs -->
             <nav class="hidden lg:flex absolute left-1/2 -translate-x-1/2 gap-1 text-sm font-medium">
                 <button data-nav="home" onclick="showView('home')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Main Page</button>
+                <button data-nav="my-clubs" onclick="showView('my-clubs')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">My Clubs</button>
                 <button data-nav="browse" onclick="showView('browse')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Browse Clubs</button>
                 <button data-nav="saved" onclick="showView('saved')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Saved Clubs</button>
-                <button data-nav="my-clubs" onclick="showView('my-clubs')" class="nav-link px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">My Clubs</button>
             </nav>
 
             <div id="authArea" class="flex items-center gap-3 z-10">
@@ -245,8 +245,12 @@
                     </div>
                 </div>
 
-                <!-- Write a Review for Student Club Hub -->
-                <div class="bg-white rounded-xl shadow-lg p-6 mt-8 max-w-2xl mx-auto">
+                <!-- Write a Review for Student Club Hub (logged-in only) -->
+                <div id="siteReviewLoggedOut" class="hidden bg-white rounded-xl shadow-lg p-6 mt-8 max-w-2xl mx-auto text-center">
+                    <h3 class="font-bold text-gray-900 text-lg mb-1">Write a Review for Student Club Hub</h3>
+                    <p class="text-sm text-gray-500">Please <a href="#" onclick="openLoginModal();return false;" class="text-indigo-600 font-semibold hover:underline">Log In</a> or <a href="#" onclick="openSignupModal();return false;" class="text-indigo-600 font-semibold hover:underline">Sign Up</a> to leave a review.</p>
+                </div>
+                <div id="siteReviewForm" class="bg-white rounded-xl shadow-lg p-6 mt-8 max-w-2xl mx-auto">
                     <h3 class="font-bold text-gray-900 text-lg mb-1">Write a Review for Student Club Hub</h3>
                     <p class="text-sm text-gray-500 mb-4">Tell us what you think — your review may appear above.</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -751,7 +755,7 @@
                                 <button onclick="clubFundLeaderboard()" class="text-indigo-600 text-sm font-semibold">See All Donors →</button>
                             </div>
                             <div id="cfPodium" class="flex items-end justify-center gap-3 mb-4"></div>
-                            <div id="cfRunnersUp" class="space-y-2 max-w-md"></div>
+                            <div id="cfRunnersUp" class="space-y-2 max-w-md mx-auto"></div>
                         </div>
                     </div>
                     <!-- RIGHT: sticky donate sidebar -->
@@ -790,7 +794,6 @@
             <aside class="md:w-52 flex-shrink-0">
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-2 flex md:flex-col gap-1 text-sm">
                     <div class="settings-tab active px-4 py-2.5 rounded-lg text-gray-700" data-cstab="general" onclick="clubSettingsTab('general')"><i class="fa-solid fa-circle-info w-5 mr-1"></i> General</div>
-                    <div class="settings-tab px-4 py-2.5 rounded-lg text-gray-700" data-cstab="officers" onclick="clubSettingsTab('officers')"><i class="fa-solid fa-user-group w-5 mr-1"></i> Officer Roles</div>
                     <div class="settings-tab px-4 py-2.5 rounded-lg text-gray-700" data-cstab="members" onclick="clubSettingsTab('members')"><i class="fa-solid fa-users w-5 mr-1"></i> Members</div>
                     <div class="settings-tab px-4 py-2.5 rounded-lg text-gray-700" data-cstab="fundraiser" onclick="clubSettingsTab('fundraiser')"><i class="fa-solid fa-bullhorn w-5 mr-1"></i> Fundraiser</div>
                 </div>
@@ -817,18 +820,9 @@
                     </div>
                     <div class="mt-4"><label class="block text-sm font-medium text-gray-700 mb-1">Mission</label><textarea id="csMission" rows="3" oninput="markClubDirty()" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring resize-none"></textarea></div>
                 </div>
-                <div id="cs-officers" class="cs-panel hidden bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                    <h2 class="font-bold text-gray-900 text-lg mb-4">Officer Roles <span class="text-gray-400 font-normal text-sm">(registered user emails)</span></h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Co-President</label><input id="csCoP" type="email" oninput="markClubDirty()" placeholder="email@school.edu" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Vice President</label><input id="csVP" type="email" oninput="markClubDirty()" placeholder="email@school.edu" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Secretary</label><input id="csSec" type="email" oninput="markClubDirty()" placeholder="email@school.edu" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Treasurer</label><input id="csTre" type="email" oninput="markClubDirty()" placeholder="email@school.edu" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring"></div>
-                    </div>
-                </div>
                 <div id="cs-members" class="cs-panel hidden bg-white rounded-xl border border-gray-200 shadow-sm p-6">
                     <h2 class="font-bold text-gray-900 text-lg mb-1">Members</h2>
-                    <p class="text-sm text-gray-500 mb-4">Ordered by role. Promote, demote, or remove members from here.</p>
+                    <p class="text-sm text-gray-500 mb-4">Ordered by role. Use <span class="font-semibold">Change Role</span> to assign officers, or <span class="font-semibold">Kick</span> to remove a member.</p>
                     <div id="csMembersList" class="space-y-2"></div>
                 </div>
                 <div id="cs-fundraiser" class="cs-panel hidden bg-white rounded-xl border border-gray-200 shadow-sm p-6">
@@ -880,23 +874,24 @@
         </div>
     </div>
 
-    <!-- PROMOTE MEMBER MODAL (role dropdown) -->
-    <div id="promoteModal" class="modal-overlay">
+    <!-- CHANGE ROLE MODAL (role dropdown) -->
+    <div id="changeRoleModal" class="modal-overlay">
         <div class="modal-card max-w-sm p-6">
-            <div class="w-14 h-14 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl mb-4"><i class="fa-solid fa-arrow-up"></i></div>
-            <h2 class="text-lg font-bold text-gray-900 mb-1 text-center">Promote member</h2>
-            <p class="text-sm text-gray-500 mb-4 text-center">Choose the role to promote <span id="promoteName" class="font-semibold text-gray-700"></span> to.</p>
-            <label class="block text-sm font-medium text-gray-700 mb-1">New role</label>
-            <select id="promoteSelect" onchange="updatePromoteMsg()" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-4 bg-white focus:outline-none focus:border-indigo-500">
+            <div class="w-14 h-14 mx-auto rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl mb-4"><i class="fa-solid fa-user-gear"></i></div>
+            <h2 class="text-lg font-bold text-gray-900 mb-1 text-center">Change member role</h2>
+            <p class="text-sm text-gray-500 mb-4 text-center">Set a new role for <span id="changeRoleName" class="font-semibold text-gray-700"></span>.</p>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <select id="changeRoleSelect" onchange="updateChangeRoleMsg()" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 mb-4 bg-white focus:outline-none focus:border-indigo-500">
                 <option>Co-President</option>
                 <option selected>Vice President</option>
                 <option>Secretary</option>
                 <option>Treasurer</option>
+                <option>Member</option>
             </select>
-            <p id="promoteMsg" class="text-sm text-gray-700 mb-5 text-center"></p>
+            <p id="changeRoleMsg" class="text-sm text-gray-700 mb-5 text-center"></p>
             <div class="flex gap-3">
-                <button onclick="closePromoteModal()" class="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg font-semibold hover:bg-gray-200 transition">Cancel</button>
-                <button onclick="confirmPromote()" class="flex-1 bg-emerald-500 text-white py-2.5 rounded-lg font-semibold hover:bg-emerald-600 transition">Promote</button>
+                <button onclick="closeChangeRoleModal()" class="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg font-semibold hover:bg-gray-200 transition">Cancel</button>
+                <button onclick="confirmChangeRole()" class="flex-1 bg-indigo-600 text-white py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition">Confirm</button>
             </div>
         </div>
     </div>
@@ -1318,8 +1313,8 @@
                 </div>
                 <p class="text-xs text-gray-500 mb-4"><span class="text-blue-500">*</span> Blue asterisk indicates a required field</p>
                 <div class="flex gap-3">
-                    <button onclick="saveFundraiserDraft()" class="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg font-semibold hover:bg-gray-200 transition">Save Draft</button>
-                    <button id="frPublishBtn" onclick="publishFundraiser()" disabled class="action-btn flex-1 py-2.5 rounded-lg font-semibold">Publish</button>
+                    <button id="frSecondaryBtn" onclick="frSecondaryAction()" class="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg font-semibold hover:bg-gray-200 transition">Save Draft</button>
+                    <button id="frPublishBtn" onclick="frPrimaryAction()" disabled class="action-btn flex-1 py-2.5 rounded-lg font-semibold">Publish</button>
                 </div>
             </div>
             <!-- Success -->
@@ -1642,6 +1637,7 @@
         document.getElementById('setMemberId').textContent = currentUser.userId || '—';
         rebuildUserClubState();
         renderMyClubsStrip();
+        updateSiteReviewAccess();
     }
     // Rebuild which clubs THIS user leads / has joined (prevents role leakage between accounts)
     function rebuildUserClubState() {
@@ -1659,6 +1655,7 @@
         // Clear per-user state so the next account never inherits roles/memberships
         ledClubs = []; joinedClubs = []; savedClubs = []; drafts = []; currentClubPage = null;
         document.getElementById('myClubsStrip').classList.add('hidden');
+        updateSiteReviewAccess();
         showView('home');
         document.getElementById('heroDonateBtn').innerHTML = '<i class="fa-solid fa-heart mr-2"></i>Donate as Guest';
         document.getElementById('authArea').innerHTML = `
@@ -2183,7 +2180,7 @@
         currentClub.members = currentClub.members || [];
         if (!currentClub.members.some(m => m.userId === currentUser.userId)) currentClub.members.push({ name: currentUser.name, role: 'Member', userId: currentUser.userId, email: currentUser.email });
         currentClub.roster = currentClub.roster || [];
-        if (!currentClub.roster.some(m => m.n === currentUser.name)) currentClub.roster.push({ n: currentUser.name, r: 'Member' });
+        if (!currentClub.roster.some(m => (m.uid && m.uid === currentUser.userId) || m.n === currentUser.name)) currentClub.roster.push({ n: currentUser.name, r: 'Member', uid: currentUser.userId });
         showToast('You joined ' + currentClub.name + '! Your ID ' + currentUser.userId + ' is now registered here. 🎉');
         const c = currentClub; closeQuickView(); openClub(c, 'info');
     }
@@ -2203,11 +2200,16 @@
     function closeLeaveModal() { document.getElementById('leaveModal').classList.remove('open'); lockScroll(false); }
     function confirmLeave() {
         const club = leaveClub; if (!club) return;
+        const uid = currentUser.userId, nm = currentUser.name, em = (currentUser.email || '').toLowerCase();
         joinedClubs = joinedClubs.filter(c => c !== club);
-        if (club.members) club.members = club.members.filter(m => m.userId !== currentUser.userId);
-        if (club.roster) club.roster = club.roster.filter(m => m.n !== currentUser.name);
-        if (club.memberIds) club.memberIds = club.memberIds.filter(id => id !== currentUser.userId);
+        // Fully remove the user from every roster/leadership/member structure so no one sees them anymore
+        if (club.members) club.members = club.members.filter(m => m.userId !== uid);
+        if (club.roster) club.roster = club.roster.filter(m => !((m.uid && m.uid === uid) || m.n === nm));
+        if (club.leaders) club.leaders = club.leaders.filter(l => !(l.n === nm || (l.c && l.c.toLowerCase() === em)));
+        if (club.memberIds) club.memberIds = club.memberIds.filter(id => id !== uid);
+        syncOfficersFromLeaders(club);
         closeLeaveModal();
+        if (currentClubPage === club) renderClubInfo(club);
         showToast('You left ' + club.name + '.');
         showView('home');
     }
@@ -2833,12 +2835,24 @@
     /* =================== FUNDRAISER BUILDER =================== */
     let frPhotos = [];
     let frDraftIndex = null;
+    let frMode = 'create';   // 'create' | 'reactivate'
     function activeFundraiserCount(club) { return (club.fundraisers || []).filter(f => !f.isDraft).length; }
-    function openFundraiser() {
+    function setFundraiserButtons(mode) {
+        frMode = mode;
+        const sec = document.getElementById('frSecondaryBtn');
+        const prim = document.getElementById('frPublishBtn');
+        if (mode === 'reactivate') { sec.textContent = 'Cancel'; prim.textContent = 'Reactivate'; }
+        else { sec.textContent = 'Save Draft'; prim.textContent = 'Publish'; }
+    }
+    function frSecondaryAction() { if (frMode === 'reactivate') closeFundraiser(); else saveFundraiserDraft(); }
+    function frPrimaryAction() { if (frMode === 'reactivate') reactivateFundraiser(); else publishFundraiser(); }
+    function openFundraiser(mode) {
         if (!currentManageClub) return;
-        if (activeFundraiserCount(currentManageClub) >= 1) { showToast('Each club can run only 1 active fundraiser at a time.'); return; }
+        mode = mode || 'create';
+        if (mode === 'create' && activeFundraiserCount(currentManageClub) >= 1) { showToast('Each club can run only 1 active fundraiser at a time.'); return; }
         frDraftIndex = null;
         frPhotos = [];
+        setFundraiserButtons(mode);
         document.getElementById('frTitle').value = '';
         document.getElementById('frMission').value = '';
         document.getElementById('frTarget').value = '';
@@ -2849,6 +2863,24 @@
         validateFundraiser();
         document.getElementById('fundraiserModal').classList.add('open');
         lockScroll(true);
+    }
+    function reactivateFundraiser() {
+        if (document.getElementById('frPublishBtn').disabled) return;
+        const c = currentManageClub; if (!c || frDraftIndex === null) return;
+        if (activeFundraiserCount(c) >= 1) { showToast('You already have an active fundraiser. Deactivate it first.'); return; }
+        const f = c.fundraisers[frDraftIndex]; if (!f) return;
+        // Update the SAME entity in place, then flip it back to active (removes it from Drafts, no duplicate)
+        f.title = document.getElementById('frTitle').value.trim();
+        f.mission = document.getElementById('frMission').value.trim();
+        f.target = parseFloat(document.getElementById('frTarget').value) || f.target;
+        f.photos = frPhotos.slice();
+        f.isPublic = document.getElementById('frPublicToggle').classList.contains('on');
+        f.isDraft = false;
+        frDraftIndex = null;
+        closeFundraiser();
+        if (currentClubPage === c) { renderClubHeader(c); renderClubFund(c); }
+        applyFilters(); renderMyClubsStrip(); renderTopFunded();
+        showToast('Fundraiser reactivated — it\'s active again.');
     }
     function closeFundraiser() {
         document.getElementById('fundraiserModal').classList.remove('open'); lockScroll(false);
@@ -3155,9 +3187,10 @@
     function isMemberOf(club) { return userRole(club) != null; }
     // Who can a given actor-role remove? Pres/Co-Pres: anyone but a President. VP: Members/Secretary/Treasurer.
     function canRemove(actorRole, targetRole) {
-        if (targetRole === 'President') return false;
-        if (actorRole === 'President' || actorRole === 'Co-President') return true;
-        if (actorRole === 'Vice President') return ['Member', 'New Member', 'Secretary', 'Treasurer'].includes(targetRole);
+        // Pres/Co-Pres: kick anyone EXCEPT a President or Co-President.
+        if (actorRole === 'President' || actorRole === 'Co-President') return !(targetRole === 'President' || targetRole === 'Co-President');
+        // Vice Presidents: kick regular Members ONLY (not Pres, Co-Pres, Secretary, or Treasurer).
+        if (actorRole === 'Vice President') return targetRole === 'Member' || targetRole === 'New Member';
         return false;
     }
 
@@ -3295,6 +3328,7 @@
         return `<div class="flex items-center gap-2 social-row"><input type="url" value="${(url || '').replace(/"/g, '&quot;')}" placeholder="https://instagram.com/yourclub" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 valid-ring"><button onclick="this.closest('.social-row').remove()" title="Delete link" class="text-gray-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button></div>`;
     }
     function toggleSocialEdit() {
+        if (!canEditClub(currentClubPage)) return;   // leadership only
         const wrap = document.getElementById('clubSocialEdit');
         const show = wrap.classList.contains('hidden');
         wrap.classList.toggle('hidden', !show);
@@ -3303,9 +3337,9 @@
             document.getElementById('socialLinksList').innerHTML = (links.length ? links : ['']).map(socialRowHtml).join('');
         }
     }
-    function addSocialLinkRow() { document.getElementById('socialLinksList').insertAdjacentHTML('beforeend', socialRowHtml('')); }
+    function addSocialLinkRow() { if (!canEditClub(currentClubPage)) return; document.getElementById('socialLinksList').insertAdjacentHTML('beforeend', socialRowHtml('')); }
     function saveSocialLinks() {
-        const club = currentClubPage;
+        const club = currentClubPage; if (!canEditClub(club)) return;   // leadership only
         club.socialLinks = Array.from(document.querySelectorAll('#socialLinksList input')).map(i => i.value.trim()).filter(Boolean);
         document.getElementById('clubSocialEdit').classList.add('hidden');
         renderClubSocials(club); showToast('Social links saved.');
@@ -3580,11 +3614,6 @@
         document.getElementById('csSchool').value = club.school || '';
         document.getElementById('csPrivacy').value = (club.privacy || '').indexOf('Private') === 0 ? 'Private' : 'Public';
         document.getElementById('csMission').value = club.mission || '';
-        const o = club.officers || {};
-        document.getElementById('csCoP').value = o.coPresident || '';
-        document.getElementById('csVP').value = o.vicePresident || '';
-        document.getElementById('csSec').value = o.secretary || '';
-        document.getElementById('csTre').value = o.treasurer || '';
         renderClubSettingsLogo();
         clubSettingsTab('general');
         renderCsFundraiser();
@@ -3595,7 +3624,7 @@
     }
     function openClubSettingsCurrent() { openClubSettings(currentClubPage); }
     function backToClubFromSettings() { if (currentSettingsClub) openClub(currentSettingsClub, currentClubTab); else showView('home'); }
-    function clubSettingsTab(tab) { ['general', 'officers', 'members', 'fundraiser'].forEach(t => document.getElementById('cs-' + t).classList.toggle('hidden', t !== tab)); document.querySelectorAll('#view-club-settings .settings-tab').forEach(el => el.classList.toggle('active', el.dataset.cstab === tab)); if (tab === 'members') renderCsMembers(); }
+    function clubSettingsTab(tab) { ['general', 'members', 'fundraiser'].forEach(t => document.getElementById('cs-' + t).classList.toggle('hidden', t !== tab)); document.querySelectorAll('#view-club-settings .settings-tab').forEach(el => el.classList.toggle('active', el.dataset.cstab === tab)); if (tab === 'members') renderCsMembers(); }
     function markClubDirty() { document.getElementById('csSaveBtn').classList.remove('hidden'); }
     function renderClubSettingsLogo() {
         const c = currentSettingsClub; const box = document.getElementById('csLogoPreview'); if (!c || !box) return;
@@ -3624,12 +3653,10 @@
         wrap.innerHTML = members.map(m => {
             const initials = (m.name || '?').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
             const isPres = m.role === 'President';
-            const canPromote = canManageRoster(c) && !isPres && roleRank(m.role) < roleRank('Co-President');
-            const canDemote = canManageRoster(c) && !isPres && roleRank(m.role) > 0;
+            const canChange = canManageRoster(c) && !isPres;   // Pres/Co-Pres change roles; never a President's
             const canKick = canRemove(myRole, m.role);
             let btns = '';
-            if (canPromote) btns += `<button onclick="askPromote('${escq(m.name)}')" class="text-xs bg-emerald-50 text-emerald-700 font-semibold px-2 py-1 rounded hover:bg-emerald-100">Promote</button>`;
-            if (canDemote) btns += `<button onclick="askDemote('${escq(m.name)}')" class="text-xs bg-amber-50 text-amber-700 font-semibold px-2 py-1 rounded hover:bg-amber-100">Demote</button>`;
+            if (canChange) btns += `<button onclick="askChangeRole('${escq(m.name)}')" class="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2 py-1 rounded hover:bg-indigo-100">Change Role</button>`;
             if (canKick) btns += `<button onclick="askKick('${escq(m.name)}')" class="text-xs bg-red-50 text-red-600 font-semibold px-2 py-1 rounded hover:bg-red-100">Kick</button>`;
             return `<div class="flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-2">
                 <div class="w-8 h-8 rounded-full ${isPres ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-600'} flex items-center justify-center text-xs font-bold">${initials}</div>
@@ -3667,31 +3694,32 @@
     function closeRoleConfirm() { document.getElementById('roleConfirmModal').classList.remove('open'); lockScroll(false); pendingRoleAction = null; }
     function runRoleConfirm() { const cb = pendingRoleAction; closeRoleConfirm(); if (cb) cb(); }
     function afterMemberChange(club) { renderCsMembers(); if (currentClubPage === club) renderClubInfo(club); }
-    let promoteName = null;
-    function askPromote(name) {
-        const c = currentSettingsClub; if (!memberByName(c, name)) return;
-        promoteName = name;
-        document.getElementById('promoteName').textContent = name;
-        document.getElementById('promoteSelect').value = 'Vice President';
-        updatePromoteMsg();
-        document.getElementById('promoteModal').classList.add('open'); lockScroll(true);
-    }
-    function updatePromoteMsg() {
-        const role = document.getElementById('promoteSelect').value;
-        document.getElementById('promoteMsg').textContent = `Are you sure you want to promote ${promoteName} to ${role}?`;
-    }
-    function closePromoteModal() { document.getElementById('promoteModal').classList.remove('open'); lockScroll(false); promoteName = null; }
-    function confirmPromote() {
-        const c = currentSettingsClub; const name = promoteName; if (!name) return;
-        const role = document.getElementById('promoteSelect').value;
-        closePromoteModal();
-        setMemberRole(c, name, role); afterMemberChange(c);
-        showToast(name + ' promoted to ' + role + '.');
-    }
-    function askDemote(name) {
+    let changeRoleName = null;
+    function askChangeRole(name) {
         const c = currentSettingsClub; const m = memberByName(c, name); if (!m) return;
-        let next = ROLE_LADDER[Math.max(roleRank(m.role) - 1, 0)];
-        openRoleConfirm(`Are you sure you want to demote ${name} to ${next}?`, 'fa-arrow-down', () => { setMemberRole(c, name, next); afterMemberChange(c); showToast(name + ' demoted to ' + next + '.'); });
+        changeRoleName = name;
+        document.getElementById('changeRoleName').textContent = name;
+        const sel = document.getElementById('changeRoleSelect');
+        // Default the dropdown to the member's current role (falls back to Vice President)
+        sel.value = ['Co-President', 'Vice President', 'Secretary', 'Treasurer', 'Member'].includes(m.role) ? m.role : 'Vice President';
+        updateChangeRoleMsg();
+        document.getElementById('changeRoleModal').classList.add('open'); lockScroll(true);
+    }
+    function updateChangeRoleMsg() {
+        const c = currentSettingsClub; const m = c && memberByName(c, changeRoleName);
+        const role = document.getElementById('changeRoleSelect').value;
+        const demoting = m && role === 'Member' && (m.role || '') !== 'Member';
+        document.getElementById('changeRoleMsg').textContent = demoting
+            ? `Are you sure you want to demote ${changeRoleName} to Member?`
+            : `Are you sure you want to change ${changeRoleName}'s role to ${role}?`;
+    }
+    function closeChangeRoleModal() { document.getElementById('changeRoleModal').classList.remove('open'); lockScroll(false); changeRoleName = null; }
+    function confirmChangeRole() {
+        const c = currentSettingsClub; const name = changeRoleName; if (!name) return;
+        const role = document.getElementById('changeRoleSelect').value;
+        closeChangeRoleModal();
+        setMemberRole(c, name, role); afterMemberChange(c);
+        showToast(name + "'s role changed to " + role + '.');
     }
     function askKick(name) {
         const c = currentSettingsClub;
@@ -3706,10 +3734,7 @@
         c.school = document.getElementById('csSchool').value.trim();
         c.privacy = document.getElementById('csPrivacy').value;
         c.mission = document.getElementById('csMission').value.trim(); c.desc = c.mission;
-        c.officers = { coPresident: document.getElementById('csCoP').value.trim(), vicePresident: document.getElementById('csVP').value.trim(), secretary: document.getElementById('csSec').value.trim(), treasurer: document.getElementById('csTre').value.trim() };
-        const base = (c.leaders || []).filter(l => l.r === 'President');
-        [['coPresident', 'Co-President'], ['vicePresident', 'Vice President'], ['secretary', 'Secretary'], ['treasurer', 'Treasurer']].forEach(([k, label]) => { if (c.officers[k]) base.push({ n: c.officers[k].split('@')[0], r: label, c: c.officers[k] }); });
-        if (base.length) c.leaders = base;
+        // Officers are managed in the Members tab now — nothing to read here.
         document.getElementById('csSaveBtn').classList.add('hidden');
         document.getElementById('csClubName').textContent = c.name;
         applyFilters(); renderMyClubsStrip(); renderTopFunded();
@@ -3766,24 +3791,31 @@
     }
     function deleteFundraiser() {
         const c = currentSettingsClub; const f = clubActiveFundraiser(c); if (!f) return;
-        c.fundraisers = (c.fundraisers || []).filter(x => x !== f);
-        renderCsFundraiser();
-        if (currentClubPage === c) { renderClubHeader(c); renderClubFund(c); }
-        applyFilters(); renderMyClubsStrip(); renderTopFunded();
-        showToast('Fundraiser deleted.');
+        openRoleConfirm('Are you sure you want to permanently delete this fundraiser?', 'fa-trash', () => {
+            c.fundraisers = (c.fundraisers || []).filter(x => x !== f);
+            renderCsFundraiser();
+            if (currentClubPage === c) { renderClubHeader(c); renderClubFund(c); }
+            applyFilters(); renderMyClubsStrip(); renderTopFunded();
+            showToast('Fundraiser deleted.');
+        });
     }
     function deleteFundraiserDraft(id) {
-        const c = currentSettingsClub; c.fundraisers = (c.fundraisers || []).filter(x => x.id !== id);
-        renderCsFundraiser(); showToast('Draft deleted.');
+        const c = currentSettingsClub;
+        openRoleConfirm('Are you sure you want to permanently delete this fundraiser?', 'fa-trash', () => {
+            c.fundraisers = (c.fundraisers || []).filter(x => x.id !== id);
+            renderCsFundraiser(); showToast('Draft deleted.');
+        });
     }
-    function startFundraiserFromSettings() { currentManageClub = currentSettingsClub; openFundraiser(); }
+    function startFundraiserFromSettings() { currentManageClub = currentSettingsClub; openFundraiser('create'); }
     function resumeFundraiserDraft(id) {
         const c = currentSettingsClub; const idx = (c.fundraisers || []).findIndex(x => x.id === id); if (idx < 0) return;
-        currentManageClub = c; openFundraiser();
+        currentManageClub = c;
+        openFundraiser('reactivate');
         frDraftIndex = idx; const d = c.fundraisers[idx];
         document.getElementById('frTitle').value = d.title || '';
         document.getElementById('frMission').value = d.mission || '';
         document.getElementById('frTarget').value = d.target || '';
+        document.getElementById('frPublicToggle').classList.toggle('on', d.isPublic !== false);
         frPhotos = (d.photos || []).slice(); renderFrPhotos(); validateFundraiser();
     }
     function renderManageFundraisers() {
@@ -3842,9 +3874,17 @@
     function updateSiteStarUI() { highlightSiteStars(siteReviewRating); }
     function setSiteStars(n) { siteReviewRating = n; updateSiteStarUI(); validateSiteReview(); }
     function validateSiteReview() { setBtn('siteReviewSubmit', siteReviewRating > 0 && document.getElementById('siteReviewText').value.trim().length > 0); }
+    function updateSiteReviewAccess() {
+        const form = document.getElementById('siteReviewForm');
+        const note = document.getElementById('siteReviewLoggedOut');
+        if (!form || !note) return;
+        form.classList.toggle('hidden', !isLoggedIn);
+        note.classList.toggle('hidden', isLoggedIn);
+    }
     function submitSiteReview() {
+        if (!isLoggedIn) { openLoginModal(); return; }
         if (document.getElementById('siteReviewSubmit').disabled) return;
-        const name = document.getElementById('siteReviewName').value.trim() || 'Anonymous';
+        const name = document.getElementById('siteReviewName').value.trim() || (currentUser.name || 'Anonymous');
         const role = document.getElementById('siteReviewRole').value.trim() || 'Community Member';
         const text = document.getElementById('siteReviewText').value.trim();
         const initials = name.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'A';
@@ -3865,7 +3905,7 @@
     }
 
     /* Full-screen modal views: Escape closes, and a global top-left "✕ Back" button appears whenever one is open */
-    const ALL_MODALS = ['logoutModal', 'leaveModal', 'roleConfirmModal', 'promoteModal', 'loginModal', 'forgotModal', 'signupModal', 'quickViewModal', 'mascotModal', 'deleteModal', 'publishModal', 'manageModal', 'fundraiserModal', 'leaderboardModal', 'campaignModal', 'portalModal', 'shareModal'];
+    const ALL_MODALS = ['logoutModal', 'leaveModal', 'roleConfirmModal', 'changeRoleModal', 'loginModal', 'forgotModal', 'signupModal', 'quickViewModal', 'mascotModal', 'deleteModal', 'publishModal', 'manageModal', 'fundraiserModal', 'leaderboardModal', 'campaignModal', 'portalModal', 'shareModal'];
     function updateGlobalBack() {
         const anyOpen = ALL_MODALS.some(id => { const el = document.getElementById(id); return el && el.classList.contains('open'); });
         document.getElementById('globalModalBack').classList.toggle('hidden', !anyOpen);
@@ -3917,6 +3957,7 @@
 
     /* Initial render */
     renderClubs(CLUBS);
+    updateSiteReviewAccess();
 
     /* Restore a saved login session (simulated JWT with expiry) */
     (function restoreSession() {
