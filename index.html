@@ -48,10 +48,13 @@
             transform: translateX(-50%) translateY(150%);
             background: #111827; color: #fff; padding: 0.75rem 1.25rem;
             border-radius: 0.75rem; font-size: 0.875rem; z-index: 200;
-            transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.3s ease, visibility 0.3s;
             box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            visibility: hidden; opacity: 0; pointer-events: none;
+            max-width: calc(100vw - 2rem);
         }
-        #toast.show { transform: translateX(-50%) translateY(0); }
+        /* When inactive the toast is fully hidden (no lingering black box); .show fades + slides it in. */
+        #toast.show { transform: translateX(-50%) translateY(0); visibility: visible; opacity: 1; }
 
         /* Code input boxes */
         .code-box { width: 3rem; height: 3.5rem; text-align: center; font-size: 1.5rem; font-weight: 700; border: 2px solid #d1d5db; border-radius: 0.5rem; background: #fff; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
@@ -400,7 +403,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Category <span class="text-blue-500">*</span></label>
-                    <select id="clubCategory" onchange="validateWizard()" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:border-indigo-500">
+                    <select id="clubCategory" onchange="onWizardCategoryChange()" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:border-indigo-500">
                         <option value="">— Select a category —</option>
                         <option>STEM &amp; Tech</option>
                         <option>Business &amp; Entrepreneurship</option>
@@ -410,7 +413,9 @@
                         <option>Humanities &amp; Debate</option>
                         <option>Health &amp; Medicine</option>
                         <option>Hobbies &amp; Niche Interests</option>
+                        <option value="Other">Other (type your own)</option>
                     </select>
+                    <input id="clubCategoryOther" type="text" oninput="validateWizard()" placeholder="Enter a custom category name" class="hidden w-full mt-2 border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 valid-ring">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Primary School Affiliation</label>
@@ -1592,6 +1597,7 @@
     let toastTimer;
     function showToast(msg) {
         const t = document.getElementById('toast');
+        if (!msg) { t.classList.remove('show'); return; }   // empty message → just dismiss, never show a blank box
         t.textContent = msg;
         t.classList.add('show');
         clearTimeout(toastTimer);
@@ -2005,7 +2011,7 @@
         const eye = opts.noEye ? '' : '<i class="fa-regular fa-eye mr-1"></i> ';
         return `
             <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col">
-                <div onclick="openPortalByName('${escq(club.name)}')" class="flex items-center space-x-3 mb-3 cursor-pointer group" title="Open club page">
+                <div onclick="openClubFromCard('${escq(club.name)}')" class="flex items-center space-x-3 mb-3 cursor-pointer group" title="View this club">
                     ${clubThumb(club, 'w-12 h-12')}
                     <div><h3 class="font-bold text-gray-900 group-hover:text-indigo-600 flex items-center gap-1">${club.name} ${fundIcon(club)}</h3><p class="text-xs text-gray-500">${club.category} • ${club.school}</p></div>
                 </div>
@@ -2134,7 +2140,7 @@
         grid.innerHTML = funded.map(c => {
             const i = CLUBS.indexOf(c), raised = clubRaised(c), goal = clubGoal(c), pct = goal ? (raised / goal * 100) : 0;
             return `<div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                <div onclick="openPortalByName('${escq(c.name)}')" class="flex items-center gap-3 mb-3 cursor-pointer group" title="Open club page">${clubThumb(c, 'w-12 h-12')}<div><h3 class="font-bold text-gray-900 group-hover:text-indigo-600 flex items-center gap-1">${c.name} ${fundIcon(c)}</h3><p class="text-xs text-gray-500">${c.category}</p></div></div>
+                <div onclick="openClubFromCard('${escq(c.name)}')" class="flex items-center gap-3 mb-3 cursor-pointer group" title="View this club">${clubThumb(c, 'w-12 h-12')}<div><h3 class="font-bold text-gray-900 group-hover:text-indigo-600 flex items-center gap-1">${c.name} ${fundIcon(c)}</h3><p class="text-xs text-gray-500">${c.category}</p></div></div>
                 ${rocketBar(pct, false)}
                 <p class="text-sm text-gray-600 mt-2 mb-3">$${raised.toLocaleString()} raised of $${goal.toLocaleString()} <span class="font-semibold text-gray-800">(${Math.round(pct)}%)</span></p>
                 <div class="flex gap-2"><button onclick="openQuickView(${i})" class="flex-1 bg-gray-100 text-indigo-600 font-semibold py-2 rounded-lg text-sm hover:bg-indigo-50">Quick View</button><button onclick="openDonationModal(${i})" class="flex-1 bg-indigo-600 text-white font-semibold py-2 rounded-lg text-sm hover:bg-indigo-700">Donate</button></div>
@@ -2437,6 +2443,8 @@
         document.getElementById('wizardHeading').textContent = 'Start a Club';
         ['clubTitle', 'clubTagline', 'clubSchool', 'clubMission', 'meetingLocation', 'officerEmail', 'meetingRepeat'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
         document.getElementById('clubCategory').value = '';
+        document.getElementById('clubCategoryOther').value = '';
+        document.getElementById('clubCategoryOther').classList.add('hidden');
         document.querySelectorAll('[data-privacy]').forEach(c => c.classList.remove('selected'));
         wizardPrivacy = ''; wizardBanner = ''; wizardGallery = []; wizardMeetings = []; wizardAffiliated = [];
         document.getElementById('bannerPreview').innerHTML = '<i class="fa-solid fa-image text-2xl"></i>';
@@ -2508,12 +2516,25 @@
             <button onclick="removeGalleryImg(${i})" class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs hidden group-hover:flex items-center justify-center">×</button></div>`).join('');
     }
     function removeGalleryImg(i) { wizardGallery.splice(i, 1); renderGalleryPreview(); }
+    // Show/hide the custom category box when "Other" is chosen in the wizard.
+    function onWizardCategoryChange() {
+        const other = document.getElementById('clubCategory').value === 'Other';
+        document.getElementById('clubCategoryOther').classList.toggle('hidden', !other);
+        if (other) document.getElementById('clubCategoryOther').focus();
+        validateWizard();
+    }
+    // Effective category: the typed custom name when "Other" is selected, else the dropdown value.
+    function wizardCategoryValue() {
+        const sel = document.getElementById('clubCategory').value;
+        if (sel === 'Other') return document.getElementById('clubCategoryOther').value.trim();
+        return sel;
+    }
     function validateWizard() {
-        const ok = document.getElementById('clubTitle').value.trim().length > 0 && document.getElementById('clubCategory').value.length > 0;
+        const ok = document.getElementById('clubTitle').value.trim().length > 0 && wizardCategoryValue().length > 0;
         setBtn('publishBtn', ok);
     }
     function buildClubFromForm() {
-        const cat = document.getElementById('clubCategory').value;
+        const cat = wizardCategoryValue();
         const st = styleForCategory(cat);
         const officerEmail = document.getElementById('officerEmail').value.trim();
         return {
@@ -2588,7 +2609,12 @@
         document.getElementById('wizardHeading').textContent = 'Resume Editing Draft';
         document.getElementById('clubTitle').value = d.name === 'Untitled Club' ? '' : d.name;
         document.getElementById('clubTagline').value = d.tagline || '';
-        document.getElementById('clubCategory').value = d.category || '';
+        // Restore category — a custom (non-listed) category resumes into the "Other" text box.
+        const catSel = document.getElementById('clubCategory');
+        const catOther = document.getElementById('clubCategoryOther');
+        const known = Array.from(catSel.options).some(o => o.value === (d.category || '') && o.value !== 'Other');
+        if (d.category && !known) { catSel.value = 'Other'; catOther.value = d.category; catOther.classList.remove('hidden'); }
+        else { catSel.value = d.category || ''; catOther.value = ''; catOther.classList.add('hidden'); }
         document.getElementById('clubSchool').value = d.school === 'Your School' ? '' : d.school;
         document.getElementById('clubMission').value = d.mission === 'A brand-new club on Student Club Hub.' ? '' : d.mission;
         wizardMeetings = (d.meetings || []).slice();
@@ -2661,9 +2687,17 @@
             </div>`).join('') : emptyState('fa-file-lines', 'No saved drafts.', '+ Start a Club', "showView('start-club')");
     }
     function escq(s) { return (s || '').replace(/'/g, "\\'"); }
+    function escHtml(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
     function findClubByName(name) { return CLUBS.find(c => c.name === name) || ledClubs.find(c => c.name === name) || joinedClubs.find(c => c.name === name); }
     function openQuickViewByName(name) { const c = findClubByName(name); if (c) openPortal(c); }
     function openPortalByName(name) { const c = findClubByName(name); if (c) openPortal(c); }
+    // Browse-card title click: only members may open the full club page (and its chat).
+    // Guests / non-members are limited to Quick View + Support/Donate.
+    function openClubFromCard(name) {
+        const c = findClubByName(name); if (!c) return;
+        if (isLoggedIn && isMemberOf(c)) { openPortal(c); }
+        else { openQuickView(CLUBS.indexOf(c)); }
+    }
     function manageClub(name) { openManage(findClubByName(name)); }
     function inviteMembers(name) { const c = findClubByName(name); const link = c && c.shareLink ? c.shareLink : 'https://studentclubhub.org/c/' + (c && c.id ? c.id.replace('#SCH-', '').toLowerCase() : ''); showToast('Invite link copied: ' + link); }
     function startFundraiserFor(name) { openCampaign(findClubByName(name)); }
@@ -2846,7 +2880,7 @@
                     const before = f.raised || 0;
                     f.raised = before + amt;
                     f.donors = f.donors || [];
-                    f.donors.push({ name: displayName, amount: amt, shoutout: shout || '', anon: anon });
+                    f.donors.push({ name: displayName, amount: amt, shoutout: shout || '', note: note || '', anon: anon, ts: Date.now() });
                     const goal = f.target || 0;
                     if (goal && before < goal && f.raised >= goal) {
                         owlBotSay(donationClub, '🚀 GOAL REACHED! We raised $' + f.raised.toLocaleString() + ' for our club!');
@@ -3340,6 +3374,11 @@
         if (o.secretary && o.secretary.toLowerCase() === em) return 'Secretary';
         if (o.treasurer && o.treasurer.toLowerCase() === em) return 'Treasurer';
         if (club.members) { const m = club.members.find(x => x.userId && x.userId === uid); if (m) return m.role || 'Member'; }
+        // Honor explicit roster/leaders entries so promotions (Settings → Members) reflect
+        // the member's exact live title — VP / Secretary / Treasurer — not a static "Member".
+        const meMatch = x => (x.uid && x.uid === uid) || (x.c && x.c.toLowerCase() === em) || (x.email && x.email.toLowerCase() === em) || (x.n && x.n === currentUser.name);
+        if (club.leaders) { const l = club.leaders.find(meMatch); if (l && l.r) return l.r; }
+        if (club.roster) { const r = club.roster.find(meMatch); if (r) return r.r || 'Member'; }
         // NOTE: role is derived only from creatorId / officer email / explicit membership —
         // never from ledClubs (which could leak a previous user's President status).
         if (joinedClubs.includes(club)) return 'Member';
@@ -3650,6 +3689,18 @@
         club.chat = club.chat || []; club.chat.push({ who: currentUser.name || 'You', uid: currentUser.userId, text: t, ts: Date.now() }); inp.value = ''; renderClubChat();
     }
     function formatChatTime(ts) { try { return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } }
+    // Relative "time ago" for donation activity cards; falls back to a clock time for older gifts.
+    function donationTimeAgo(ts) {
+        if (!ts) return 'Just now';
+        const secs = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+        if (secs < 45) return 'Just now';
+        if (secs < 90) return '1 min ago';
+        const mins = Math.floor(secs / 60);
+        if (mins < 60) return mins + ' min ago';
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return hrs + (hrs === 1 ? ' hr ago' : ' hrs ago');
+        try { return new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric' }); } catch (e) { return ''; }
+    }
     function chatMsgIsMine(m) { return isLoggedIn && ((m.uid && m.uid === currentUser.userId) || (!m.uid && m.who === currentUser.name)); }
     function editChatMsg(i) {
         const club = currentClubPage; const m = club.chat[i]; if (!m || m.bot || !chatMsgIsMine(m)) return;
@@ -3748,9 +3799,23 @@
         if (club.showDonationMessages === false) { feed.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">Automated donation messages are hidden.</p>'; return; }
         const ds = (f.donors || []).slice().reverse();
         feed.innerHTML = ds.length ? ds.map(d => {
-            let t = '💚 ' + d.name + ' donated $' + d.amount.toLocaleString();
-            if (d.shoutout) t += ' — shout-out to ' + d.shoutout;
-            return `<div class="flex items-start gap-2"><div class="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-xs flex-shrink-0">🤖</div><div class="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700">${t}</div></div>`;
+            const nm = escHtml(d.name || 'A supporter');
+            const amt = '$' + (d.amount || 0).toLocaleString();
+            const initials = (d.anon || d.name === 'Anonymous') ? '🎁' : initialsOf(d.name || '?');
+            const shout = d.shoutout ? `<p class="text-[12px] text-indigo-600 font-medium mt-0.5"><i class="fa-solid fa-bullhorn mr-1"></i>Shoutout to: ${escHtml(d.shoutout)}</p>` : '';
+            const note = d.note ? `<p class="text-[13px] text-gray-600 italic mt-1">"${escHtml(d.note)}"</p>` : '';
+            const when = donationTimeAgo(d.ts);
+            return `<div class="flex items-start gap-2">
+                <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold flex-shrink-0">${initials}</div>
+                <div class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="text-sm text-gray-800"><span class="font-semibold">${nm}</span> donated <span class="font-semibold text-emerald-600">${amt}</span></p>
+                        <span class="text-[11px] text-gray-400 flex-shrink-0">${when}</span>
+                    </div>
+                    ${shout}
+                    ${note}
+                </div>
+            </div>`;
         }).join('') : '<p class="text-xs text-gray-400 text-center py-2">No donations yet — be the first!</p>';
         feed.scrollTop = feed.scrollHeight;
     }
@@ -3894,10 +3959,14 @@
     function setMemberRole(club, name, newRole) {
         const cur = memberByName(club, name); if (!cur) return;
         const email = cur.email || '';
+        // Preserve the member's uid across the role change so userRole() can still
+        // match them (roster join records store uid, not email).
+        const priorUid = (club.leaders || []).concat(club.roster || []).find(x => x.n === name);
+        const uid = (priorUid && priorUid.uid) || cur.uid || '';
         club.leaders = (club.leaders || []).filter(l => l.n !== name);
         club.roster = (club.roster || []).filter(m => m.n !== name);
-        if (newRole === 'Member') { club.roster.push({ n: name, r: 'Member', email: email }); }
-        else { club.leaders.push({ n: name, r: newRole, c: email }); }
+        if (newRole === 'Member') { club.roster.push({ n: name, r: 'Member', email: email, uid: uid }); }
+        else { club.leaders.push({ n: name, r: newRole, c: email, uid: uid }); }
         syncOfficersFromLeaders(club);
     }
     function kickFromClub(club, name) {
@@ -3917,7 +3986,7 @@
     }
     function closeRoleConfirm() { document.getElementById('roleConfirmModal').classList.remove('open'); lockScroll(false); pendingRoleAction = null; }
     function runRoleConfirm() { const cb = pendingRoleAction; closeRoleConfirm(); if (cb) cb(); }
-    function afterMemberChange(club) { renderCsMembers(); if (currentClubPage === club) renderClubInfo(club); }
+    function afterMemberChange(club) { renderCsMembers(); if (currentClubPage === club) { renderClubHeader(club); renderClubInfo(club); } }
     let changeRoleName = null;
     function askChangeRole(name) {
         const c = currentSettingsClub; const m = memberByName(c, name); if (!m) return;
