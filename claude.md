@@ -29,8 +29,10 @@ monetary features have been intentionally removed and must not be reintroduced.
 | `styles/main.css` | All global styles: palette tokens, layout grids, cards, buttons, badges, modals + glassmorphism filters. |
 | `scripts/auth.js` | User state, login, signup, logout, invite credentials (member IDs), session persistence, header auth area. Also hosts shared helpers (`showView`, `toast`, `escHtml`). |
 | `scripts/directory.js` | Club data, club-card rendering, category filtering, search, club creation & settings. |
-| `scripts/modal.js` | Club profile modal, image lightbox, favorite/join/contact interactions, overlay behavior. |
-| `scripts/profile.js` | Public user profiles and favorite-clubs (Saved) management. |
+| `scripts/modal.js` | Full-page Club Detail view (About/Manage tabs, ranked roster, socials, chat w/ edit-delete-permissions, owner transfer/delete, member-only reviews), image lightbox, and shared overlays (contact, review, transfer, confirm). |
+| `scripts/profile.js` | Public user profiles, Saved-clubs lists, and the multi-tab Account Settings interface. |
+| `scripts/schools.js` | Pre-populated LA-County high-school directory + district mapping (data + option builders). Loaded first. |
+| `scripts/qr.js` | Self-contained offline QR-code generator (byte mode, EC level L, v1–5) for the Share Club modal. Loaded first. |
 
 - **Maximum 1,000 lines per file module.** If a module approaches the limit,
   extract a new module rather than growing past it.
@@ -57,7 +59,9 @@ monetary features have been intentionally removed and must not be reintroduced.
 **Modals — dark glassmorphism:** overlays use a translucent dark scrim plus a
 real blur — `background: rgba(17, 24, 39, 0.55); backdrop-filter: blur(8px);`.
 The modal card itself is an opaque white surface. Clicking the scrim (outside
-the card) dismisses the modal; `Esc` also closes.
+the card) dismisses the modal; `Esc` also closes. (Applies to the auth, contact,
+review, transfer, and confirm overlays — the Club Detail is a full page, not an
+overlay, so it never closes on an outside click.)
 
 **Border-radii (consistent):** `--r-sm: 8px` (chips/inputs), `--r: 14px`
 (cards/buttons), `--r-lg: 22px` (modal cards), `--r-pill: 999px` (pills/avatars).
@@ -69,9 +73,14 @@ the card) dismisses the modal; `Esc` also closes.
 
 ## 4. Scope Guardrails (MVP)
 
-**In scope:** browse/search/filter directory, club profile modal + gallery
-lightbox, favorite clubs, join club, contact leader, public user profiles,
-club creation & settings, accounts + invite credentials.
+**Terminology:** the bookmarking action is always **"Save" / "Saved"**
+(never "Favorite") across tabs, buttons, and profile lists.
+
+**In scope:** browse/search/filter directory (by zip, school, district),
+top-clubs spotlight, club profile modal + gallery lightbox, save clubs, join
+club, contact leader, club + website reviews, public user profiles, multi-tab
+account settings, club creation with media, owner management (edit details,
+media, officer roles), club chat & announcements, accounts + invite credentials.
 
 **Out of scope — do not add:** donations, fundraisers, campaigns, progress
 bars, goal/rocket visualizers, donor leaderboards/podiums, donor activity
