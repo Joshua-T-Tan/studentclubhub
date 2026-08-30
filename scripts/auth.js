@@ -737,3 +737,20 @@ async function handleSignUp(email, password, fullName, school, gradYear) {
     // 4. Prompt user to check their email for verification
     alert("Sign-up successful! Please check your email inbox to verify your account before logging in.");
 }
+// Attach Supabase Sign-Up to the modal form
+document.addEventListener('DOMContentLoaded', function() {
+    const authForm = document.getElementById('authForm');
+    if (authForm) {
+        authForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('authEmail')?.value || '';
+            const password = document.getElementById('authPassword')?.value || '';
+            const fullName = document.getElementById('authName')?.value || '';
+            const school = document.getElementById('authSchool')?.value || '';
+            const gradYear = document.getElementById('authGradYear')?.value || '';
+
+            // Run real Supabase sign-up
+            await handleSignUp(email, password, fullName, school, gradYear);
+        });
+    }
+});
