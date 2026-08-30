@@ -703,3 +703,37 @@ function toggleFavorite(clubId) {
   if (typeof refreshFavUI === 'function') refreshFavUI();
 }
 function isJoined(clubId) { return !!(currentUser && currentUser.joined.indexOf(clubId) !== -1); }
+// Handle User Sign-Up with Supabase Email Verification
+async function handleSignUp(email, password, fullName, school, gradYear) {
+    // 1. Basic email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert("Please enter a valid email address.");
+        return;
+    }
+
+    // 2. Check if the user is using a student email (e.g., .edu or school domain)
+    const isStudent = email.toLowerCase().endsWith(".edu") || email.toLowerCase().includes("school");
+
+    // 3. Register user in Supabase Auth
+    const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+            data: {
+                full_name: fullName,
+                high_school: school,
+                graduation_year: gradYear,
+                role: isStudent ? 'student' : 'community' // Assign role automatically
+            }
+        }
+    });
+
+    if (error) {
+        alert("Error signing up: " + error.message);
+        return;
+    }
+
+    // 4. Prompt user to check their email for verification
+    alert("Sign-up successful! Please check your email inbox to verify your account before logging in.");
+}
