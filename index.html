@@ -164,7 +164,7 @@
           </div>
           <div class="field">
             <label><span data-i18n="cc_gallery">Gallery media</span> <span class="form-note">(optional, images/videos)</span></label>
-            <label class="btn ghost sm-btn">Add media<input type="file" accept="image/*,video/*" multiple hidden onchange="onGalleryUpload(event)"></label>
+            <label class="btn ghost sm-btn">Add media<input type="file" accept="image/*,video/mp4,video/webm,video/ogg" multiple hidden onchange="onGalleryUpload(event)"></label>
             <div id="ccGalleryPreview" class="gallery" style="margin-top:10px"></div>
           </div>
           <div class="field">
@@ -261,6 +261,9 @@
     <span id="lightboxCount" class="lb-count"></span>
   </div>
 
+  <!-- Full vertical gallery page (all club media) -->
+  <div id="galleryPage" class="gallery-page hidden"></div>
+
   <div id="toast" class="toast"></div>
 
   <script src="scripts/schools.js"></script>
@@ -278,7 +281,3 @@
   </script>
 </body>
 </html>
-<!-- Supabase Library -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="scripts/supabase-config.js"></script>
-<script src="scripts/auth.js"></script>

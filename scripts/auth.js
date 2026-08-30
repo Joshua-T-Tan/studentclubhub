@@ -69,6 +69,10 @@ var I18N = {
     card_save:'Save', card_saved:'Saved', card_view:'View Club',
     club_join:'+ Join Club', club_leave:'Leave Club', club_contact:'Contact Leader', tab_about:'About', tab_manage:'Manage',
     sec_about:'About', sec_details:'Details', sec_reviews:'Reviews & Ratings', sec_members:'Members & Officers', sec_gallery:'Gallery', sec_leadership:'Leadership', sec_chat:'Chat & Announcements',
+    gallery_empty:'No photos or videos added yet.', gallery_view_all:'View all media',
+    links_max:'You can add up to 8 links (4 per row).',
+    rv_reply:'Reply', rv_reply_prompt:'Write a reply to this review:', rv_reply_done:'Reply posted.',
+    rv_reply_del_h:'Delete reply?', rv_reply_del_msg:'This reply will be removed for everyone.',
     draft_resume:'Resume Editing', draft_delete:'Delete Draft' },
   es: { nav_main:'Inicio', nav_browse:'Explorar Clubes', nav_myclubs:'Mis Clubes', nav_saved:'Clubes Guardados', nav_create:'Crear un Club',
     hero_h:'Descubre tu comunidad.<br>Explora clubes de secundaria cerca de ti.', hero_p:'Busca clubes por código postal o escuela, guarda los que te gusten y conecta con sus líderes, todo en un solo lugar.',
@@ -476,6 +480,7 @@ function initAuth() {
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
       if (!$('lightbox').classList.contains('hidden')) return closeLightbox();
+      if ($('galleryPage') && !$('galleryPage').classList.contains('hidden')) return closeGalleryPage();
       ['confirmOverlay', 'contactOverlay', 'reviewOverlay', 'transferOverlay', 'forgotOverlay', 'welcomeOverlay', 'shareOverlay', 'authOverlay'].forEach(function (id) {
         if (!$(id).classList.contains('hidden')) closeOverlay(id);
       });
@@ -703,54 +708,3 @@ function toggleFavorite(clubId) {
   if (typeof refreshFavUI === 'function') refreshFavUI();
 }
 function isJoined(clubId) { return !!(currentUser && currentUser.joined.indexOf(clubId) !== -1); }
-// Handle User Sign-Up with Supabase Email Verification
-async function handleSignUp(email, password, fullName, school, gradYear) {
-    // 1. Basic email format check
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        alert("Please enter a valid email address.");
-        return;
-    }
-
-    // 2. Check if the user is using a student email (e.g., .edu or school domain)
-    const isStudent = email.toLowerCase().endsWith(".edu") || email.toLowerCase().includes("school");
-
-    // 3. Register user in Supabase Auth
-    const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-            data: {
-                full_name: fullName,
-                high_school: school,
-                graduation_year: gradYear,
-                role: isStudent ? 'student' : 'community' // Assign role automatically
-            }
-        }
-    });
-
-    if (error) {
-        alert("Error signing up: " + error.message);
-        return;
-    }
-
-    // 4. Prompt user to check their email for verification
-    alert("Sign-up successful! Please check your email inbox to verify your account before logging in.");
-}
-// Attach Supabase Sign-Up to the modal form
-document.addEventListener('DOMContentLoaded', function() {
-    const authForm = document.getElementById('authForm');
-    if (authForm) {
-        authForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('authEmail')?.value || '';
-            const password = document.getElementById('authPassword')?.value || '';
-            const fullName = document.getElementById('authName')?.value || '';
-            const school = document.getElementById('authSchool')?.value || '';
-            const gradYear = document.getElementById('authGradYear')?.value || '';
-
-            // Run real Supabase sign-up
-            await handleSignUp(email, password, fullName, school, gradYear);
-        });
-    }
-});

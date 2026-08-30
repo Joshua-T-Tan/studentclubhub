@@ -148,7 +148,50 @@ function deriveClubId(seed) {
 function saveUserClubs() {
   var seedIds = SEED_CLUBS.map(function (c) { return c.id; });
   var userClubs = CLUBS.filter(function (c) { return seedIds.indexOf(c.id) === -1; });
-  localStorage.setItem(LS.clubs, JSON.stringify(userClubs));
+  try {
+    localStorage.setItem(LS.clubs, JSON.stringify(userClubs));
+    return true;
+  } catch (e) {
+    // Almost always a QuotaExceededError from an oversized image/video data URL.
+    toast('Storage limit reached — that media is too large to save on this device. Try a smaller or more compressed file.');
+    return false;
+  }
+}
+
+/* ============================================================
+   Shared media + link validation (used by Create wizard AND Manage tab)
+   ============================================================ */
+var PLAYABLE_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg'];
+var IMAGE_MAX_BYTES = 3 * 1024 * 1024;    // 3 MB per image
+var VIDEO_MAX_BYTES = 8 * 1024 * 1024;    // 8 MB per clip (localStorage is ~5 MB total, so keep clips short)
+function fmtMB(b) { return (b / (1024 * 1024)).toFixed(1) + ' MB'; }
+/* Returns true if the file may be added; otherwise toasts why and returns false. */
+function validateMediaFile(f) {
+  if (!f) return false;
+  if (/^video\//i.test(f.type)) {
+    if (PLAYABLE_VIDEO_TYPES.indexOf(f.type) === -1) {
+      toast('That video format won’t play in browsers. Please use MP4, WebM, or OGG (MOV/AVI aren’t supported).');
+      return false;
+    }
+    if (f.size > VIDEO_MAX_BYTES) { toast('Video is too large (' + fmtMB(f.size) + '). The limit is ' + fmtMB(VIDEO_MAX_BYTES) + '.'); return false; }
+    return true;
+  }
+  if (/^image\//i.test(f.type)) {
+    if (f.size > IMAGE_MAX_BYTES) { toast('Image is too large (' + fmtMB(f.size) + '). The limit is ' + fmtMB(IMAGE_MAX_BYTES) + '.'); return false; }
+    return true;
+  }
+  toast('Unsupported file type — add an image or a video.');
+  return false;
+}
+/* A value counts as a link only if it looks like a real URL/domain (rejects plain words). */
+function isValidLink(v) {
+  v = (v || '').trim(); if (!v) return false;
+  return /^(https?:\/\/)?((([a-z0-9-]+\.)+[a-z]{2,})|localhost)(:\d+)?(\/[^\s]*)?$/i.test(v);
+}
+/* Toggle the red "invalid link" state on a single input as the user types. */
+function validateLinkInput(el) {
+  if (!el) return; var v = (el.value || '').trim();
+  el.classList.toggle('invalid', !!v && !isValidLink(v));
 }
 
 /* ---------- Main-page stats ---------- */
@@ -303,7 +346,9 @@ function createCategoryValue() {
 }
 function onBannerUpload(e) {
   var f = e.target.files[0]; if (!f) return;
+  if (!validateMediaFile(f)) { e.target.value = ''; return; }
   var r = new FileReader(); r.onload = function (ev) { wizardBanner = ev.target.result; paintBannerPreview(); }; r.readAsDataURL(f);
+  e.target.value = '';
 }
 function paintBannerPreview() {
   var el = $('ccBannerPreview');
@@ -315,13 +360,16 @@ function paintBannerPreview() {
 function clearBanner() { wizardBanner = ''; paintBannerPreview(); }
 function onGalleryUpload(e) {
   Array.prototype.forEach.call(e.target.files, function (f) {
+    if (!validateMediaFile(f)) return;
     var r = new FileReader(); r.onload = function (ev) { wizardGallery.push(ev.target.result); paintGalleryPreview(); }; r.readAsDataURL(f);
   });
   e.target.value = '';
 }
 function paintGalleryPreview() {
   $('ccGalleryPreview').innerHTML = wizardGallery.map(function (src, i) {
-    var media = /^data:video|\.(mp4|webm|mov)$/i.test(src) ? '<video src="' + src + '" muted></video>' : '<img src="' + src + '" alt="">';
+    var media = isVideoSrc(src)
+      ? '<video src="' + escAttr(src) + '#t=0.1" muted playsinline preload="metadata"></video><span class="vid-badge">▶</span>'
+      : '<img src="' + escAttr(src) + '" alt="">';
     return '<div class="thumb">' + media + '<button class="mini-x" onclick="removeGalleryItem(' + i + ')">✕</button></div>';
   }).join('');
 }
@@ -408,14 +456,18 @@ function copyClubLink() {
 function continueFromWelcome() { var c = welcomeClub; closeWelcome(); if (c) openClub(c.id); }
 
 /* ---------- Create-form social links ---------- */
-function addCreateLinkRow(url) { var w = $('ccLinks'); if (w) w.insertAdjacentHTML('beforeend', linkInputRow(url || '')); }
+function addCreateLinkRow(url) {
+  var w = $('ccLinks'); if (!w) return;
+  if (w.querySelectorAll('.mg-link').length >= 8) { toast(t('links_max')); return; }
+  w.insertAdjacentHTML('beforeend', linkInputRow(url || ''));
+}
 function seedCreateLinks(list) {
   var w = $('ccLinks'); if (!w) return;
   var arr = (list && list.length) ? list : [''];
   w.innerHTML = arr.map(function (u) { return linkInputRow(u); }).join('');
 }
 function collectCreateLinks() {
-  return Array.prototype.map.call(document.querySelectorAll('#ccLinks .mg-link'), function (el) { return el.value.trim(); }).filter(Boolean);
+  return Array.prototype.map.call(document.querySelectorAll('#ccLinks .mg-link'), function (el) { return el.value.trim(); }).filter(isValidLink).slice(0, 8);
 }
 function resetCreateForm() {
   ['ccName','ccDesc','ccMeeting','ccEmail','ccTags','ccSchool','ccDistrict','ccZip','ccOther','ccInvite'].forEach(function (id) { $(id).value = ''; });

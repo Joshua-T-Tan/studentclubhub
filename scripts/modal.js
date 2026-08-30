@@ -12,8 +12,8 @@ var clubReturnView = 'browse';
 
 var ICON_MAIL = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>';
 var ICON_STAR = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2l3 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.9 21l1.2-6.8-5-4.9 6.9-1z"/></svg>';
-var OFFICER_ROLES = ['President', 'Vice President', 'Secretary', 'Treasurer', 'Member'];
-var ROLE_RANK = { 'President': 0, 'Vice President': 1, 'Secretary': 2, 'Treasurer': 3, 'Member': 4 };
+var OFFICER_ROLES = ['President', 'Vice President', 'Treasurer', 'Secretary', 'Member'];
+var ROLE_RANK = { 'President': 0, 'Vice President': 1, 'Treasurer': 2, 'Secretary': 3, 'Member': 4 };
 var ICON_ROLE = '🔁';
 
 /* ---------- Relationship helpers ---------- */
@@ -57,81 +57,121 @@ function currentViewName() { return VIEWS.find(function (v) { return !$('view-' 
 
 function renderClub() {
   var club = getClub(currentClubId); if (!club) return;
-  var owner = ownerOf(club), member = isClubMember(club), role = roleInClub(club);
+  var owner = ownerOf(club), role = roleInClub(club), member = isClubMember(club);
   var relBadge = owner ? renderBadge(t('you_pres'), 'join') : (member ? renderBadge('You: ' + role, 'join') : '');
-
-  var tabs = owner
-    ? '<div class="club-tabs">' + tabBtn('about', t('tab_about')) + tabBtn('manage', t('tab_manage')) + '</div>'
-    : '';
-
+  var tabs = owner ? '<div class="club-tabs">' + tabBtn('about', t('tab_about')) + tabBtn('manage', t('tab_manage')) + '</div>' : '';
   var inManage = (currentClubTab === 'manage' && owner);
   currentManageClubId = inManage ? club.id : null;
-  var content = inManage ? renderManageTab(club) : renderAboutTab(club);
 
-  $('clubBody').innerHTML =
-    '<button class="back-pill" onclick="backFromClub()">' + t('back') + '</button>' +
-    '<div class="club-page">' +
-      '<div class="club-hero" style="' + coverStyle(club) + '">' +
-        '<button class="banner-star ' + (isFavorite(club.id) ? 'on' : '') + '" title="' + escAttr(isFavorite(club.id) ? t('card_saved') : t('save_club')) + '" onclick="toggleFavorite(\'' + club.id + '\')">' + starSvg(isFavorite(club.id)) + '</button>' +
-        '<button class="share-pill" title="' + escAttr(t('share_club')) + '" onclick="openShare(\'' + club.id + '\')">🔗 ' + t('share_club') + '</button>' +
-      '</div>' +
-      '<div class="club-head">' +
-        '<h2>' + escHtml(club.name) + '</h2>' +
-        '<div class="sub">' + escHtml(club.category) + ' · ' + escHtml(club.school) + (club.zip ? ' · ' + escHtml(club.zip) : '') +
-          (club.clubId ? ' · <span class="club-id-chip">#' + escHtml(club.clubId) + '</span>' : '') + '</div>' +
-        '<div class="chips">' + recruitBadge(club.recruitment) + renderBadge((club.memberCount || 0) + ' members', 'gray') + relBadge + '</div>' +
-      '</div>' + tabs +
-      '<div class="club-content">' + content + '</div>' +
-    '</div>';
+  var hero = clubHeroHTML(club), head = clubHeadHTML(club, relBadge);
+  var body;
+  if (inManage) {
+    // Manage stays a single, width-constrained column (it's a form).
+    body = '<div class="club-page club-manage">' + hero + head + tabs +
+      '<div class="club-content">' + renderManageTab(club) + '</div></div>';
+  } else {
+    // About = 2-column top grid + a full-width Reviews section spanning the bottom.
+    //   LEFT: banner, title, action buttons, About, details.
+    //   RIGHT: Officers & Members (top) then a large Chat & Announcements (bottom).
+    body = '<div class="club-detail-grid">' +
+      '<div class="club-main-content club-page">' + hero + head + tabs +
+        '<div class="club-content">' + clubLeftMainHTML(club) + '</div></div>' +
+      '<aside class="club-side">' + clubRightColHTML(club) + '</aside>' +
+    '</div>' +
+    '<div class="sidebar-card club-reviews-full">' + reviewsSectionHTML(club) + '</div>';
+  }
+  $('clubBody').innerHTML = '<button class="back-pill" onclick="backFromClub()">' + t('back') + '</button>' + body;
 }
 function tabBtn(id, label) { return '<button class="club-tab ' + (currentClubTab === id ? 'active' : '') + '" onclick="switchClubTab(\'' + id + '\')">' + label + '</button>'; }
-
-/* Save Club / Saved text button — available to everyone (guest, member, owner) */
-function saveClubBtn(club) {
+function clubHeroHTML(club) {
   var saved = isFavorite(club.id);
-  return '<button class="fav-btn ' + (saved ? 'on' : '') + '" onclick="toggleFavorite(\'' + club.id + '\')">' +
-    starSvg(saved) + (saved ? t('card_saved') : t('save_club')) + '</button>';
+  return '<div class="club-hero" style="' + coverStyle(club) + '">' +
+    '<button class="banner-star ' + (saved ? 'on' : '') + '" title="' + escAttr(saved ? t('card_saved') : t('save_club')) + '" onclick="toggleFavorite(\'' + club.id + '\')">' + starSvg(saved) + '</button>' +
+    '<button class="share-pill" title="' + escAttr(t('share_club')) + '" onclick="openShare(\'' + club.id + '\')">🔗 ' + t('share_club') + '</button>' +
+    '</div>';
 }
-/* ---------- ABOUT ---------- */
-function renderAboutTab(club) {
-  var owner = ownerOf(club), member = isClubMember(club);
-  // Guests: [Join · Contact · Save] at the TOP (between header and About).
-  // Members: [Leave · Contact · Save] at the BOTTOM (between roster and reviews).
-  // Owners: just [Save] at the bottom (they manage via the Manage tab).
-  var topActions = '', bottomActions = '';
-  if (owner) {
-    bottomActions = '<div class="modal-actions">' + saveClubBtn(club) + '</div>';
-  } else if (member) {
-    bottomActions = '<div class="modal-actions"><button class="btn ghost" onclick="toggleJoin(\'' + club.id + '\')">' + t('club_leave') + '</button>' +
-      '<button class="btn primary" onclick="openContact(\'' + club.id + '\')">' + ICON_MAIL + ' ' + t('club_contact') + '</button>' +
-      saveClubBtn(club) + '</div>';
-  } else {
-    topActions = '<div class="modal-actions"><button class="btn join" onclick="toggleJoin(\'' + club.id + '\')">' + t('club_join') + '</button>' +
-      '<button class="btn primary" onclick="openContact(\'' + club.id + '\')">' + ICON_MAIL + ' ' + t('club_contact') + '</button>' +
-      saveClubBtn(club) + '</div>';
-  }
-
-  var galleryHTML = '';
-  if (club.gallery && club.gallery.length) {
-    galleryHTML = '<div class="section-title">' + t('sec_gallery') + '</div><div class="gallery">' +
-      club.gallery.map(function (src, i) {
-        var media = isVideoSrc(src) ? '<video src="' + src + '" muted></video>' : '<img src="' + src + '" alt="">';
-        return '<div class="thumb" onclick="openLightbox(\'' + club.id + '\',' + i + ')">' + media + '</div>';
-      }).join('') + '</div>';
-  }
-
-  return topActions +
-    socialsPublicHTML(club) +
-    '<div class="section-title">' + t('sec_about') + '</div><p style="color:var(--muted)">' + escHtml(club.desc) + '</p>' +
-    '<div class="section-title">' + t('sec_details') + '</div>' +
+function clubHeadHTML(club, relBadge) {
+  var tags = (club.tags || []).length ? '<div class="chips" style="margin-top:8px">' + club.tags.map(function (tg) { return '<span class="tag">#' + escHtml(tg) + '</span>'; }).join('') + '</div>' : '';
+  return '<div class="club-head"><h2>' + escHtml(club.name) + '</h2>' +
+    '<div class="sub">' + escHtml(club.category) + ' · ' + escHtml(club.school) + (club.zip ? ' · ' + escHtml(club.zip) : '') +
+      (club.clubId ? ' · <span class="club-id-chip">#' + escHtml(club.clubId) + '</span>' : '') + '</div>' +
+    '<div class="chips">' + recruitBadge(club.recruitment) + renderBadge((club.memberCount || 0) + ' members', 'gray') + relBadge + '</div>' +
+    tags + '</div>';
+}
+/* Action buttons (Join/Leave · Contact · Save · Share) — live in the LEFT main column now */
+function clubActionsHTML(club) {
+  var owner = ownerOf(club), member = isClubMember(club), saved = isFavorite(club.id), b = '';
+  if (!owner && !member) b += '<button class="btn join" onclick="toggleJoin(\'' + club.id + '\')">' + t('club_join') + '</button>';
+  if (member && !owner) b += '<button class="btn ghost" onclick="toggleJoin(\'' + club.id + '\')">' + t('club_leave') + '</button>';
+  if (!owner) b += '<button class="btn primary" onclick="openContact(\'' + club.id + '\')">' + ICON_MAIL + ' ' + t('club_contact') + '</button>';
+  b += '<button class="fav-btn ' + (saved ? 'on' : '') + '" onclick="toggleFavorite(\'' + club.id + '\')">' + starSvg(saved) + (saved ? t('card_saved') : t('save_club')) + '</button>';
+  b += '<button class="btn ghost" onclick="openShare(\'' + club.id + '\')">🔗 ' + t('share_club') + '</button>';
+  return '<div class="modal-actions wrap club-actions">' + b + '</div>';
+}
+/* Key details block — back in the LEFT main column */
+function clubDetailsHTML(club) {
+  return '<div class="section-title">' + t('sec_details') + '</div>' +
     infoLine('Meets', club.meeting || 'TBD') + infoLine('School', club.school) +
-    (club.district ? infoLine('District', club.district) : '') + (club.zip ? infoLine('Zip', club.zip) : '') +
-    ((club.tags || []).length ? '<div class="chips" style="margin-top:6px">' + club.tags.map(function (t) { return '<span class="tag">#' + escHtml(t) + '</span>'; }).join('') + '</div>' : '') +
-    galleryHTML +
-    chatHTML(club) +
-    rosterHTML(club) +
-    bottomActions +
-    reviewsSectionHTML(club);
+    (club.district ? infoLine('District', club.district) : '') +
+    infoLine('Zip', club.zip || '—') + infoLine('Access', club.recruitment === 'Private' ? t('vis_private') : t('vis_public'));
+}
+/* LEFT main column body: actions → socials → About (scroll box) → gallery (fixed box) → details */
+function clubLeftMainHTML(club) {
+  return clubActionsHTML(club) +
+    socialsPublicHTML(club) +
+    '<div class="section-title">' + t('sec_about') + '</div>' +
+    '<div class="about-box">' + escHtml(club.desc || '') + '</div>' +
+    galleryBoxHTML(club) +
+    clubDetailsHTML(club);
+}
+/* Media thumbnail markup shared by the gallery box and the full gallery page.
+   Videos get a seek hint (#t=0.1) so a poster frame paints, plus a ▶ badge. */
+function thumbMediaHTML(src) {
+  if (isVideoSrc(src)) {
+    return '<video src="' + escAttr(src) + '#t=0.1" muted playsinline preload="metadata"></video><span class="vid-badge">▶</span>';
+  }
+  return '<img src="' + escAttr(src) + '" alt="" loading="lazy">';
+}
+/* Fixed 4×2 gallery box: shows up to 8; 8th is a "+N" gateway when more exist.
+   Empty state keeps the 2-row footprint so the main column never changes size. */
+function galleryBoxHTML(club) {
+  var g = (club.gallery || []).filter(Boolean);
+  var title = '<div class="section-title">' + t('sec_gallery') + '</div>';
+  if (!g.length) {
+    return title + '<div class="gallery gallery-fixed gallery-empty">' + t('gallery_empty') + '</div>';
+  }
+  var extra = g.length - 8;                        // >0 → hidden photos remain
+  var cells = g.slice(0, 8).map(function (src, i) {
+    if (i === 7 && extra > 0) {
+      return '<div class="thumb more" title="' + escAttr(t('gallery_view_all')) + '" onclick="openGalleryPage(\'' + club.id + '\')">' +
+        thumbMediaHTML(src) + '<div class="more-overlay">+' + extra + '</div></div>';
+    }
+    return '<div class="thumb" onclick="openLightbox(\'' + club.id + '\',' + i + ')">' + thumbMediaHTML(src) + '</div>';
+  }).join('');
+  return title + '<div class="gallery gallery-fixed">' + cells + '</div>';
+}
+/* Full vertical gallery page (all media, one column) — opened from the "+N" tile */
+function openGalleryPage(clubId) {
+  var club = getClub(clubId); if (!club) return;
+  var g = (club.gallery || []).filter(Boolean); if (!g.length) return;
+  var items = g.map(function (src, i) {
+    return '<div class="gp-item" onclick="openLightbox(\'' + club.id + '\',' + i + ')">' + thumbMediaHTML(src) + '</div>';
+  }).join('');
+  var el = $('galleryPage'); if (!el) return;
+  el.innerHTML = '<div class="gp-head"><button class="back-pill" onclick="closeGalleryPage()">' + t('back') + '</button>' +
+    '<h2 class="gp-title">' + escHtml(club.name) + '</h2></div>' +
+    '<div class="gp-grid">' + items + '</div>';
+  el.classList.remove('hidden'); document.body.style.overflow = 'hidden';
+}
+function closeGalleryPage() {
+  var el = $('galleryPage'); if (el) el.classList.add('hidden');
+  var anyOpen = Array.prototype.some.call(document.querySelectorAll('.overlay'), function (o) { return !o.classList.contains('hidden'); });
+  if (!anyOpen && $('lightbox').classList.contains('hidden')) document.body.style.overflow = '';
+}
+/* RIGHT column: Officers & Members (top) then a large Chat & Announcements (bottom) */
+function clubRightColHTML(club) {
+  return '<div class="sidebar-card side-roster">' + rosterHTML(club) + '</div>' +
+    '<div class="sidebar-card side-chat">' + chatHTML(club) + '</div>';
 }
 function infoLine(k, v) { return '<div class="info-line"><span class="k">' + escHtml(k) + '</span><span>' + escHtml(v) + '</span></div>'; }
 
@@ -152,35 +192,36 @@ function rosterHTML(club) {
   if (!isClubMember(club)) {
     return title + '<p class="chat-locked form-note">🔒 ' + t('roster_gated') + '</p>';
   }
-  // Members: show up to 5 by default (President, VP, Secretary, Treasurer, top alphabetical member),
-  // with an inline search that reveals the full roster.
+  // Members: officers ranked (President, VP, Treasurer, Secretary) then members alphabetically.
+  // The list shows ~6 rows at a time and scrolls; the search filters the whole roster.
   var search = '<div class="search" style="margin-bottom:10px"><span class="ico">⌕</span>' +
     '<input id="rosterSearch" type="text" placeholder="' + escAttr(t('roster_search_ph')) + '" oninput="filterRoster()"></div>';
-  var rows = list.map(function (m, i) {
+  var rows = list.map(function (m) {
     var badge = isOfficerRole(m.role) ? '<span class="badge">' + escHtml(m.role) + '</span>' : '<span class="badge gray">Member</span>';
     var q = (m.name + ' ' + (m.role || '')).toLowerCase();
-    return '<button class="leader-row roster-item" data-q="' + escAttr(q) + '"' + (i >= 5 ? ' style="display:none"' : '') +
+    return '<button class="leader-row roster-item" data-q="' + escAttr(q) + '"' +
       ' onclick="openProfile(\'' + escAttr(m.name) + '\')">' + avatarHTML(m.name, 'sm') +
       '<div class="who"><div class="n">' + escHtml(m.name) + '</div></div>' + badge + '</button>';
   }).join('');
-  var more = list.length > 5 ? '<p class="form-note" id="rosterMore" style="margin-top:6px">Showing 5 of ' + list.length + ' — search to find more.</p>' : '';
-  return title + search + '<div id="rosterList">' + rows + '</div>' + more;
+  return title + search + '<div id="rosterList" class="roster-scroll">' + rows + '</div>';
 }
 function filterRoster() {
   var q = ($('rosterSearch') && $('rosterSearch').value || '').trim().toLowerCase();
-  var items = document.querySelectorAll('#rosterList .roster-item'), more = $('rosterMore');
-  if (!q) { Array.prototype.forEach.call(items, function (el, i) { el.style.display = i < 5 ? '' : 'none'; }); if (more) more.style.display = ''; return; }
-  Array.prototype.forEach.call(items, function (el) { el.style.display = el.getAttribute('data-q').indexOf(q) > -1 ? '' : 'none'; });
-  if (more) more.style.display = 'none';
+  var items = document.querySelectorAll('#rosterList .roster-item');
+  Array.prototype.forEach.call(items, function (el) {
+    el.style.display = (!q || el.getAttribute('data-q').indexOf(q) > -1) ? '' : 'none';
+  });
 }
 
 /* ---------- Social links (public) ---------- */
 function socialsPublicHTML(club) {
-  var links = (club.socials || []).filter(Boolean);
+  var links = (club.socials || []).filter(isValidLink).slice(0, 8);
+  if (!links.length) return '';
   var pills = links.map(function (u) {
-    return '<a class="social-pill" href="' + escAttr(normalizeUrl(u)) + '" target="_blank" rel="noopener">🔗 ' + escHtml(hostLabel(u)) + '</a>';
+    return '<a class="social-pill" href="' + escAttr(normalizeUrl(u)) + '" target="_blank" rel="noopener" title="' + escAttr(normalizeUrl(u)) + '">' +
+      '<span class="sp-ico">🔗</span><span class="sp-label">' + escHtml(hostLabel(u)) + '</span></a>';
   }).join('');
-  return pills ? '<div class="socials">' + pills + '</div>' : '';
+  return '<div class="socials socials-grid">' + pills + '</div>';
 }
 function normalizeUrl(u) { return /^https?:\/\//i.test(u) ? u : 'https://' + u; }
 function hostLabel(u) {
@@ -326,7 +367,7 @@ function renderManageTab(club) {
     // 2) Banners, Gallery & Social Links
     '<div class="section-title">' + t('mg_media_h') + '</div>' +
     '<div class="field"><label>' + t('mg_banner') + '</label>' + bannerBlock + '</div>' +
-    '<div class="field"><label>' + t('mg_gallery') + '</label><label class="btn ghost sm-btn">' + t('mg_upload') + '<input type="file" accept="image/*,video/*" multiple hidden onchange="mgAddGallery(\'' + club.id + '\',event)"></label>' +
+    '<div class="field"><label>' + t('mg_gallery') + '</label><label class="btn ghost sm-btn">' + t('mg_upload') + '<input type="file" accept="image/*,video/mp4,video/webm,video/ogg" multiple hidden onchange="mgAddGallery(\'' + club.id + '\',event)"></label>' +
       '<div class="gallery" style="margin-top:10px">' + (club.gallery || []).map(function (src, i) {
         var media = isVideoSrc(src) ? '<video src="' + src + '" muted></video>' : '<img src="' + src + '" alt="">';
         return '<div class="thumb">' + media + '<button class="mini-x" onclick="mgRemoveGallery(\'' + club.id + '\',' + i + ')">✕</button></div>';
@@ -363,10 +404,15 @@ function filterMembers() {
   });
 }
 function linkInputRow(url) {
-  return '<div class="link-row"><input class="mg-link" type="url" placeholder="Link (Optional)" value="' + escAttr(url || '') + '">' +
+  var bad = (url && !isValidLink(url)) ? ' invalid' : '';
+  return '<div class="link-row"><input class="mg-link' + bad + '" type="text" placeholder="Link (https://…)" value="' + escAttr(url || '') + '" oninput="validateLinkInput(this)">' +
     '<button class="mini-x-inline" type="button" title="Remove" onclick="this.parentElement.remove(); mgLinksChanged()">✕</button></div>';
 }
-function addLinkRow() { var w = $('mgLinks'); if (w) { w.insertAdjacentHTML('beforeend', linkInputRow('')); mgLinksChanged(); } }
+function addLinkRow() {
+  var w = $('mgLinks'); if (!w) return;
+  if (w.querySelectorAll('.mg-link').length >= 8) { toast(t('links_max')); return; }
+  w.insertAdjacentHTML('beforeend', linkInputRow('')); mgLinksChanged();
+}
 function mgLinksChanged() { if (currentManageClubId) mgAutoSave(currentManageClubId, true); }
 
 /* ---- Auto-save Manage inputs (debounced, no full re-render so focus/scroll are kept) ---- */
@@ -378,7 +424,9 @@ function mgAutoSave(clubId, immediate) {
     if ($('mgTitle')) club.name = $('mgTitle').value.trim() || club.name;
     if ($('mgDesc')) club.desc = $('mgDesc').value.trim() || club.desc;
     if ($('mgMeeting')) club.meeting = $('mgMeeting').value.trim() || club.meeting;
-    club.socials = Array.prototype.map.call(document.querySelectorAll('#mgLinks .mg-link'), function (el) { return el.value.trim(); }).filter(Boolean);
+    // Only genuine links persist; flag (but don't drop the row for) anything that isn't a URL. Cap at 8.
+    document.querySelectorAll('#mgLinks .mg-link').forEach(function (el) { validateLinkInput(el); });
+    club.socials = Array.prototype.map.call(document.querySelectorAll('#mgLinks .mg-link'), function (el) { return el.value.trim(); }).filter(isValidLink).slice(0, 8);
     saveUserClubs(); applyFilters(); renderTopClubs();      // refresh cards, but DON'T renderClub (keeps focus)
     var s = document.querySelector('.mg-autosave'); if (s) { s.textContent = t('mg_saved_note'); setTimeout(function () { if (document.querySelector('.mg-autosave')) document.querySelector('.mg-autosave').textContent = t('mg_autosaved'); }, 1200); }
   };
@@ -402,14 +450,23 @@ function mgToggleChat(clubId) {
 function mgBannerUpload(clubId, e) {
   var club = getClub(clubId); if (!club) return;
   var f = e.target.files[0]; if (!f) return;
-  var r = new FileReader(); r.onload = function (ev) { club.banner = ev.target.result; saveUserClubs(); applyFilters(); renderTopClubs(); renderClub(); }; r.readAsDataURL(f);
+  if (!validateMediaFile(f)) { e.target.value = ''; return; }
+  var r = new FileReader(); r.onload = function (ev) { var prev = club.banner; club.banner = ev.target.result; if (!saveUserClubs()) { club.banner = prev; } applyFilters(); renderTopClubs(); renderClub(); }; r.readAsDataURL(f);
   e.target.value = '';
 }
 function mgRemoveBanner(clubId) { var c = getClub(clubId); if (c) { c.banner = ''; saveUserClubs(); applyFilters(); renderTopClubs(); renderClub(); } }
 function mgAddGallery(clubId, e) {
   var club = getClub(clubId); if (!club) return;
   Array.prototype.forEach.call(e.target.files, function (f) {
-    var r = new FileReader(); r.onload = function (ev) { (club.gallery = club.gallery || []).push(ev.target.result); saveUserClubs(); renderClub(); }; r.readAsDataURL(f);
+    if (!validateMediaFile(f)) return;
+    var r = new FileReader();
+    r.onload = function (ev) {
+      club.gallery = club.gallery || [];
+      club.gallery.push(ev.target.result);
+      if (!saveUserClubs()) { club.gallery.pop(); }   // roll back if it didn't fit in local storage
+      renderClub();
+    };
+    r.readAsDataURL(f);
   });
   e.target.value = '';
 }
@@ -677,16 +734,46 @@ function reviewsSectionHTML(club) {
     : '<span class="form-note">Join this club to leave a review</span>';
   var header = '<div class="reviews-head"><div><div class="section-title" style="margin:0">' + t('sec_reviews') + '</div>' +
     (sum.count ? '<div class="rating-line">' + starRow(sum.avg) + '<strong>' + sum.avg.toFixed(1) + '</strong><span class="form-note">· ' + sum.count + ' review' + (sum.count === 1 ? '' : 's') + '</span></div>' : '<div class="form-note">No reviews yet.</div>') + '</div>' + btn + '</div>';
+  var canReply = canReplyReview(club);
   var body = clubReviews(club.id).map(function (r, i) { return { i: i, r: r }; }).reverse().map(function (o) {
     var r = o.r, mine = currentUser && r.name === currentUser.name;
     var ctrls = mine ? '<span class="review-ctrls"><button onclick="openEditReview(\'' + club.id + '\',' + o.i + ')">' + t('rv_edit') + '</button>' +
       '<button onclick="deleteReview(\'' + club.id + '\',' + o.i + ')">' + t('rv_delete') + '</button></span>' : '';
+    var replies = (r.replies || []).map(function (rep, j) {
+      var canDel = currentUser && (rep.name === currentUser.name || ownerOf(club));
+      return '<div class="review-reply"><div class="rr-top">' + avatarHTML(rep.name, 'sm') +
+        '<span class="rr-name">' + escHtml(rep.name) + '</span><span class="badge">' + escHtml(rep.role || 'Officer') + '</span>' +
+        (rep.ts ? '<span class="review-time">' + escHtml(timeAgo(rep.ts)) + '</span>' : '') +
+        (canDel ? '<button class="rr-del" onclick="deleteReviewReply(\'' + club.id + '\',' + o.i + ',' + j + ')">' + t('rv_delete') + '</button>' : '') +
+        '</div><p class="rr-text">' + escHtml(rep.text) + '</p></div>';
+    }).join('');
+    var replyBtn = canReply ? '<button class="review-reply-btn" onclick="replyReview(\'' + club.id + '\',' + o.i + ')">↩ ' + t('rv_reply') + '</button>' : '';
     return '<div class="review"><div class="review-top">' + avatarHTML(r.name, 'sm') +
       '<div class="review-who"><div class="n">' + escHtml(r.name) + '</div>' + starRow(r.rating, 'sm') + '</div>' +
       (r.ts ? '<span class="review-time">' + escHtml(timeAgo(r.ts)) + '</span>' : '') + '</div>' +
-      '<p class="review-text">' + escHtml(r.text) + '</p>' + ctrls + '</div>';
+      '<p class="review-text">' + escHtml(r.text) + '</p>' + ctrls + replies + replyBtn + '</div>';
   }).join('');
   return header + body;
+}
+/* Only club leadership (owner / President / VP / Treasurer / Secretary) may reply to reviews. */
+function canReplyReview(club) { return ownerOf(club) || isOfficerRole(roleInClub(club)); }
+function replyReview(clubId, i) {
+  var club = getClub(clubId); if (!club || !canReplyReview(club)) return;
+  var all = loadReviews() || {}; var r = all[clubId] && all[clubId][i]; if (!r) return;
+  var text = window.prompt(t('rv_reply_prompt')); if (text == null) return;
+  text = text.trim(); if (!text) return;
+  r.replies = r.replies || [];
+  r.replies.push({ name: currentUser.name, role: roleInClub(club) || 'Officer', text: text, ts: Date.now() });
+  saveReviews(all); refreshClubModalState(); toast(t('rv_reply_done'));
+}
+function deleteReviewReply(clubId, i, j) {
+  var club = getClub(clubId); if (!club) return;
+  var all = loadReviews() || {}; var r = all[clubId] && all[clubId][i]; if (!r || !r.replies || !r.replies[j]) return;
+  var rep = r.replies[j];
+  if (!currentUser || (rep.name !== currentUser.name && !ownerOf(club))) return;   // reply author or owner only
+  openConfirm(t('rv_reply_del_h'), t('rv_reply_del_msg'), '🗑️', function () {
+    r.replies.splice(j, 1); saveReviews(all); refreshClubModalState();
+  }, t('rv_delete'));
 }
 function renderSiteReviews() {
   var wrap = $('siteReviews'); if (!wrap) return;
@@ -784,7 +871,9 @@ function openLightbox(clubId, index) {
 }
 function renderLightbox() {
   var src = lightboxSet[lightboxIndex];
-  $('lightboxStage').innerHTML = isVideoSrc(src) ? '<video src="' + src + '" controls autoplay></video>' : '<img src="' + src + '" alt="">';
+  $('lightboxStage').innerHTML = isVideoSrc(src)
+    ? '<video src="' + escAttr(src) + '#t=0.1" controls playsinline preload="metadata"></video>'
+    : '<img src="' + escAttr(src) + '" alt="">';
   $('lightboxCount').textContent = (lightboxIndex + 1) + ' / ' + lightboxSet.length;
   var multi = lightboxSet.length > 1;
   document.querySelector('.lb-prev').style.display = multi ? '' : 'none';
