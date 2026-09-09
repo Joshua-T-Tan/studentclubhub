@@ -84,8 +84,8 @@ function renderMyClubs() {
     var drafts = loadDrafts();
     grid.innerHTML = drafts.length ? drafts.map(draftCard).join('')
       : '<div class="empty" style="grid-column:1/-1"><div class="big">📝</div><p>No drafts yet.</p>' +
-        '<p class="form-note">Start a club and choose “Save as Draft” to keep it here.</p>' +
-        '<div style="margin-top:14px"><button class="btn primary" onclick="showView(\'create\')">Start a Club</button></div></div>';
+        '<p class="form-note">Register a club and choose “Save as Draft” to keep it here.</p>' +
+        '<div style="margin-top:14px"><button class="btn primary" onclick="showView(\'create\')">Register a Club</button></div></div>';
     return;
   }
   var q = ($('myClubsSearch') && $('myClubsSearch').value || '').trim();
@@ -292,11 +292,27 @@ function saveSettings() {
 function togglePrivacy() { currentUser.private = !currentUser.private; persistUser(); renderSettings(); toast(currentUser.private ? 'Profile is now private.' : 'Profile is now public.'); }
 function toggleEmailNotif() { currentUser.emailNotif = (currentUser.emailNotif === false); persistUser(); renderSettings(); toast(currentUser.emailNotif ? 'Email notifications on.' : 'Email notifications off.'); }
 function setLanguage(lang) { applyLanguage(lang); onLanguageChanged(); if (currentUser) { currentUser.lang = lang; persistUser(); } }
-function deleteAccount() {
-  openConfirm('Delete your account?', 'This permanently removes your account and saved data from this browser.', '⚠️', function () {
-    var users = loadUsers(); delete users[currentUser.email.toLowerCase()]; saveUsers(users);
-    currentUser = null; localStorage.removeItem(LS.session);
-    renderAuthArea(); if (typeof refreshFavUI === 'function') refreshFavUI();
-    showView('main'); toast('Your account has been deleted.');
-  });
+/* Deleting an account requires re-entering the correct password */
+function deleteAccount() { openDeleteAccount(); }
+function openDeleteAccount() {
+  if (!currentUser) return;
+  var e = $('delAcctErr'); if (e) e.style.display = 'none';
+  var p = $('delAcctPass'); if (p) p.value = '';
+  openOverlay('deleteAccountOverlay');
+  setTimeout(function () { if ($('delAcctPass')) $('delAcctPass').focus(); }, 60);
+}
+function closeDeleteAccount() { closeOverlay('deleteAccountOverlay'); }
+function confirmDeleteAccount() {
+  if (!currentUser) return;
+  var typed = ($('delAcctPass') && $('delAcctPass').value) || '';
+  if (typed !== currentUser.pass) {
+    var e = $('delAcctErr'); if (e) e.style.display = '';
+    var p = $('delAcctPass'); if (p) { p.value = ''; p.focus(); }
+    return;
+  }
+  var users = loadUsers(); delete users[currentUser.email.toLowerCase()]; saveUsers(users);
+  currentUser = null; localStorage.removeItem(LS.session);
+  closeDeleteAccount();
+  renderAuthArea(); if (typeof refreshFavUI === 'function') refreshFavUI();
+  showView('main'); toast('Your account has been deleted.');
 }
