@@ -63,30 +63,70 @@ function renderClub() {
   var inManage = (currentClubTab === 'manage' && owner);
   currentManageClubId = inManage ? club.id : null;
 
-  var hero = clubHeroHTML(club), head = clubHeadHTML(club, relBadge);
-  var body;
   if (inManage) {
-    // Manage stays a single, width-constrained column (it's a form).
-    body = '<div class="club-page club-manage">' + hero + head + tabs +
-      '<div class="club-content">' + renderManageTab(club) + '</div></div>';
-  } else {
-    // About = 2-column top grid + a full-width Reviews section spanning the bottom.
-    //   LEFT: banner, title, action buttons, About, details.
-    //   RIGHT: Officers & Members (top) then a large Chat & Announcements (bottom).
-    body = '<div class="club-detail-grid">' +
-      '<div class="club-main-content club-page">' + hero + head + tabs +
-        '<div class="club-content">' + clubLeftMainHTML(club) + '</div></div>' +
-      '<aside class="club-side">' + clubRightColHTML(club) + '</aside>' +
-    '</div>' +
-    '<div class="sidebar-card club-reviews-full">' + reviewsSectionHTML(club) + '</div>';
+    // Manage stays a single, width-constrained card (it's a form).
+    $('clubBody').innerHTML = '<div class="biz-wrap" style="max-width:900px">' +
+      '<button class="back-pill" onclick="backFromClub()">' + t('back') + '</button>' +
+      '<div class="club-page club-manage">' + clubHeroHTML(club) + clubHeadHTML(club, relBadge) + tabs +
+        '<div class="club-content">' + renderManageTab(club) + '</div></div></div>';
+    return;
   }
-  $('clubBody').innerHTML = '<button class="back-pill" onclick="backFromClub()">' + t('back') + '</button>' + body;
+  // About = full-bleed Yelp-style slideshow hero, then wide content + full-width reviews.
+  var slides = clubSlides(club);
+  $('clubBody').innerHTML =
+    clubHeroSlideshow(club, relBadge, slides) +
+    '<div class="biz-wrap">' +
+      '<button class="back-pill" onclick="backFromClub()">' + t('back') + '</button>' +
+      tabs + clubActionsHTML(club) +
+      '<div class="club-detail-grid">' +
+        '<div class="club-main-content">' + clubLeftMainHTML(club) + '</div>' +
+        '<aside class="club-side">' + clubRightColHTML(club) + '</aside>' +
+      '</div>' +
+      '<div class="sidebar-card club-reviews-full">' + reviewsSectionHTML(club) + '</div>' +
+    '</div>';
+  _clubSlide = 0; startClubSlideshow(slides.length);
+}
+/* ---- Club hero slideshow (Yelp-style, full-bleed) ---- */
+var _clubSlide = 0, _clubSlideTimer = null;
+function clubSlides(club) {
+  var g = (club.gallery || []).filter(Boolean);
+  if (club.banner) g = [club.banner].concat(g);
+  if (g.length) return g.map(function (u) { return { img: u }; });
+  var m = styleForCategory(club.category);
+  return [club.category, ((club.tags || []).map(function (tag) { return '#' + tag; }).join('  ')) || club.school, 'Meets at ' + club.school]
+    .map(function (txt, i) { return { grad: 'linear-gradient(' + (120 + i * 30) + 'deg,' + (i % 2 ? '#005f7d,#003249' : '#0a94ba,#00617f') + ')', icon: m.icon, txt: txt }; });
+}
+function clubHeroSlideshow(club, relBadge, slides) {
+  slides = slides || clubSlides(club);
+  var chips = recruitBadge(club.recruitment) + renderBadge((club.memberCount || 0) + ' members', 'gray') + (relBadge || '');
+  var meta = escHtml(club.category) + '  •  ' + escHtml(club.school) + (club.zip ? '  •  ' + escHtml(club.zip) : '') + (club.clubId ? '  •  #' + escHtml(club.clubId) : '');
+  var galleryN = (club.gallery || []).filter(Boolean).length;
+  return '<div class="biz-slideshow" id="clubSlideshow">' +
+    slides.map(function (s, i) {
+      return '<div class="biz-slide' + (i === 0 ? ' active' : '') + '" style="' + (s.img ? 'background-image:url(' + escAttr(s.img) + ')' : 'background:' + s.grad) + '">' +
+        (s.img ? '' : '<span class="biz-slide-ico">' + s.icon + '</span><span class="biz-slide-txt">' + escHtml(s.txt || '') + '</span>') + '</div>';
+    }).join('') +
+    '<div class="biz-slide-scrim"></div>' +
+    (slides.length > 1 ? '<button class="lb-btn biz-sl-prev" onclick="clubSlideStep(-1)">‹</button><button class="lb-btn biz-sl-next" onclick="clubSlideStep(1)">›</button>' : '') +
+    (galleryN ? '<button class="biz-seeall" onclick="openGalleryPage(\'' + club.id + '\')">▦ See all ' + galleryN + ' photos</button>' : '') +
+    '<div class="biz-hero-info container"><h1>' + escHtml(club.name) + '</h1>' +
+      '<div class="biz-tagline">' + chips + '</div>' +
+      '<div class="biz-cuisines" style="margin-top:6px">' + meta + '</div></div></div>';
+}
+function clubSlideStep(d) {
+  var s = document.querySelectorAll('#clubSlideshow .biz-slide'); if (!s.length) return;
+  s[_clubSlide].classList.remove('active'); _clubSlide = (_clubSlide + d + s.length) % s.length; s[_clubSlide].classList.add('active');
+  startClubSlideshow(s.length);
+}
+function startClubSlideshow(n) {
+  if (_clubSlideTimer) clearInterval(_clubSlideTimer);
+  if (n > 1) _clubSlideTimer = setInterval(function () { if ($('view-club') && !$('view-club').classList.contains('hidden')) clubSlideStep(1); }, 5000);
 }
 function tabBtn(id, label) { return '<button class="club-tab ' + (currentClubTab === id ? 'active' : '') + '" onclick="switchClubTab(\'' + id + '\')">' + label + '</button>'; }
 function clubHeroHTML(club) {
   var saved = isFavorite(club.id);
   return '<div class="club-hero" style="' + coverStyle(club) + '">' +
-    '<button class="banner-star ' + (saved ? 'on' : '') + '" title="' + escAttr(saved ? t('card_saved') : t('save_club')) + '" onclick="toggleFavorite(\'' + club.id + '\')">' + starSvg(saved) + '</button>' +
+    '<button class="banner-star ' + (saved ? 'on' : '') + '" title="' + escAttr(saved ? t('card_saved') : t('save_club')) + '" onclick="toggleFavorite(\'' + club.id + '\')">' + bookmarkSvg(saved) + '</button>' +
     '<button class="share-pill" title="' + escAttr(t('share_club')) + '" onclick="openShare(\'' + club.id + '\')">🔗 ' + t('share_club') + '</button>' +
     '</div>';
 }
@@ -104,8 +144,9 @@ function clubActionsHTML(club) {
   if (!owner && !member) b += '<button class="btn join" onclick="toggleJoin(\'' + club.id + '\')">' + t('club_join') + '</button>';
   if (member && !owner) b += '<button class="btn ghost" onclick="toggleJoin(\'' + club.id + '\')">' + t('club_leave') + '</button>';
   if (!owner) b += '<button class="btn primary" onclick="openContact(\'' + club.id + '\')">' + ICON_MAIL + ' ' + t('club_contact') + '</button>';
-  b += '<button class="fav-btn ' + (saved ? 'on' : '') + '" onclick="toggleFavorite(\'' + club.id + '\')">' + starSvg(saved) + (saved ? t('card_saved') : t('save_club')) + '</button>';
+  b += '<button class="fav-btn ' + (saved ? 'on' : '') + '" onclick="toggleFavorite(\'' + club.id + '\')">' + bookmarkSvg(saved) + (saved ? t('card_saved') : t('save_club')) + '</button>';
   b += '<button class="btn ghost" onclick="openShare(\'' + club.id + '\')">🔗 ' + t('share_club') + '</button>';
+  if (!owner) b += '<button class="btn blue" onclick="openReachOut(\'club\',\'' + club.id + '\')">💬 Reach Out</button>';
   return '<div class="modal-actions wrap club-actions">' + b + '</div>';
 }
 /* Key details block — back in the LEFT main column */
@@ -115,10 +156,10 @@ function clubDetailsHTML(club) {
     (club.district ? infoLine('District', club.district) : '') +
     infoLine('Zip', club.zip || '—') + infoLine('Access', club.recruitment === 'Private' ? t('vis_private') : t('vis_public'));
 }
-/* LEFT main column body: actions → socials → About (scroll box) → gallery (fixed box) → details */
+/* LEFT main column body: socials → About (scroll box) → gallery (fixed box) → details.
+   (Actions moved to the full-width action bar under the Yelp-style hero.) */
 function clubLeftMainHTML(club) {
-  return clubActionsHTML(club) +
-    socialsPublicHTML(club) +
+  return socialsPublicHTML(club) +
     '<div class="section-title">' + t('sec_about') + '</div>' +
     '<div class="about-box">' + escHtml(club.desc || '') + '</div>' +
     galleryBoxHTML(club) +
@@ -364,6 +405,7 @@ function renderManageTab(club) {
     '<div class="field"><label>' + t('mg_title') + '</label><input id="mgTitle" type="text" value="' + escAttr(club.name) + '" oninput="mgAutoSave(\'' + club.id + '\')"></div>' +
     '<div class="field"><label>' + t('mg_desc') + '</label><textarea id="mgDesc" oninput="mgAutoSave(\'' + club.id + '\')">' + escHtml(club.desc) + '</textarea></div>' +
     '<div class="field"><label>' + t('mg_meeting') + '</label><input id="mgMeeting" type="text" value="' + escAttr(club.meeting || '') + '" oninput="mgAutoSave(\'' + club.id + '\')"></div>' +
+    '<div class="field"><label>' + t('mg_tags') + '</label><input id="mgTags" type="text" placeholder="' + escAttr(t('mg_tags_ph')) + '" value="' + escAttr((club.tags || []).join(', ')) + '" oninput="mgAutoSave(\'' + club.id + '\')"><div class="form-note">' + t('mg_tags_note') + '</div></div>' +
     // 2) Banners, Gallery & Social Links
     '<div class="section-title">' + t('mg_media_h') + '</div>' +
     '<div class="field"><label>' + t('mg_banner') + '</label>' + bannerBlock + '</div>' +
@@ -424,6 +466,7 @@ function mgAutoSave(clubId, immediate) {
     if ($('mgTitle')) club.name = $('mgTitle').value.trim() || club.name;
     if ($('mgDesc')) club.desc = $('mgDesc').value.trim() || club.desc;
     if ($('mgMeeting')) club.meeting = $('mgMeeting').value.trim() || club.meeting;
+    if ($('mgTags')) club.tags = $('mgTags').value.split(',').map(function (x) { return x.trim(); }).filter(Boolean).slice(0, 12);
     // Only genuine links persist; flag (but don't drop the row for) anything that isn't a URL. Cap at 8.
     document.querySelectorAll('#mgLinks .mg-link').forEach(function (el) { validateLinkInput(el); });
     club.socials = Array.prototype.map.call(document.querySelectorAll('#mgLinks .mg-link'), function (el) { return el.value.trim(); }).filter(isValidLink).slice(0, 8);

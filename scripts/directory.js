@@ -5,20 +5,22 @@
    ============================================================ */
 
 /* ---------- Categories (creation dropdown + card cover) ---------- */
+/* Cohesive cool covers — every category is a distinct shade within the
+   Deep-Space-Blue → Cerulean → Frosted-Blue family (no rainbow clash). */
 var CATEGORIES = [
-  { name: 'STEM & Tech',                 grad: 'linear-gradient(135deg,#6366f1,#4f46e5)', icon: '🔬' },
-  { name: 'Business & Entrepreneurship', grad: 'linear-gradient(135deg,#f59e0b,#d97706)', icon: '📈' },
-  { name: 'Arts, Media & Design',        grad: 'linear-gradient(135deg,#ec4899,#db2777)', icon: '🎨' },
-  { name: 'Culture & Language',          grad: 'linear-gradient(135deg,#14b8a6,#0d9488)', icon: '🌐' },
-  { name: 'Community Service',           grad: 'linear-gradient(135deg,#10b981,#059669)', icon: '🤝' },
-  { name: 'Humanities & Debate',         grad: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', icon: '🎙️' },
-  { name: 'Health & Medicine',           grad: 'linear-gradient(135deg,#ef4444,#dc2626)', icon: '⚕️' },
-  { name: 'Athletics & Recreation',      grad: 'linear-gradient(135deg,#0ea5e9,#0284c7)', icon: '⚽' },
-  { name: 'Hobbies & Niche Interests',   grad: 'linear-gradient(135deg,#64748b,#475569)', icon: '🎲' }
+  { name: 'STEM & Tech',                 grad: 'linear-gradient(140deg,#0a6f96 0%,#003249 100%)', icon: '🔬' },
+  { name: 'Business & Entrepreneurship', grad: 'linear-gradient(140deg,#0f8ca0 0%,#0a4f66 100%)', icon: '📈' },
+  { name: 'Arts, Media & Design',        grad: 'linear-gradient(140deg,#4fb3c9 0%,#007ea7 100%)', icon: '🎨' },
+  { name: 'Culture & Language',          grad: 'linear-gradient(140deg,#12a594 0%,#0a5f66 100%)', icon: '🌐' },
+  { name: 'Community Service',           grad: 'linear-gradient(140deg,#2596be 0%,#0a4f66 100%)', icon: '🤝' },
+  { name: 'Humanities & Debate',         grad: 'linear-gradient(140deg,#2a6f97 0%,#013a5c 100%)', icon: '🎙️' },
+  { name: 'Health & Medicine',           grad: 'linear-gradient(140deg,#0e9aa7 0%,#036b82 100%)', icon: '⚕️' },
+  { name: 'Athletics & Recreation',      grad: 'linear-gradient(140deg,#1ba3d1 0%,#005f7d 100%)', icon: '⚽' },
+  { name: 'Hobbies & Niche Interests',   grad: 'linear-gradient(140deg,#5a8a99 0%,#2a4d5c 100%)', icon: '🎲' }
 ];
 function styleForCategory(cat) {
   return CATEGORIES.find(function (c) { return c.name === cat; }) ||
-    { grad: 'linear-gradient(135deg,#6366f1,#4f46e5)', icon: '◎' };
+    { grad: 'linear-gradient(140deg,#0a6f96 0%,#003249 100%)', icon: '◎' };
 }
 /* Cover background: uploaded banner if present, otherwise a clean gradient block */
 function coverStyle(club) {
@@ -109,10 +111,26 @@ function initDirectory() {
   seedCreateLinks(['']);
   if ($('ccSchool') && typeof schoolOptionsHTML === 'function') $('ccSchool').innerHTML = schoolOptionsHTML('');
   if ($('ccDistrict') && typeof districtOptionsHTML === 'function') $('ccDistrict').innerHTML = districtOptionsHTML('');
+  reconcileMemberships();     // make sure joined clubs (incl. non-persisted seed clubs) show the user in their roster
   applyFilters();
   // Deep link: ?club=A8K9X2 opens that club directly
   var dl = location.search.match(/[?&]club=([A-Za-z0-9]+)/);
   if (dl) { var dc = getClubByClubId(dl[1]); if (dc) setTimeout(function () { openClub(dc.id); }, 60); }
+}
+/* Ensure every club the current user has joined lists them in its roster/members array.
+   Seed clubs are not persisted by saveUserClubs, so their roster resets on reload — this
+   re-applies the user's membership from the (persisted) currentUser.joined list. */
+function reconcileMemberships() {
+  if (!currentUser || !currentUser.joined) return;
+  currentUser.joined.forEach(function (cid) {
+    var c = getClub(cid); if (!c) return;
+    c.roster = c.roster || [];
+    var mine = c.roster.find(function (m) { return (m.memberId && m.memberId === currentUser.memberId) || m.name === currentUser.name; });
+    if (!mine) {
+      c.roster.push({ name: currentUser.name, role: 'Member', memberId: currentUser.memberId });
+      c.memberCount = Math.max(c.memberCount || 0, c.roster.length);
+    }
+  });
 }
 function cloneClub(c) { return JSON.parse(JSON.stringify(c)); }
 function normalizeClub(c, i) {
@@ -205,11 +223,41 @@ function renderStats() {
 function stat(n, label) { return '<div class="stat"><div class="n">' + n + '</div><div class="l">' + escHtml(label) + '</div></div>'; }
 
 /* ---------- Top Clubs spotlight (most members) ---------- */
+var _tcIndex = 0, _tcTimer = null, _tcTop = [];
 function renderTopClubs() {
   var row = $('topClubs'); if (!row) return;
-  // Use the SAME card component as the directory so banner height, padding, and text sizing match.
-  var top = CLUBS.slice().sort(function (a, b) { return (b.memberCount || 0) - (a.memberCount || 0); }).slice(0, 3);
-  row.innerHTML = top.map(renderCard).join('');
+  _tcTop = CLUBS.slice().sort(function (a, b) { return (b.memberCount || 0) - (a.memberCount || 0); }).slice(0, 3);
+  row.className = 'tc-slideshow';
+  if (!_tcTop.length) { row.innerHTML = ''; return; }
+  var slides = _tcTop.map(function (c, i) {
+    return '<div class="tc-slide' + (i === 0 ? ' active' : '') + '" style="' + coverStyle(c) + '">' +
+      '<div class="tc-scrim"></div><div class="tc-body">' +
+        '<div class="chips">' + recruitBadge(c.recruitment) + renderBadge((c.memberCount || 0) + ' members', 'gray') + '</div>' +
+        '<h3>' + escHtml(c.name) + '</h3>' +
+        '<div class="tc-meta">' + escHtml(c.category) + ' · ' + escHtml(c.school) + (c.zip ? ' · ' + escHtml(c.zip) : '') + '</div>' +
+        '<button class="btn primary" onclick="openClub(\'' + c.id + '\')">' + t('card_view') + '</button>' +
+      '</div></div>';
+  }).join('');
+  var dots = _tcTop.map(function (_, i) { return '<button class="tc-dot' + (i === 0 ? ' active' : '') + '" onclick="tcGo(' + i + ')" aria-label="Slide ' + (i + 1) + '"></button>'; }).join('');
+  row.innerHTML = slides +
+    (_tcTop.length > 1 ? '<button class="tc-arrow tc-prev" onclick="tcStep(-1)">‹</button><button class="tc-arrow tc-next" onclick="tcStep(1)">›</button>' : '') +
+    '<div class="tc-dots">' + dots + '</div>';
+  _tcIndex = 0; startTcAuto();
+}
+function tcPaint() {
+  var slides = document.querySelectorAll('#topClubs .tc-slide'), dots = document.querySelectorAll('#topClubs .tc-dot');
+  slides.forEach(function (s, i) { s.classList.toggle('active', i === _tcIndex); });
+  dots.forEach(function (d, i) { d.classList.toggle('active', i === _tcIndex); });
+}
+function tcStep(d) { if (!_tcTop.length) return; _tcIndex = (_tcIndex + d + _tcTop.length) % _tcTop.length; tcPaint(); startTcAuto(); }
+function tcGo(i) { _tcIndex = i; tcPaint(); startTcAuto(); }
+function startTcAuto() {
+  if (_tcTimer) clearInterval(_tcTimer);
+  if (_tcTop.length < 2) return;
+  _tcTimer = setInterval(function () {
+    var v = $('view-browse'); if (!v || v.classList.contains('hidden')) return;   // only advance while visible
+    _tcIndex = (_tcIndex + 1) % _tcTop.length; tcPaint();
+  }, 5000);
 }
 
 /* ---------- Filter UI builders ---------- */
@@ -305,12 +353,15 @@ function renderCard(club) {
   var saved = isFavorite(club.id);
   // Save is available on every card regardless of join/ownership (syncs with the banner star).
   var foot = '<button class="fav-btn ' + (saved ? 'on' : '') + '" onclick="toggleFavorite(\'' + club.id + '\')">' +
-        starSvg(saved) + (saved ? t('card_saved') : t('save_club')) + '</button>' +
+        bookmarkSvg(saved) + (saved ? t('card_saved') : t('save_club')) + '</button>' +
       '<button class="btn primary" onclick="openClub(\'' + club.id + '\')">' + t('card_view') + '</button>';
   return (
     '<article class="card">' +
-      '<div class="card-cover" style="' + coverStyle(club) + '" onclick="openClub(\'' + club.id + '\')"></div>' +
+      '<div class="card-cover" style="' + coverStyle(club) + '" onclick="openClub(\'' + club.id + '\')">' +
+        (club.banner ? '' : '<span class="cover-mark">' + styleForCategory(club.category).icon + '</span>') +
+        '<span class="cover-cat">' + escHtml(club.category) + '</span></div>' +
       '<div class="card-body">' +
+        (typeof partnershipBadge === 'function' ? partnershipBadge('club', club.id) : '') +
         '<div class="card-title" onclick="openClub(\'' + club.id + '\')"><h3>' + escHtml(club.name) + '</h3>' +
           (club.clubId ? '<span class="club-id-chip">#' + escHtml(club.clubId) + '</span>' : '') +
           (typeof isClubMember === 'function' && isClubMember(club) ? '<span class="joined-chip">✓ ' + t('joined_label') + '</span>' : '') + '</div>' +

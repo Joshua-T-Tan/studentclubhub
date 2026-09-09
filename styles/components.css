@@ -1,0 +1,108 @@
+/* ============================================================
+   Student Club Hub — components.css
+   Isolated, reusable UI widgets: modal/overlay shells, the auth
+   modal, lightbox, confirm dialog, toast, and the share modal.
+   Loaded AFTER main.css. Palette tokens live in main.css.
+   ============================================================ */
+
+/* ============================================================
+   MODALS — dark glassmorphism overlay
+   ============================================================ */
+.overlay {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 40px 16px;
+  background: rgba(17, 24, 39, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow-y: auto;
+  animation: overlay-in .18s ease;
+}
+@keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  position: relative; width: 100%; max-width: 560px;
+  background: var(--card); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg); overflow: hidden;
+  animation: modal-in .2s cubic-bezier(.2,.7,.3,1.2);
+}
+.modal.wide { max-width: 720px; }
+@keyframes modal-in { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+
+/* Floating sticky header controls inside the club modal */
+.modal-float {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 14px; pointer-events: none;
+}
+.modal-float > * { pointer-events: auto; }
+.icon-btn {
+  width: 38px; height: 38px; border-radius: var(--r-pill);
+  background: rgba(255,255,255,0.92); box-shadow: var(--shadow-sm);
+  display: grid; place-items: center; font-size: 1.05rem; color: var(--ink);
+  backdrop-filter: blur(4px);
+}
+.icon-btn:hover { background: #fff; }
+.float-fav { color: var(--faint); }
+.float-fav.on { color: var(--star); }
+
+.modal-body { padding: 0 22px 24px; }
+.modal-pad { padding: 22px; }
+
+/* Auth modal */
+.tab-row { display: flex; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: var(--r); margin-bottom: 18px; }
+.tab-row button { flex: 1; padding: 9px; border-radius: 10px; font-weight: 700; color: var(--muted); }
+.tab-row button.active { background: #fff; color: var(--ink); box-shadow: var(--shadow-sm); }
+.auth-error { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;
+  font-size: 0.85rem; border-radius: var(--r-sm); padding: 9px 12px; margin-bottom: 12px; }
+.credential-box {
+  background: var(--brand-50); border: 1px dashed var(--brand-light); border-radius: var(--r-sm);
+  padding: 12px 14px; margin: 10px 0; font-size: 0.9rem;
+}
+.credential-box .id { font-family: ui-monospace, Menlo, monospace; font-weight: 800; color: var(--brand-dark); font-size: 1.05rem; }
+
+/* Lightbox */
+.lightbox {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.92); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+}
+.lightbox img, .lightbox video { max-height: 84vh; max-width: 88vw; border-radius: var(--r); object-fit: contain; }
+.lb-btn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 48px; height: 48px; border-radius: var(--r-pill);
+  background: rgba(255,255,255,0.12); color: #fff; font-size: 1.4rem;
+  display: grid; place-items: center;
+}
+.lb-btn:hover { background: rgba(255,255,255,0.24); }
+.lb-prev { left: 20px; } .lb-next { right: 20px; }
+.lb-close { position: absolute; top: 20px; right: 20px; width: 44px; height: 44px;
+  border-radius: var(--r-pill); background: rgba(255,255,255,0.12); color: #fff; font-size: 1.3rem; display: grid; place-items: center; }
+.lb-close:hover { background: rgba(255,255,255,0.24); }
+.lb-count { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
+  color: rgba(255,255,255,0.85); font-size: 0.85rem; background: rgba(255,255,255,0.12); padding: 4px 12px; border-radius: var(--r-pill); }
+
+/* Confirm modal */
+.confirm { max-width: 400px; text-align: center; padding: 26px; }
+.confirm .c-ico { width: 56px; height: 56px; border-radius: var(--r-pill); margin: 0 auto 14px;
+  display: grid; place-items: center; font-size: 1.5rem; background: var(--brand-50); }
+.confirm h3 { font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; }
+.confirm p { color: var(--muted); font-size: 0.92rem; margin-bottom: 18px; }
+.confirm .row { display: flex; gap: 10px; } .confirm .row > * { flex: 1; }
+
+/* ---- Toast ---- */
+.toast {
+  position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(160%);
+  background: #111827; color: #fff; padding: 11px 18px; border-radius: var(--r);
+  font-size: 0.88rem; z-index: 300; box-shadow: var(--shadow-lg);
+  visibility: hidden; opacity: 0;
+  transition: transform .35s cubic-bezier(.2,.8,.3,1.3), opacity .3s, visibility .3s;
+  max-width: calc(100vw - 32px);
+}
+.toast.show { transform: translateX(-50%) translateY(0); visibility: visible; opacity: 1; }
+
+/* Share modal */
+.share-link-row { display: flex; gap: 8px; align-items: center; }
+.share-link-row input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: #f8fafc; font-size: 0.78rem; }
+.qr-wrap { margin-top: 16px; }
+.qr-box { display: flex; justify-content: center; padding: 12px; background: #fff; border: 1px solid var(--line); border-radius: var(--r); }
+.qr-box svg { width: 190px; height: 190px; display: block; }
