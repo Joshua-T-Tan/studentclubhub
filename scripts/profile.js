@@ -1,5 +1,5 @@
 /* ============================================================
-   profile.js — public user profiles, Saved-clubs lists, and the
+   profile.js - public user profiles, Saved-clubs lists, and the
    multi-tab Account Settings interface.
    ============================================================ */
 
@@ -15,9 +15,17 @@ function userRecordByName(name) {
 /* ============================================================
    PUBLIC PROFILE
    ============================================================ */
+var profileReturn = { view: 'browse', clubId: null };
 function openProfile(name) {
   if (!name) return;
+  var cur = (typeof currentViewName === 'function') ? currentViewName() : 'browse';
+  if (cur !== 'profile') profileReturn = { view: cur, clubId: (cur === 'club' && typeof currentClubId !== 'undefined') ? currentClubId : null };
   currentProfileName = name; closeClubModal(); renderProfile(name); showView('profile');
+}
+/* Back from a profile → return to wherever you opened it (the club, browse, settings, …). */
+function backFromProfile() {
+  if (profileReturn.view === 'club' && profileReturn.clubId && typeof openClub === 'function') { openClub(profileReturn.clubId); return; }
+  showView(profileReturn.view || 'browse');
 }
 function renderProfileIfOpen() {
   if (currentProfileName && !$('view-profile').classList.contains('hidden')) renderProfile(currentProfileName);
@@ -46,25 +54,74 @@ function renderProfile(name) {
   }
 
   var html =
-    '<div style="padding-top:16px"><button class="btn ghost" onclick="goHome()">← Back to directory</button></div>' +
+    '<div style="padding-top:16px"><button class="btn ghost" onclick="backFromProfile()">← Back</button></div>' +
     '<div class="profile-head">' + avatarHTML(name, 'lg') +
-      '<div class="meta"><h1>' + escHtml(name) + '</h1>' + identity +
+      '<div class="meta"><div class="name-row"><h1>' + escHtml(name) + '</h1>' +
+        (isSelf ? '' : '<button class="name-ico flag" title="Report this user" onclick="openReport(\'user\',\'' + escAttr(memberId || name) + '\',\'' + escAttr(name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '🚩') + '</button>') + '</div>' + identity +
         (isSelf ? '<div class="profile-edit"><button class="btn ghost sm-btn" onclick="openSettings()">Edit Profile &amp; Settings</button></div>' : '') +
-      '</div></div>';
-
-  // ----- Club lists (hidden entirely when private) — Saved Clubs never shown here -----
-  if (!priv) {
-    if (isSelf) {
-      var joined = currentUser.joined.map(getClub).filter(Boolean).filter(function (c) { return led.indexOf(c) === -1; });
-      html += profileSection('Clubs Joined', joined, 'You haven’t joined any clubs yet.');
-    }
-    html += profileSection(isSelf ? 'Clubs Leading' : 'Clubs ' + name.split(' ')[0] + ' Leads', led,
-      isSelf ? 'You don’t lead any clubs yet.' : 'No clubs listed.');
-  }
+      '</div></div>' +
+    '<div id="profileLists"></div>';
   body.innerHTML = html;
+  // Club + business lists (hidden entirely when private) — Saved Clubs never shown here
+  if (!priv) _populateProfileLists(name, isSelf, rec);
 }
-function profileSection(title, clubs, emptyMsg) {
-  var inner = clubs && clubs.length ? '<div class="grid">' + clubs.map(renderCard).join('') + '</div>'
+/* Resolve the profile person's email + member ID (for looking up their shops / joined clubs). */
+function _resolveProfilePerson(name, rec) {
+  if (currentUser && currentUser.name === name) return Promise.resolve({ email: (currentUser.email || '').toLowerCase(), memberId: currentUser.memberId || '' });
+  if (rec && (rec.email || rec.memberId)) return Promise.resolve({ email: (rec.email || '').toLowerCase(), memberId: rec.memberId || '' });
+  if (typeof sbRest !== 'function') return Promise.resolve({ email: '', memberId: '' });
+  return sbRest('profiles?name=eq.' + encodeURIComponent(name) + '&select=member_id,email&limit=1')
+    .then(function (r) { var p = r && r[0]; return p ? { email: (p.email || '').toLowerCase(), memberId: p.member_id || '' } : { email: '', memberId: '' }; })
+    .catch(function () { return { email: '', memberId: '' }; });
+}
+/* Build every applicable section for a profile: clubs led, businesses led (shops
+   they own), and clubs joined. Shops + another user's joined clubs load async. */
+function _populateProfileLists(name, isSelf, rec) {
+  var host = $('profileLists'); if (!host) return;
+  host.innerHTML = '<p class="form-note" style="padding:14px 0">Loading…</p>';
+  var led = clubsLedBy(name);
+  var first = name.split(' ')[0];
+  _resolveProfilePerson(name, rec).then(function (pp) {
+    if (currentProfileName !== name) return;   // profile changed while loading
+    var bizP = pp.email
+      ? sbRest('businesses?owner_email=eq.' + encodeURIComponent(pp.email) + '&select=*' + (isSelf ? '' : '&status=eq.verified')).catch(function () { return []; })
+      : Promise.resolve([]);
+    var memP = (!isSelf && pp.memberId)
+      ? sbRest('club_members?member_id=eq.' + encodeURIComponent(pp.memberId) + '&select=club_id').catch(function () { return []; })
+      : Promise.resolve(null);
+    Promise.all([bizP, memP]).then(function (res) {
+      if (currentProfileName !== name) return;
+      var bizzes = res[0] || [], mem = res[1];
+      // Cache fetched shops so their cards' "View Details" can open them.
+      if (bizzes.length) { window._bizCache = (typeof _bizCache !== 'undefined' && _bizCache) || []; bizzes.forEach(function (b) { if (!_bizCache.some(function (x) { return x.id === b.id; })) _bizCache.push(b); }); }
+      var ledIds = led.map(function (c) { return String(c.id); });
+      var joined;
+      if (isSelf) {
+        joined = currentUser.joined.map(getClub).filter(Boolean).filter(function (c) { return ledIds.indexOf(String(c.id)) === -1; });
+      } else if (mem) {
+        var seen = {};
+        joined = mem.map(function (r) { return getClub(r.club_id); }).filter(Boolean).filter(function (c) {
+          var id = String(c.id); if (ledIds.indexOf(id) > -1 || seen[id]) return false; seen[id] = 1; return true;
+        });
+      } else joined = [];
+      var out = '';
+      if (isSelf) {
+        out += profileSection('Clubs Joined', joined, 'You haven’t joined any clubs yet.');
+        out += profileSection('Clubs Leading', led, 'You don’t lead any clubs yet.');
+        out += profileSection('Businesses Leading', bizzes, 'You don’t own any businesses yet.', businessCard);
+      } else {
+        if (led.length) out += profileSection('Clubs ' + first + ' Leads', led, '');
+        if (bizzes.length) out += profileSection('Businesses ' + first + ' Leads', bizzes, '', businessCard);
+        if (joined.length) out += profileSection('Clubs ' + first + ' Joined', joined, '');
+        if (!out) out = '<p class="form-note" style="padding:10px 0">No public clubs or businesses yet.</p>';
+      }
+      host.innerHTML = out;
+    });
+  });
+}
+function profileSection(title, items, emptyMsg, renderer) {
+  renderer = renderer || renderCard;
+  var inner = items && items.length ? '<div class="grid">' + items.map(renderer).join('') + '</div>'
     : '<p class="form-note" style="padding:6px 0 4px">' + escHtml(emptyMsg) + '</p>';
   return '<div class="page-head" style="padding:22px 0 8px"><h1 style="font-size:1.2rem">' + escHtml(title) + '</h1></div>' + inner;
 }
@@ -251,7 +308,7 @@ function submitForgot() {
   toast('If an account exists for ' + e + ', a password reset link is on its way.');
 }
 
-/* Update the avatar in place — never re-render the whole Settings panel (keeps unsaved text). */
+/* Update the avatar in place - never re-render the whole Settings panel (keeps unsaved text). */
 function paintSettingsAvatar() {
   var wrap = $('setAvatarWrap'); if (wrap) wrap.innerHTML = avatarHTML(currentUser.name, 'lg');
   var ctrls = $('setAvatarCtrls');
@@ -311,8 +368,9 @@ function confirmDeleteAccount() {
     return;
   }
   var users = loadUsers(); delete users[currentUser.email.toLowerCase()]; saveUsers(users);
-  currentUser = null; localStorage.removeItem(LS.session);
+  currentUser = null; if (typeof clearSessionEmail === 'function') { clearSessionEmail(); } else { localStorage.removeItem(LS.session); }
   closeDeleteAccount();
   renderAuthArea(); if (typeof refreshFavUI === 'function') refreshFavUI();
   showView('main'); toast('Your account has been deleted.');
 }
+

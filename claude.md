@@ -47,6 +47,8 @@ monetary features have been intentionally removed and must not be reintroduced.
 | `scripts/schools.js` | Pre-populated LA-County high-school directory + district mapping (data + option builders). Loaded first. |
 | `scripts/qr.js` | Self-contained offline QR-code generator (byte mode, EC level L, v1–5) for the Share Club modal. Loaded first. |
 | `scripts/supabase.js` | Minimal Supabase Auth email-OTP client (`sbSendOtp`/`sbVerifyOtp`) via plain `fetch`. Holds the public project URL + publishable key. Loaded before auth.js. |
+| `styles/theme.css` | The active "Paper" theme (red/yellow, graph paper, ink borders, hard shadows, Roboto). Loaded LAST; token-only re-skin. Remove its `<link>` to revert. |
+| `scripts/hero-motion.js` | Canvas animation behind the homepage hero (10-second seamless loop). Loaded after pages.js. |
 
 - **Maximum 1,000 lines per file module.** If a module approaches the limit,
   extract a new module rather than growing past it.
@@ -55,38 +57,49 @@ monetary features have been intentionally removed and must not be reintroduced.
 
 ## 3. Design & Palette Standards
 
-**Brand palette** (defined once as CSS custom properties on `:root`):
+**Active look: the "Paper" theme** (`styles/theme.css`, designed by williki6).
+It is loaded **last** and re-skins `main.css` / `pages.css` / `components.css`
+purely through tokens + a few overrides — it never changes layout. Removing its
+`<link>` in `index.html` reverts to the original cerulean look. New components
+should use the tokens below (not hard-coded colors) so both themes work; if a
+component needs paper-specific styling, add it to the coverage section at the
+bottom of `theme.css`.
 
-Neutral cool palette (MP31) — one accent (cerulean); gold is reserved for the Save star only.
+White graph-paper ground, **red** as the single accent, **yellow sticky-note**
+tags/cards, square-edged boxes with a solid ink border and a hard offset shadow
+(cut-out paper on a bulletin board). Light + dark variants are both defined.
 
-| Token | Value | Use |
+| Token | Light | Use |
 |-------|-------|-----|
-| `--navy` | `#003249` | Deep Space Blue — header, dark surfaces, display headings |
-| `--brand` | `#007EA7` | Cerulean — primary actions, links |
-| `--brand-dark` | `#00617f` | Deeper cerulean — hover / accent text (remapped to `#86d4dd` in dark) |
-| `--brand-light` | `#80CED7` | Frosted Blue — soft accents, card backings, borders |
-| `--brand-50` | `#eaf5f7` | Pale cerulean tint — chips, soft fills |
-| `--grad-brand` | cerulean gradient | Primary buttons, badges, glossy panels |
-| `--star` | `#f5b301` | Warm gold — Save/favorite star ONLY |
+| `--brand` | `#d62828` | Red — primary buttons, links, focus, active states |
+| `--brand-dark` | `#a91d1d` | Red hover / accent text |
+| `--brand-50` | `#fdecec` | Pale red tint — soft fills |
+| `--note` | `#ffd84d` | Yellow sticky note — stat cards, tags, icon tiles |
+| `--note-soft` | `#fff4c2` | Pale yellow — request cards, notices |
+| `--ink` / `--navy` | `#1a1a1a` | Text, box borders (`--line`), hard shadows (`--box-ink`) |
+| `--muted` | `#555555` | Secondary text |
+| `--ground` / `--bg` | `#ffffff` | Page ground (with a faint 28px graph-paper grid) |
+| `--card` | `#ffffff` | Card / surface background |
+| `--star` | `#f5b301` | Gold — Save star only |
 
-| `--join` | `#12a594` | Join success (teal-green) |
-| `--ink` | `#0e2a37` | Primary text (deep teal-navy) |
-| `--muted` | `#5a7581` | Secondary text |
-| `--line` | `#d9e6e9` | Borders/dividers |
-| `--bg` | `#f3f8f9` | Page background (cool off-white) |
-| `--card` | `#ffffff` | Card/surface background |
+Shadows are hard offsets, not blurs: `--shadow-sm/md/lg` = `4/6/8px` solid ink.
+Borders use `--edge` (`1.5px solid var(--line)`).
 
-Typography: **Space Grotesk** (display/headings) + **Inter** (body), loaded from Google Fonts with a system-font fallback stack (`--font-head` / `--font-body`).
+Typography: **Roboto** (400/500/700/900) for both headings and body, loaded from
+Google Fonts with a system-font fallback stack (`--font-head` / `--font-body`).
 
-**Modals — dark glassmorphism:** overlays use a translucent dark scrim plus a
-real blur — `background: rgba(17, 24, 39, 0.55); backdrop-filter: blur(8px);`.
-The modal card itself is an opaque white surface. Clicking the scrim (outside
-the card) dismisses the modal; `Esc` also closes. (Applies to the auth, contact,
-review, transfer, and confirm overlays — the Club Detail is a full page, not an
+**Homepage hero:** an animated canvas (`scripts/hero-motion.js`, `#heroMotion`) —
+a seamless 10-second loop of local businesses and school clubs wired together
+like circuit traces. Canvas only; no files or network.
+
+**Modals:** translucent scrim behind an opaque card. Clicking the scrim
+dismisses the modal; `Esc` also closes. (Applies to the auth, contact, review,
+transfer, report, and confirm overlays — the Club Detail is a full page, not an
 overlay, so it never closes on an outside click.)
 
-**Border-radii (consistent):** `--r-sm: 8px` (chips/inputs), `--r: 14px`
-(cards/buttons), `--r-lg: 22px` (modal cards), `--r-pill: 999px` (pills/avatars).
+**Border-radii (consistent, near-square):** `--r-sm: 3px` (chips/inputs),
+`--r: 4px` (cards/buttons), `--r-lg: 6px` (modal cards), `--r-pill: 4px`
+(pills render as small square tags).
 
 **Interaction rules:**
 - The top-left "Student Club Hub" logo always returns to the home directory.
@@ -118,3 +131,29 @@ feeds, Stripe/payout/bank fields, shoutouts, or any money movement or pricing.
 - Guard DOM lookups (`el && ...`) so a missing element never throws.
 - One responsibility per function; name functions for what they render/do.
 - Keep `localStorage` keys namespaced with the `sch_` prefix.
+
+## 6. Security Posture (MVP) — known limitations
+
+This is a prototype. Its data model is **not** access-controlled, by design of
+the current architecture. Understand these before shipping to real users:
+
+- **No real authentication → no real authorization.** Accounts and sessions
+  live in `localStorage`; every Supabase request uses the **public publishable
+  key** with no per-user JWT. RLS policies therefore have no `auth.uid()` to key
+  on, so every table backed by REST is effectively **world-readable and
+  world-writable** by anyone with the (public) key. All role/ownership checks
+  (`ownerOf`, `canEditClub`, `isBizOwner`, officer gates) are **client-side only
+  and trivially bypassable**. *Fix path:* adopt real Supabase Auth sessions, then
+  rewrite RLS to `auth.uid()`-scoped policies and move authorization server-side.
+- **Business "verified" seal is self-assigned.** `submitBusiness()` writes
+  `status:'verified'` (a `// TEMP:` auto-approve). The blue "Verified Partner"
+  seal is therefore **not** a trust signal yet. *Fix path:* restore
+  `status:'pending'` and add an officer/admin approval step before a listing goes
+  public — do both together so creation isn't silently broken.
+- **No message storage (intentional).** In-app DMs/inbox were removed; the
+  platform is an initial connector. "Reach Out" opens the visitor's email client
+  via `mailto:` to the listing's **public** contact address only (never a private
+  login email). The address is format-validated before use.
+- **Hardening in place:** user strings are escaped (`escHtml`/`escAttr`), query
+  params are `encodeURIComponent`-ed, and contact/creation emails are
+  format-validated. The publishable key is public by design (not a leak).

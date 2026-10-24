@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Student Club Hub — Find Your Club</title>
+  <title>Student Club Hub | Find a club near you</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" />
   <link rel="stylesheet" href="styles/main.css" />
   <link rel="stylesheet" href="styles/pages.css" />
   <link rel="stylesheet" href="styles/components.css" />
   <link rel="stylesheet" href="styles/hero.css" />
+  <link rel="stylesheet" href="styles/theme.css" />   <!-- Paper theme (red/yellow) — loaded LAST; remove this line to revert -->
 </head>
 <body>
 
@@ -33,9 +34,9 @@
           <button class="nav-trigger" data-group="business" onclick="toggleNavMenu(event,'business')" data-i18n="nav_business">Local Businesses <span class="caret">⌄</span></button>
           <div class="nav-menu">
             <button data-i18n="nav_browse_shops" onclick="navShop('browse')">Browse Businesses</button>
-            <button data-i18n="nav_register_shop" onclick="navShop('register')">List Your Business</button>
             <button data-i18n="nav_my_shop" onclick="navShop('my')">My Business</button>
             <button data-i18n="nav_saved_shops" onclick="navShop('saved')">Saved Businesses</button>
+            <button data-i18n="nav_register_shop" onclick="navShop('register')">Register Your Business</button>
           </div>
         </div>
         <div class="nav-item has-menu">
@@ -44,6 +45,7 @@
             <button data-i18n="nav_philosophy" onclick="navGo('philosophy')">Our Philosophy</button>
             <button data-i18n="nav_howitworks" onclick="navHowItWorks()">How It Works</button>
             <button data-i18n="nav_faq" onclick="navFaq()">FAQ</button>
+            <button onclick="navContact()">Contact Us</button>
           </div>
         </div>
       </nav>
@@ -57,6 +59,7 @@
       <div class="hero">
         <div class="hero-bg" id="heroBg"><!-- image layers rendered by pages.js --></div>
         <div class="hero-overlay"></div>
+        <canvas class="hero-motion" id="heroMotion" aria-hidden="true"></canvas>
         <div class="container hero-content">
           <div class="hero-carousel" id="heroCarousel"><!-- slides rendered by pages.js --></div>
           <div class="hero-actions">
@@ -96,6 +99,10 @@
       <div id="faqBody"></div>
     </section>
 
+    <section id="view-contact" class="app-view hidden">
+      <div id="contactBody"></div>
+    </section>
+
     <!-- ======================= LOCAL BUSINESSES (directory) ======================= -->
     <section id="view-shops" class="app-view hidden">
       <div class="container" id="shopsBody"></div>
@@ -114,7 +121,7 @@
     <!-- ======================= BROWSE / DIRECTORY ======================= -->
     <section id="view-browse" class="app-view hidden">
       <div class="container view">
-        <div class="page-head"><h1 data-i18n="browse_h">Browse Clubs</h1><p data-i18n="browse_p">Search by zip code, school name, or district.</p></div>
+        <div class="page-head centered"><h1 data-i18n="browse_h">Browse Clubs</h1><p data-i18n="browse_p">Discover student clubs near you — search by club name, school, district, or zip code.</p></div>
 
         <div class="spotlight">
           <div class="spotlight-head"><span data-i18n="top_clubs">🔥 Top Clubs</span><span class="form-note" data-i18n="most_popular">Most popular right now</span></div>
@@ -157,7 +164,7 @@
         </div>
         <div class="search search-narrow" id="myClubsSearchWrap"><span class="ico">⌕</span>
           <input id="myClubsSearch" type="text" data-i18n-ph="search_saved_ph" placeholder="Search by club name, ID, or zip..." oninput="renderMyClubs()" /></div>
-        <div id="myClubsGrid" class="grid center"></div>
+        <div id="myClubsGrid" class="grid"></div>
       </div>
     </section>
 
@@ -167,7 +174,7 @@
         <div class="page-head centered"><h1 data-i18n="saved_h">Saved Clubs</h1><p data-i18n="saved_p">Your favorite clubs, saved in one place for quick access and updates.</p></div>
         <div class="search search-narrow"><span class="ico">⌕</span>
           <input id="savedSearch" type="text" data-i18n-ph="search_saved_ph" placeholder="Search by club name, ID, or zip..." oninput="renderSaved()" /></div>
-        <div id="savedGrid" class="grid center"></div>
+        <div id="savedGrid" class="grid"></div>
       </div>
     </section>
 
@@ -194,7 +201,7 @@
           <div class="field"><label><span data-i18n="cc_name">Club name</span> *</label><input id="ccName" type="text" placeholder="e.g. Robotics &amp; AI Society" oninput="validateCreate()" /></div>
           <div class="field"><label data-i18n="cc_desc">Description</label><textarea id="ccDesc" placeholder="What does your club do? When and where do you meet?"></textarea></div>
           <div class="two-col">
-            <div class="field"><label><span data-i18n="cc_category">Category</span> *</label><select id="ccCategory" onchange="onCreateCategoryChange()"><option value="">— Select —</option></select></div>
+            <div class="field"><label><span data-i18n="cc_category">Category</span> *</label><select id="ccCategory" onchange="onCreateCategoryChange()"><option value="">Select…</option></select></div>
             <div class="field"><label data-i18n="cc_visibility">Club status</label><select id="ccRecruit"><option value="Public" data-i18n="vis_public">Public</option><option value="Private" data-i18n="vis_private">Private</option></select></div>
           </div>
           <div id="ccOtherWrap" class="field hidden"><label>Custom category</label><input id="ccOther" type="text" placeholder="Type your own category" oninput="validateCreate()" /></div>
@@ -210,24 +217,7 @@
             <div class="field"><label data-i18n="cc_meeting">Meeting schedule</label><input id="ccMeeting" type="text" placeholder="Wednesdays @ 3:30 PM, Room 214" /></div>
             <div class="field"><label><span data-i18n="cc_tags">Tags</span> <span class="form-note">(comma-separated)</span></label><input id="ccTags" type="text" placeholder="robotics, coding, competition" /></div>
           </div>
-          <div class="field">
-            <label><span data-i18n="cc_banner">Club banner image</span> <span class="form-note">(optional)</span></label>
-            <label class="uploader" id="ccBannerDrop">
-              <input type="file" accept="image/*" hidden onchange="onBannerUpload(event)">
-              <span class="up-ico">⬆</span> Drag &amp; drop or <u>click to upload</u> a banner image
-            </label>
-            <div id="ccBannerPreview" class="banner-preview">No banner — a clean gradient block will be used.</div>
-          </div>
-          <div class="field">
-            <label><span data-i18n="cc_gallery">Gallery media</span> <span class="form-note">(optional, images/videos)</span></label>
-            <label class="btn ghost sm-btn">Add media<input type="file" accept="image/*,video/mp4,video/webm,video/ogg" multiple hidden onchange="onGalleryUpload(event)"></label>
-            <div id="ccGalleryPreview" class="gallery" style="margin-top:10px"></div>
-          </div>
-          <div class="field">
-            <label><span data-i18n="cc_links">Links</span> <span class="form-note">(optional)</span></label>
-            <div id="ccLinks"></div>
-            <button class="btn ghost sm-btn" type="button" onclick="addCreateLinkRow()">+ Add Link</button>
-          </div>
+          <p class="form-note" style="margin:2px 0 10px">Charter your club now — add a banner, photo gallery, and links afterward from your club page using the ⚙ settings and pencil icons.</p>
           <div class="field invite-field">
             <label><span data-i18n="cc_invite">🔑 Club leader invite code</span> *</label>
             <input id="ccInvite" type="text" placeholder="e.g. PVPHS2026" oninput="validateCreate()" />
@@ -328,6 +318,10 @@
     <div class="modal" id="bizBody"></div>
   </div>
 
+  <div id="agreementOverlay" class="overlay hidden" onclick="onOverlayClick(event, 'agreementOverlay', closeAgreementForm)">
+    <div class="modal agreement-modal" id="agreementBody"></div>
+  </div>
+
   <div id="deleteAccountOverlay" class="overlay hidden" onclick="onOverlayClick(event, 'deleteAccountOverlay', closeDeleteAccount)">
     <div class="modal confirm" style="text-align:left">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -342,6 +336,17 @@
     </div>
   </div>
 
+  <!-- Floating Partnership Requests button (follows the user on every view; shown only when signed in) -->
+  <button id="inboxFab" class="inbox-fab" hidden onclick="navInbox()" aria-label="Partnership requests">
+    <span class="inbox-fab-ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.5 11H19V7a2 2 0 0 0-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4a2 2 0 0 0-2 2v3.8h1.5a2.2 2.2 0 1 1 0 4.4H2V19a2 2 0 0 0 2 2h3.8v-1.5a2.2 2.2 0 1 1 4.4 0V21H17a2 2 0 0 0 2-2v-4h1.5a2.5 2.5 0 0 0 0-5z"/>
+      </svg>
+    </span>
+    <span class="inbox-fab-label">Partnerships</span>
+    <span class="inbox-fab-badge" id="inboxFabBadge" hidden></span>
+  </button>
+
   <div id="toast" class="toast"></div>
 
   <script src="scripts/schools.js"></script>
@@ -352,9 +357,12 @@
   <script src="scripts/modal.js"></script>
   <script src="scripts/profile.js"></script>
   <script src="scripts/pages.js"></script>
+  <script src="scripts/hero-motion.js"></script>
   <script src="scripts/business.js"></script>
   <script src="scripts/messages.js"></script>
   <script src="scripts/partnerships.js"></script>
+  <script src="scripts/agreement.js"></script>
+  <script src="scripts/editors.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       initAuth();

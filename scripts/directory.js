@@ -1,11 +1,11 @@
 /* ============================================================
-   directory.js — club data, card rendering, zip/school/district
+   directory.js - club data, card rendering, zip/school/district
    search, focus filters, top-clubs spotlight, sorting, stats,
    and club creation (media, district validation, invite code).
    ============================================================ */
 
 /* ---------- Categories (creation dropdown + card cover) ---------- */
-/* Cohesive cool covers — every category is a distinct shade within the
+/* Cohesive cool covers - every category is a distinct shade within the
    Deep-Space-Blue → Cerulean → Frosted-Blue family (no rainbow clash). */
 var CATEGORIES = [
   { name: 'STEM & Tech',                 grad: 'linear-gradient(140deg,#0a6f96 0%,#003249 100%)', icon: '🔬' },
@@ -28,11 +28,11 @@ function coverStyle(club) {
   return 'background:' + styleForCategory(club.category).grad;
 }
 
-/* ---------- Focus quick-filters (no "All" chip — click again to clear) ---------- */
+/* ---------- Focus quick-filters (no "All" chip - click again to clear) ---------- */
 var FOCUS_FILTERS = ['STEM', 'Social Impact', 'Community Service', 'Arts', 'Athletics', 'Academic Competition'];
 
 /* ---------- Recruitment statuses (streamlined) ---------- */
-/* Public / Private status badge — identical purple pill for both (no lock emoji) */
+/* Public / Private status badge - identical purple pill for both (no lock emoji) */
 function recruitBadge(status) {
   return '<span class="badge privacy-badge">' + escHtml(status === 'Private' ? t('vis_private') : t('vis_public')) + '</span>';
 }
@@ -70,7 +70,7 @@ var SEED_CLUBS = [
   { id: 'c-biz', name: 'Young Entrepreneurs', category: 'Business & Entrepreneurship', focus: ['Academic Competition', 'Social Impact'],
     school: 'Redondo Union High School', district: 'Redondo Beach Unified School District', zip: '90277',
     recruitment: 'Open to All', tags: ['business', 'startups', 'pitching'],
-    desc: 'Turn ideas into real projects — pitch nights, mentor sessions, and a spring startup showcase.',
+    desc: 'Turn ideas into real projects with pitch nights, mentor sessions, and a startup showcase every spring.',
     meeting: 'Fridays @ 3:00 PM · Rm 301', memberCount: 24, email: 'ye@redondo.edu',
     leaders: [{ name: 'Daniel Ruiz', role: 'President', email: 'daniel.r@redondo.edu' }] },
   { id: 'c-med', name: 'Future Health Professionals', category: 'Health & Medicine', focus: ['STEM', 'Community Service'],
@@ -88,7 +88,7 @@ var SEED_CLUBS = [
   { id: 'c-track', name: 'Running & Fitness Club', category: 'Athletics & Recreation', focus: ['Athletics', 'Community Service'],
     school: 'Mira Costa High School', district: 'Manhattan Beach Unified School District', zip: '90266',
     recruitment: 'Open to All', tags: ['running', 'fitness', 'wellness'],
-    desc: 'Group runs, beach workouts, and charity 5Ks for all fitness levels — no tryouts, just show up.',
+    desc: 'Group runs, beach workouts, and charity 5Ks for every fitness level. No tryouts, just show up.',
     meeting: 'Tuesdays & Fridays @ 3:15 PM · Track', memberCount: 46, email: 'run@miracosta.edu',
     leaders: [{ name: 'Leo Park', role: 'President', email: 'leo.p@miracosta.edu' }] }
 ];
@@ -113,12 +113,13 @@ function initDirectory() {
   if ($('ccDistrict') && typeof districtOptionsHTML === 'function') $('ccDistrict').innerHTML = districtOptionsHTML('');
   reconcileMemberships();     // make sure joined clubs (incl. non-persisted seed clubs) show the user in their roster
   applyFilters();
+  loadClubs();                // replace the local snapshot with the shared server copy (syncs across accounts)
   // Deep link: ?club=A8K9X2 opens that club directly
   var dl = location.search.match(/[?&]club=([A-Za-z0-9]+)/);
   if (dl) { var dc = getClubByClubId(dl[1]); if (dc) setTimeout(function () { openClub(dc.id); }, 60); }
 }
 /* Ensure every club the current user has joined lists them in its roster/members array.
-   Seed clubs are not persisted by saveUserClubs, so their roster resets on reload — this
+   Seed clubs are not persisted by saveUserClubs, so their roster resets on reload - this
    re-applies the user's membership from the (persisted) currentUser.joined list. */
 function reconcileMemberships() {
   if (!currentUser || !currentUser.joined) return;
@@ -163,17 +164,133 @@ function deriveClubId(seed) {
   var id = ''; for (var j = 0; j < 6; j++) { id += chars.charAt(h % chars.length); h = Math.floor(h / chars.length) + (j + 1) * 7 + seed.length; }
   return id;
 }
-function saveUserClubs() {
+/* Local cache (best-effort) + authoritative per-club upsert to Supabase so edits
+   sync across accounts/devices. Pass the club that changed; otherwise the open
+   club (currentClubId) is used. */
+function saveUserClubs(club) {
   var seedIds = SEED_CLUBS.map(function (c) { return c.id; });
   var userClubs = CLUBS.filter(function (c) { return seedIds.indexOf(c.id) === -1; });
-  try {
-    localStorage.setItem(LS.clubs, JSON.stringify(userClubs));
-    return true;
-  } catch (e) {
-    // Almost always a QuotaExceededError from an oversized image/video data URL.
-    toast('Storage limit reached — that media is too large to save on this device. Try a smaller or more compressed file.');
-    return false;
+  var ok = true;
+  try { localStorage.setItem(LS.clubs, JSON.stringify(userClubs)); }
+  catch (e) { toast('That file is too big to save on this device. Try a smaller or more compressed file.'); ok = false; }
+  if (ok) {
+    var c = club || (typeof currentClubId !== 'undefined' && currentClubId ? getClub(currentClubId) : null);
+    if (c) sbSaveClub(c);
   }
+  return ok;
+}
+/* ---------- Supabase club sync ---------- */
+function sbSaveClub(club) {
+  if (typeof sbRest !== 'function' || !club || !club.id) return Promise.resolve();
+  return sbRest('clubs?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({ id: club.id, data: club, updated_at: new Date().toISOString() }) }).catch(function () {});
+}
+function sbDeleteClub(id) {
+  if (typeof sbRest !== 'function') return Promise.resolve();
+  return sbRest('clubs?id=eq.' + encodeURIComponent(id), { method: 'DELETE', headers: { Prefer: 'return=minimal' } }).catch(function () {});
+}
+/* Fetch all clubs from the server (authoritative), seeding any missing seed clubs
+   and migrating this browser's local-only clubs up on first load. */
+var _clubsServerLoaded = false;
+function loadClubs(cb) {
+  if (typeof sbRest !== 'function') { if (typeof cb === 'function') cb(); return; }
+  sbRest('clubs?select=id,data').then(function (rows) {
+    rows = rows || [];
+    var byId = {};
+    rows.forEach(function (r) { if (r && r.data && r.id) byId[r.id] = r.data; });
+    var toUpsert = [];
+    SEED_CLUBS.forEach(function (s) { if (!byId[s.id]) { var c = cloneClub(s); byId[s.id] = c; toUpsert.push(c); } });
+    var localStored = []; try { localStored = JSON.parse(localStorage.getItem(LS.clubs)) || []; } catch (e) {}
+    localStored.forEach(function (lc) { if (lc && lc.id && !byId[lc.id]) { byId[lc.id] = lc; toUpsert.push(lc); } });
+    CLUBS = Object.keys(byId).map(function (k) { return byId[k]; });
+    CLUBS.forEach(function (c, i) { normalizeClub(c, i); });
+    _clubsServerLoaded = true;
+    toUpsert.forEach(function (c) { sbSaveClub(c); });
+    reconcileMyMemberships();     // pull my joined-club list from the server (memberships made on any device)
+    reconcileMemberships();
+    if (typeof refreshCanPartner === 'function') refreshCanPartner();   // do I own an open club/shop? (puzzle color)
+    buildSchoolFilter(); renderStats(); renderTopClubs();
+    if (typeof applyFilters === 'function') applyFilters();
+    if (typeof refreshClubModalState === 'function') refreshClubModalState();
+    if (typeof cb === 'function') cb();
+  }).catch(function () { if (typeof cb === 'function') cb(); });
+}
+/* ---------- Club members (roster) sync — Step 2 ---------- */
+function _memberToRosterEntry(r) { return { name: r.name, role: r.role, memberId: r.member_id, email: r.email }; }
+function _applyMembers(club, rows) {
+  if (!club) return;
+  club.roster = (rows || []).map(_memberToRosterEntry);
+  club.memberCount = club.roster.length;
+}
+/* Fetch a club's members; if the table is empty for it but the blob has a roster,
+   migrate that roster into the table once (so existing clubs seed their members). */
+function loadClubMembers(clubId, cb) {
+  if (typeof sbRest !== 'function') { if (typeof cb === 'function') cb(); return; }
+  sbRest('club_members?club_id=eq.' + encodeURIComponent(clubId) + '&select=*&order=joined_at.asc').then(function (rows) {
+    var club = getClub(clubId);
+    if ((!rows || !rows.length) && club && (club.roster || []).length) {
+      var seedRows = club.roster.map(function (m, i) {
+        return { club_id: clubId, member_id: m.memberId || ('seed-' + clubId + '-' + i), email: (m.email || '').toLowerCase() || null, name: m.name, role: m.role || 'Member' };
+      });
+      sbRest('club_members?on_conflict=club_id,member_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=representation' }, body: JSON.stringify(seedRows) })
+        .then(function (ins) { _applyMembers(club, ins || seedRows); if (typeof cb === 'function') cb(); })
+        .catch(function () { if (typeof cb === 'function') cb(); });
+      return;
+    }
+    if (club) _applyMembers(club, rows);
+    if (typeof cb === 'function') cb();
+  }).catch(function () { if (typeof cb === 'function') cb(); });
+}
+function sbAddMember(clubId, m) {
+  if (typeof sbRest !== 'function') return Promise.resolve();
+  return sbRest('club_members?on_conflict=club_id,member_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({ club_id: clubId, member_id: m.memberId, email: (m.email || '').toLowerCase() || null, name: m.name, role: m.role || 'Member' }) }).catch(function () {});
+}
+function sbSetMemberRole(clubId, memberId, role) {
+  if (typeof sbRest !== 'function') return Promise.resolve();
+  return sbRest('club_members?club_id=eq.' + encodeURIComponent(clubId) + '&member_id=eq.' + encodeURIComponent(memberId), { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ role: role }) }).catch(function () {});
+}
+function sbRemoveMember(clubId, memberId) {
+  if (typeof sbRest !== 'function') return Promise.resolve();
+  return sbRest('club_members?club_id=eq.' + encodeURIComponent(clubId) + '&member_id=eq.' + encodeURIComponent(memberId), { method: 'DELETE', headers: { Prefer: 'return=minimal' } }).catch(function () {});
+}
+function sbRenameMember(memberId, newName) {
+  if (typeof sbRest !== 'function' || !memberId) return Promise.resolve();
+  return sbRest('club_members?member_id=eq.' + encodeURIComponent(memberId), { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ name: newName }) }).catch(function () {});
+}
+/* Reconcile the signed-in user's joined list from the server (memberships made on any device). */
+function reconcileMyMemberships(cb) {
+  if (typeof sbRest !== 'function' || !currentUser) { if (typeof cb === 'function') cb(); return; }
+  sbRest('club_members?member_id=eq.' + encodeURIComponent(currentUser.memberId) + '&select=club_id,name,role').then(function (rows) {
+    rows = rows || [];
+    var serverIds = rows.map(function (r) { return r.club_id; });
+    // 1) Self-heal my display name across all my memberships if it drifted (fixes stale snapshots like "Tester").
+    if (rows.some(function (r) { return r.name !== currentUser.name; }) && typeof sbRenameMember === 'function') {
+      sbRenameMember(currentUser.memberId, currentUser.name);
+    }
+    // 2) Push up any local-only memberships (legacy joins made before the server migration).
+    (currentUser.joined || []).forEach(function (id) {
+      if (serverIds.indexOf(id) === -1 && typeof sbAddMember === 'function') {
+        var club = getClub(id);
+        var role = (club && club.verifiedOwner === currentUser.memberId) ? 'President' : 'Member';
+        sbAddMember(id, { memberId: currentUser.memberId, email: currentUser.email, name: currentUser.name, role: role });
+      }
+    });
+    // 3) Union server + local for the joined list.
+    var ids = serverIds.slice();
+    (currentUser.joined || []).forEach(function (id) { if (ids.indexOf(id) === -1) ids.push(id); });
+    currentUser.joined = ids; if (typeof persistUser === 'function') persistUser();
+    if (typeof cb === 'function') cb();
+  }).catch(function () { if (typeof cb === 'function') cb(); });
+}
+/* Refetch just one club from the server and merge it into CLUBS (used when opening a club). */
+function refetchClub(id, cb) {
+  if (typeof sbRest !== 'function') { if (typeof cb === 'function') cb(); return; }
+  sbRest('clubs?id=eq.' + encodeURIComponent(id) + '&select=data').then(function (rows) {
+    var d = rows && rows[0] && rows[0].data;
+    if (d) { normalizeClub(d, 0); var i = CLUBS.findIndex(function (c) { return c.id === id; }); if (i > -1) CLUBS[i] = d; else CLUBS.push(d); reconcileMemberships(); }
+    if (typeof cb === 'function') cb();
+  }).catch(function () { if (typeof cb === 'function') cb(); });
 }
 
 /* ============================================================
@@ -198,7 +315,7 @@ function validateMediaFile(f) {
     if (f.size > IMAGE_MAX_BYTES) { toast('Image is too large (' + fmtMB(f.size) + '). The limit is ' + fmtMB(IMAGE_MAX_BYTES) + '.'); return false; }
     return true;
   }
-  toast('Unsupported file type — add an image or a video.');
+  toast('That file type won’t work. Add an image or a video.');
   return false;
 }
 /* A value counts as a link only if it looks like a real URL/domain (rejects plain words). */
@@ -282,7 +399,7 @@ function buildSchoolFilter() {
 }
 function buildCreateCategoryOptions() {
   var sel = $('ccCategory'); if (!sel) return;
-  sel.innerHTML = '<option value="">— Select —</option>' +
+  sel.innerHTML = '<option value="">Select…</option>' +
     CATEGORIES.map(function (c) { return '<option>' + escHtml(c.name) + '</option>'; }).join('') +
     '<option value="Other">Other (type your own)</option>';
 }
@@ -359,13 +476,16 @@ function renderCard(club) {
     '<article class="card">' +
       '<div class="card-cover" style="' + coverStyle(club) + '" onclick="openClub(\'' + club.id + '\')">' +
         (club.banner ? '' : '<span class="cover-mark">' + styleForCategory(club.category).icon + '</span>') +
+        '<button class="card-share" title="' + escAttr(t('share_club')) + '" onclick="event.stopPropagation(); openShare(\'' + club.id + '\')">' + (typeof ICON_SHARE !== 'undefined' ? ICON_SHARE : '🔗') + '</button>' +
+        '<button class="card-flag" title="Report this club" onclick="event.stopPropagation(); openReport(\'club\',\'' + club.id + '\',\'' + escAttr(club.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '🚩') + '</button>' +
         '<span class="cover-cat">' + escHtml(club.category) + '</span></div>' +
       '<div class="card-body">' +
         (typeof partnershipBadge === 'function' ? partnershipBadge('club', club.id) : '') +
         '<div class="card-title" onclick="openClub(\'' + club.id + '\')"><h3>' + escHtml(club.name) + '</h3>' +
-          (club.clubId ? '<span class="club-id-chip">#' + escHtml(club.clubId) + '</span>' : '') +
+          (club.verified ? '<span class="name-verified-ico" title="Verified">' + verifiedSeal(16, '#e6b422', '#ffffff') + '</span>' : '') +
           (typeof isClubMember === 'function' && isClubMember(club) ? '<span class="joined-chip">✓ ' + t('joined_label') + '</span>' : '') + '</div>' +
         '<div class="card-meta">' + escHtml(club.school) + (club.zip ? ' · ' + escHtml(club.zip) : '') + '</div>' +
+        (club.clubId ? '<div class="card-idline"><span class="club-id-chip">#' + escHtml(club.clubId) + '</span></div>' : '') +
         '<p class="card-desc">' + escHtml(club.desc) + '</p>' +
         '<div class="chips">' + recruitBadge(club.recruitment) + renderBadge((club.memberCount || 0) + ' members', 'gray') + '</div>' +
         '<div class="card-foot">' + foot + '</div>' +
@@ -384,7 +504,7 @@ function refreshFavUI() {
 }
 
 /* ============================================================
-   START A CLUB — media, district validation, invite code
+   START A CLUB - media, district validation, invite code
    ============================================================ */
 var wizardBanner = '', wizardGallery = [];
 function onCreateCategoryChange() {
@@ -402,10 +522,10 @@ function onBannerUpload(e) {
   e.target.value = '';
 }
 function paintBannerPreview() {
-  var el = $('ccBannerPreview');
+  var el = $('ccBannerPreview'); if (!el) return;
   el.innerHTML = wizardBanner
     ? '<img src="' + wizardBanner + '" alt="banner preview"><button class="mini-x" title="Remove banner" onclick="clearBanner()">✕</button>'
-    : 'No banner — a clean gradient block will be used.';
+    : 'No banner yet. We’ll use a plain color block for now.';
   el.classList.toggle('has-img', !!wizardBanner);
 }
 function clearBanner() { wizardBanner = ''; paintBannerPreview(); }
@@ -417,7 +537,8 @@ function onGalleryUpload(e) {
   e.target.value = '';
 }
 function paintGalleryPreview() {
-  $('ccGalleryPreview').innerHTML = wizardGallery.map(function (src, i) {
+  var gp = $('ccGalleryPreview'); if (!gp) return;
+  gp.innerHTML = wizardGallery.map(function (src, i) {
     var media = isVideoSrc(src)
       ? '<video src="' + escAttr(src) + '#t=0.1" muted playsinline preload="metadata"></video><span class="vid-badge">▶</span>'
       : '<img src="' + escAttr(src) + '" alt="">';
@@ -431,7 +552,7 @@ function validateCreate() {
   if (invite) {
     var ok = isValidInvite(invite);
     msg.className = 'form-note ' + (ok ? 'ok' : 'bad');
-    msg.innerHTML = ok ? '✓ Verified — you can author this listing.' : '✗ That invite code isn’t recognized.';
+    msg.innerHTML = ok ? '✓ Verified. You can edit this listing.' : '✗ That invite code isn’t recognized.';
   } else {
     msg.className = 'form-note';
     msg.innerHTML = 'Enter your school-issued invite code to verify you can author this listing. <em>Demo codes: PVPHS2026, WEST2026, DEMO2026.</em>';
@@ -454,6 +575,7 @@ function publishClub() {
   if (!isValidInvite($('ccInvite').value)) return toast('Enter a valid club leader invite code to publish.');
   if (!name || !cat || !school || !district) return toast('Please complete all required fields, including school district.');
   if (!$('ccZip').value.trim() || !$('ccEmail').value.trim()) return toast('Zip code and leader contact email are required.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('ccEmail').value.trim())) return toast('Enter a valid leader contact email (name@example.com).');
 
   var tags = $('ccTags').value.split(',').map(function (t) { return t.trim(); }).filter(Boolean);
   var club = {
@@ -471,7 +593,7 @@ function publishClub() {
     verifiedOwner: currentUser.memberId, inviteCode: $('ccInvite').value.trim().toUpperCase()
   };
   CLUBS.push(club);
-  saveUserClubs();
+  saveUserClubs(club);
   if (currentUser.joined.indexOf(club.id) === -1) { currentUser.joined.push(club.id); persistUser(); }
   if (editingDraftId) { deleteDraft(editingDraftId, true); editingDraftId = null; }
 
@@ -528,7 +650,7 @@ function resetCreateForm() {
 }
 
 /* ============================================================
-   DRAFTS — save an in-progress club without publishing
+   DRAFTS - save an in-progress club without publishing
    ============================================================ */
 var editingDraftId = null;
 function loadDrafts() {
@@ -556,7 +678,7 @@ function saveDraft() {
   if (i > -1) list[i] = draft; else list.push(draft);
   saveDrafts(list);
   resetCreateForm();
-  toast('Draft saved — find it under My Clubs → Drafts.');
+  toast('Draft saved. You’ll find it in My Clubs → Drafts.');
   showView('myclubs'); myClubsTab('drafts');
 }
 function resumeDraft(id) {
@@ -577,3 +699,4 @@ function deleteDraft(id, silent) {
   saveDrafts(list);
   if (!silent) { toast('Draft deleted.'); if (typeof renderMyClubs === 'function') renderMyClubs(); }
 }
+

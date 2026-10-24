@@ -1,5 +1,5 @@
 /* ============================================================
-   auth.js — user state, login/signup, invite credentials,
+   auth.js - user state, login/signup, invite credentials,
    session persistence, plus shared app helpers used everywhere.
    ============================================================ */
 
@@ -47,20 +47,20 @@ function timeAgo(ts) {
   try { return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; }
 }
 
-/* ---------- i18n — translates all FIXED UI text (user-typed content stays as typed) ---------- */
+/* ---------- i18n - translates all FIXED UI text (user-typed content stays as typed) ---------- */
 var LANGS = [
   { code: 'en', label: 'English' }, { code: 'es', label: 'Español' }, { code: 'fr', label: 'Français' },
   { code: 'ja', label: '日本語' }, { code: 'zh-CN', label: '中文（简体）' }, { code: 'zh-TW', label: '中文（繁體）' }
 ];
 var I18N = {
   en: { nav_main:'Main Page', nav_browse:'Browse Clubs', nav_myclubs:'My Clubs', nav_saved:'Saved Clubs', nav_create:'Register a Club',
-    hero_h:'Discover Your Community.<br>Explore High School Clubs Near You.', hero_p:'Search clubs by zip code or school, save the ones you love, and get connected with their leaders — all in one place.',
+    hero_h:'Find a club at your school.<br>Or start your own.', hero_p:'Search by zip code or school, save the clubs you like, and message the students who run them.',
     btn_browse:'Browse Clubs', btn_start:'Register a Club',
     step1_t:'Search by Zip Code', step1_p:'Enter your zip, school, or district to find clubs near you.',
     step2_t:'Explore Active Clubs', step2_p:'Browse profiles, photos, meeting times, and recruitment status.',
     step3_t:'Get Involved', step3_p:'Save clubs, join, and contact leaders to start participating.',
     reviews_h:'Loved by students & advisors', reviews_p:'What the community says about Student Club Hub.', write_review:'Write a Review',
-    browse_h:'Browse Clubs', browse_p:'Search by zip code, school name, or district.', search_ph:'Search by zip code, school, district, or club name...',
+    browse_h:'Browse Clubs', browse_p:'Discover student clubs near you — search by club name, school, district, or zip code.', search_ph:'Search by zip code, school, district, or club name...',
     top_clubs:'🔥 Top Clubs', most_popular:'Most popular right now',
     myclubs_h:'My Clubs', myclubs_p:'Clubs you lead and clubs you’ve joined.', tab_leading:'Clubs Leading', tab_joined:'Clubs Joined', tab_drafts:'Drafts',
     saved_h:'Saved Clubs', saved_p:'The clubs you’ve saved, kept on your account.',
@@ -68,9 +68,10 @@ var I18N = {
     settings_h:'Account Settings', settings_p:'Manage your profile and account.', tab_profile:'Profile', tab_account:'Account', lang_label:'Display language',
     card_save:'Save', card_saved:'Saved', card_view:'View Club',
     club_join:'+ Join Club', club_leave:'Leave Club', club_contact:'Contact Leader', tab_about:'About', tab_manage:'Manage',
-    sec_about:'About', sec_details:'Details', sec_reviews:'Reviews & Ratings', sec_members:'Members & Officers', sec_gallery:'Gallery', sec_leadership:'Leadership', sec_chat:'Chat & Announcements',
+    sec_about:'About', sec_details:'Details', sec_reviews:'Reviews & Ratings', sec_members:'Members & Officers', sec_gallery:'Gallery', sec_links:'Links', sec_leadership:'Leadership', sec_chat:'Chat & Announcements',
+    page_settings:'Page Settings', back_to_profile:'Back to profile', mg_partner_h:'Partnerships', mg_partner_title:'Open to partnerships', mg_partner_desc:'Show a green “Open to partnerships” badge so clubs and businesses know you welcome collaborations.',
     nav_students:'Students <span class="caret">⌄</span>', nav_business:'Local Businesses <span class="caret">⌄</span>', nav_purpose:'About Us <span class="caret">⌄</span>',
-    nav_browse_shops:'Browse Businesses', nav_register_shop:'List Your Business', nav_my_shop:'My Business', nav_saved_shops:'Saved Businesses',
+    nav_browse_shops:'Browse Businesses', nav_register_shop:'Register Your Business', nav_my_shop:'My Business', nav_saved_shops:'Saved Businesses',
     nav_philosophy:'Our Philosophy', nav_howitworks:'How It Works', nav_faq:'FAQ',
     gallery_empty:'No photos or videos added yet.', gallery_view_all:'View all media',
     links_max:'You can add up to 8 links (4 per row).',
@@ -129,7 +130,7 @@ var I18N = {
     sec_about:'概要', sec_details:'詳細', sec_reviews:'レビューと評価', sec_members:'メンバーと役員', sec_gallery:'ギャラリー', sec_leadership:'リーダーシップ', sec_chat:'チャットとお知らせ',
     draft_resume:'編集を再開', draft_delete:'下書きを削除' },
   'zh-CN': { nav_main:'首页', nav_browse:'浏览社团', nav_myclubs:'我的社团', nav_saved:'已保存社团', nav_create:'注册社团',
-    hero_h:'发现你的社群。<br>探索附近的高中社团。', hero_p:'按邮编或学校搜索社团，保存你喜欢的社团，并与负责人取得联系——尽在一处。',
+    hero_h:'发现你的社群。<br>探索附近的高中社团。', hero_p:'按邮编或学校搜索社团，保存你喜欢的社团，并与负责人取得联系，尽在一处。',
     btn_browse:'浏览社团', btn_start:'注册社团',
     step1_t:'按邮编搜索', step1_p:'输入你的邮编、学校或学区，查找附近的社团。',
     step2_t:'探索活跃社团', step2_p:'浏览简介、照片、活动时间和招募状态。',
@@ -146,7 +147,7 @@ var I18N = {
     sec_about:'简介', sec_details:'详情', sec_reviews:'评价与评分', sec_members:'成员与干部', sec_gallery:'相册', sec_leadership:'领导层', sec_chat:'聊天与公告',
     draft_resume:'继续编辑', draft_delete:'删除草稿' },
   'zh-TW': { nav_main:'首頁', nav_browse:'瀏覽社團', nav_myclubs:'我的社團', nav_saved:'已收藏社團', nav_create:'註冊社團',
-    hero_h:'發現你的社群。<br>探索附近的高中社團。', hero_p:'依郵遞區號或學校搜尋社團，收藏你喜歡的社團，並與負責人取得聯繫——盡在一處。',
+    hero_h:'發現你的社群。<br>探索附近的高中社團。', hero_p:'依郵遞區號或學校搜尋社團，收藏你喜歡的社團，並與負責人取得聯繫，盡在一處。',
     btn_browse:'瀏覽社團', btn_start:'註冊社團',
     step1_t:'依郵遞區號搜尋', step1_p:'輸入你的郵遞區號、學校或學區，尋找附近的社團。',
     step2_t:'探索活躍社團', step2_p:'瀏覽簡介、照片、聚會時間與招募狀態。',
@@ -170,7 +171,7 @@ var I18N_EXTRA = {
     au_login:'Log In', au_signup:'Sign Up', au_name:'Full name', au_email:'Email', au_password:'Password', au_confirm:'Confirm password', au_create:'Create Account',
     au_pwhint:'At least 8 characters, including a number or symbol.', au_verify_h:'Verify your email', au_verify_p:'Enter the verification code we sent to your email:',
     au_code:'Verification code', au_verify_btn:'Verify', au_resend:'Resend code', au_demo:'Demo code:', au_onboard_h:'Complete your profile', au_onboard_p:'Just a few details to personalize your experience.',
-    au_hs:'High school', au_district:'School district', au_zip:'Zip code', au_lang:'Preferred language', au_finish:'Finish', au_demo_note:'Demo only — accounts are stored locally in your browser.',
+    au_hs:'High school', au_district:'School district', au_zip:'Zip code', au_lang:'Preferred language', au_finish:'Finish', au_demo_note:'This is a demo. Accounts are saved in your browser only.',
     cc_name:'Club name', cc_desc:'Description', cc_category:'Category', cc_recruit:'Recruitment status', cc_school:'School', cc_district:'School district', cc_zip:'Zip code', cc_email:'Leader contact email',
     cc_meeting:'Meeting schedule', cc_tags:'Tags', cc_banner:'Club banner image', cc_gallery:'Gallery media', cc_links:'Links', cc_invite:'🔑 Club leader invite code',
     cc_cancel:'Cancel', cc_savedraft:'Save as Draft', cc_publish:'Publish to Directory', cc_open_all:'Open to All', cc_app_required:'Application Required',
@@ -195,7 +196,7 @@ var I18N_EXTRA = {
     au_login:'登录', au_signup:'注册', au_name:'姓名', au_email:'邮箱', au_password:'密码', au_confirm:'确认密码', au_create:'创建账户',
     au_pwhint:'至少 8 个字符，并包含一个数字或符号。', au_verify_h:'验证你的邮箱', au_verify_p:'请输入我们发送到你邮箱的验证码：',
     au_code:'验证码', au_verify_btn:'验证', au_resend:'重新发送验证码', au_demo:'演示验证码：', au_onboard_h:'完善你的资料', au_onboard_p:'只需几项信息，即可个性化你的体验。',
-    au_hs:'高中', au_district:'学区', au_zip:'邮政编码', au_lang:'首选语言', au_finish:'完成', au_demo_note:'仅为演示——账户保存在你的浏览器本地。',
+    au_hs:'高中', au_district:'学区', au_zip:'邮政编码', au_lang:'首选语言', au_finish:'完成', au_demo_note:'仅为演示：账户保存在你的浏览器本地。',
     cc_name:'社团名称', cc_desc:'简介', cc_category:'类别', cc_recruit:'招募状态', cc_school:'学校', cc_district:'学区', cc_zip:'邮政编码', cc_email:'负责人联系邮箱',
     cc_meeting:'活动时间', cc_tags:'标签', cc_banner:'社团横幅图片', cc_gallery:'相册媒体', cc_links:'链接', cc_invite:'🔑 社团负责人邀请码',
     cc_cancel:'取消', cc_savedraft:'保存为草稿', cc_publish:'发布到目录', cc_open_all:'欢迎所有人', cc_app_required:'需要申请',
@@ -214,7 +215,7 @@ var I18N_EXTRA = {
     au_login:'登入', au_signup:'註冊', au_name:'姓名', au_email:'電子郵件', au_password:'密碼', au_confirm:'確認密碼', au_create:'建立帳戶',
     au_pwhint:'至少 8 個字元，並包含一個數字或符號。', au_verify_h:'驗證你的電子郵件', au_verify_p:'請輸入我們寄送到你電子郵件的驗證碼：',
     au_code:'驗證碼', au_verify_btn:'驗證', au_resend:'重新傳送驗證碼', au_demo:'示範驗證碼：', au_onboard_h:'完善你的個人資料', au_onboard_p:'只需幾項資訊，即可個人化你的體驗。',
-    au_hs:'高中', au_district:'學區', au_zip:'郵遞區號', au_lang:'偏好語言', au_finish:'完成', au_demo_note:'僅為示範——帳戶儲存在你的瀏覽器本機。',
+    au_hs:'高中', au_district:'學區', au_zip:'郵遞區號', au_lang:'偏好語言', au_finish:'完成', au_demo_note:'僅為示範：帳戶儲存在你的瀏覽器本機。',
     cc_name:'社團名稱', cc_desc:'簡介', cc_category:'類別', cc_recruit:'招募狀態', cc_school:'學校', cc_district:'學區', cc_zip:'郵遞區號', cc_email:'負責人聯絡電子郵件',
     cc_meeting:'聚會時間', cc_tags:'標籤', cc_banner:'社團橫幅圖片', cc_gallery:'相簿媒體', cc_links:'連結', cc_invite:'🔑 社團負責人邀請碼',
     cc_cancel:'取消', cc_savedraft:'儲存為草稿', cc_publish:'發布到目錄', cc_open_all:'歡迎所有人', cc_app_required:'需要申請',
@@ -233,7 +234,7 @@ var I18N_EXTRA = {
 Object.keys(I18N_EXTRA).forEach(function (lc) { var d = I18N[lc] || (I18N[lc] = {}); var s = I18N_EXTRA[lc]; for (var k in s) d[k] = s[k]; });
 var I18N_EXTRA2 = {
   en: { set_remove:'Remove', set_notifications:'Notifications', set_security:'Security',
-    set_private_desc_full:'When on, others only see your name, Member ID, and number of clubs led — your school, bio, headline, and club lists stay hidden.' },
+    set_private_desc_full:'When on, others only see your name, Member ID, and number of clubs led. Your school, bio, headline, and club lists stay hidden.' },
   'zh-CN': { set_remove:'移除', set_notifications:'通知', set_security:'安全',
     set_private_desc_full:'开启后，他人只能看到你的姓名、成员 ID 和管理的社团数量；你的学校、简介、个人标签和社团列表将被隐藏。' },
   'zh-TW': { set_remove:'移除', set_notifications:'通知', set_security:'安全',
@@ -345,7 +346,7 @@ var I18N_EXTRA7 = {
 Object.keys(I18N_EXTRA7).forEach(function (lc) { var d = I18N[lc] || (I18N[lc] = {}); var s = I18N_EXTRA7[lc]; for (var k in s) d[k] = s[k]; });
 var LANG = 'en';
 function getLang() { try { return localStorage.getItem(LS.lang) || 'en'; } catch (e) { return 'en'; } }
-/* t(key) — translated fixed-UI string for the active language (English fallback). */
+/* t(key) - translated fixed-UI string for the active language (English fallback). */
 function t(key) { return (I18N[LANG] && I18N[LANG][key] != null) ? I18N[LANG][key] : (I18N.en[key] != null ? I18N.en[key] : key); }
 function applyLanguage(lang) {
   if (!I18N[lang]) lang = 'en';
@@ -375,7 +376,7 @@ function onLanguageChanged() {
   if (v === 'shops' && typeof renderShops === 'function') renderShops();
 }
 
-/* Standard log-out icon (door/box with an outward-pointing arrow) — shared by header + confirm */
+/* Standard log-out icon (door/box with an outward-pointing arrow) - shared by header + confirm */
 var ICON_LOGOUT = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>';
 
 function toast(msg) {
@@ -385,7 +386,7 @@ function toast(msg) {
   window._toastT = setTimeout(function () { t.classList.remove('show'); }, 2600);
 }
 
-var VIEWS = ['main', 'browse', 'myclubs', 'saved', 'profile', 'settings', 'club', 'create', 'philosophy', 'shops', 'faq', 'howitworks', 'business', 'inbox'];
+var VIEWS = ['main', 'browse', 'myclubs', 'saved', 'profile', 'settings', 'club', 'create', 'philosophy', 'shops', 'faq', 'howitworks', 'business', 'inbox', 'contact'];
 function showView(name) {
   VIEWS.forEach(function (v) {
     var el = $('view-' + v); if (el) el.classList.toggle('hidden', v !== name);
@@ -397,6 +398,8 @@ function showView(name) {
   if (name === 'saved' && typeof renderSaved === 'function') renderSaved();
   if (name === 'settings' && typeof renderSettings === 'function') renderSettings();
   if (name === 'inbox' && typeof renderInbox === 'function') renderInbox();
+  if (name === 'contact' && typeof renderContactPage === 'function') renderContactPage();
+  if (typeof updateInboxFab === 'function') updateInboxFab(name);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function goHome() { showView('main'); }
@@ -429,7 +432,7 @@ function wireDropzones() {
   });
 }
 
-/* Avatar helpers — shared so every account sees real photos, not just initials */
+/* Avatar helpers - shared so every account sees real photos, not just initials */
 function initialsOf(n) {
   return (n || '?').split(' ').filter(Boolean).map(function (w) { return w[0]; }).join('').substring(0, 2).toUpperCase();
 }
@@ -469,7 +472,7 @@ function genMemberId() {
   while (Object.values(users).some(function (u) { return u.memberId === id; }));
   return id;
 }
-/* 6-character alpha-numeric public Club ID, e.g. A8K9X2 — unique across all clubs. */
+/* 6-character alpha-numeric public Club ID, e.g. A8K9X2 - unique across all clubs. */
 function genClubId() {
   var chars = 'ABCDEFGHIJKLMNPQRSTUVWXYZ23456789', id;   // no confusing O/0/1/I
   do {
@@ -481,8 +484,25 @@ function genClubId() {
 /* ============================================================
    INIT + SESSION RESTORE
    ============================================================ */
+/* Session is pinned PER TAB (sessionStorage) so a refresh keeps THIS tab on its
+   account even if another tab logged into a different account. localStorage holds
+   the last login as the default for brand-new tabs. */
+function saveSessionEmail(email) {
+  try { sessionStorage.setItem(LS.session, email); } catch (e) {}
+  try { localStorage.setItem(LS.session, email); } catch (e) {}
+}
+function readSessionEmail() {
+  var e = null;
+  try { e = sessionStorage.getItem(LS.session); } catch (x) {}
+  if (!e) { try { e = localStorage.getItem(LS.session); } catch (x) {} }
+  return e;
+}
+function clearSessionEmail() {
+  try { sessionStorage.removeItem(LS.session); } catch (e) {}
+  try { localStorage.removeItem(LS.session); } catch (e) {}
+}
 function initAuth() {
-  var email = localStorage.getItem(LS.session);
+  var email = readSessionEmail();
   if (email) {
     var rec = loadUsers()[email.toLowerCase()];
     if (rec) setSession(rec);
@@ -514,11 +534,15 @@ function setSession(rec) {
     emailNotif: rec.emailNotif !== false,
     lang: prefsGet(rec, 'lang') || 'en', theme: prefsGet(rec, 'theme') || 'light'
   };
-  localStorage.setItem(LS.session, rec.email.toLowerCase());
+  saveSessionEmail(rec.email.toLowerCase());
   // Apply THIS account's preferences (recalculated on every account switch — no leakage)
   applyLanguage(currentUser.lang);
   applyTheme(currentUser.theme);
   if (typeof reconcileMemberships === 'function') reconcileMemberships();   // restore roster entries on login
+  // Sync this account's memberships + current name up to the server (self-heals stale names / legacy joins).
+  if (typeof reconcileMyMemberships === 'function') reconcileMyMemberships();
+  if (typeof refreshCanPartner === 'function') refreshCanPartner();   // do I own an open club/shop? (puzzle color)
+  if (typeof sbUpsertProfile === 'function') sbUpsertProfile();       // register in the member directory (so others can message me by ID)
 }
 /* Read a preference from the account record (nested user.preferences first, then flat legacy) */
 function prefsGet(rec, key) { return (rec && rec.preferences && rec.preferences[key]) || (rec && rec[key]) || ''; }
@@ -544,7 +568,7 @@ function persistUser() {
 }
 
 /* ============================================================
-   AUTH MODAL — multi-step: login → (2FA) ; signup → verify → onboard
+   AUTH MODAL - multi-step: login → (2FA) ; signup → verify → onboard
    ============================================================ */
 var authStage = 'login';         // login | signup | verify | onboard
 var authIntroMsg = '';
@@ -557,7 +581,7 @@ function authBusy(id, busy, label) {
   if (busy) { if (!b.dataset.label) b.dataset.label = b.textContent; b.textContent = label || 'Please wait…'; b.disabled = true; }
   else { if (b.dataset.label) { b.textContent = b.dataset.label; delete b.dataset.label; } b.disabled = false; }
 }
-/* "Resend code" cooldown — disables the link for `secs` and counts down, so rapid
+/* "Resend code" cooldown - disables the link for `secs` and counts down, so rapid
    taps don't trip Supabase's per-email rate limit. */
 var resendTimer = null, resendUntil = 0;
 function startResendCooldown(secs) {
@@ -657,7 +681,7 @@ function submitSignup() {
   if (!name) return authErr('Please enter your name.');
   if (!email) return authErr('Please enter your email.');
   if (!isValidEmail(email)) return authErr('Please enter a valid email address (e.g. you@school.edu).');
-  if (loadUsers()[email]) return authErr('An account with that email already exists — log in instead.');
+  if (loadUsers()[email]) return authErr('There’s already an account with that email. Try logging in.');
   if (!validPassword(pass)) return authErr('Password must be at least 8 characters and include a number or symbol.');
   if (pass !== confirm) return authErr('Passwords don’t match.');
   pendingReg = { name: name, email: email, pass: pass };
@@ -669,7 +693,7 @@ function submitSignup() {
 }
 function resendOtp() {
   if (!verifyEmail) return;
-  if (Date.now() < resendUntil) return;                 // still cooling down — ignore taps
+  if (Date.now() < resendUntil) return;                 // still cooling down - ignore taps
   var el = $('resendLink'); if (el) { el.classList.add('disabled'); el.textContent = t('au_resend') + '…'; }
   sbSendOtp(verifyEmail)
     .then(function () { toast('A new code has been sent to ' + verifyEmail + '.'); startResendCooldown(60); })
@@ -720,7 +744,7 @@ function logout() {
 function doLogout() {
   persistUser();
   currentUser = null;
-  localStorage.removeItem(LS.session);
+  clearSessionEmail();
   // Reset guest UI to the Light + English defaults
   applyTheme('light'); applyLanguage('en');
   renderAuthArea();
@@ -742,6 +766,7 @@ function requireAuth(cb) {
    HEADER AUTH AREA
    ============================================================ */
 function renderAuthArea() {
+  if (typeof updateInboxFab === 'function') updateInboxFab();
   var area = $('authArea'); if (!area) return;
   if (!currentUser) {
     area.innerHTML =
@@ -750,7 +775,6 @@ function renderAuthArea() {
     return;
   }
   area.innerHTML =
-    '<button class="inbox-btn" onclick="navInbox()" title="Inbox">✉<span class="ib-label">Inbox</span></button>' +
     '<button class="user-chip" onclick="openSettings()" title="Account settings">' +
       avatarHTML(currentUser.name, 'sm') +
       '<span class="name">' + escHtml(currentUser.name.split(' ')[0]) + '</span>' +
@@ -759,7 +783,7 @@ function renderAuthArea() {
 }
 
 /* ============================================================
-   FAVORITES (data layer — UI lives in directory/modal/profile)
+   FAVORITES (data layer - UI lives in directory/modal/profile)
    ============================================================ */
 function isFavorite(clubId) { return !!(currentUser && currentUser.favorites.indexOf(clubId) !== -1); }
 function toggleFavorite(clubId) {
@@ -771,3 +795,4 @@ function toggleFavorite(clubId) {
   if (typeof refreshFavUI === 'function') refreshFavUI();
 }
 function isJoined(clubId) { return !!(currentUser && currentUser.joined.indexOf(clubId) !== -1); }
+

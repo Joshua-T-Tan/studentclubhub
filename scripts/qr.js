@@ -1,5 +1,5 @@
 /* ============================================================
-   qr.js — tiny self-contained QR Code generator (offline).
+   qr.js - tiny self-contained QR Code generator (offline).
    Byte mode, error-correction level L, versions 1–5, mask 0.
    Enough capacity (≤106 bytes) for a club share URL.
    Algorithm follows Nayuki's reference QR generator (public domain).
@@ -132,3 +132,4 @@ var QRCode = (function () {
 })();
 function qrMatrix(t) { return QRCode.matrix(t); }
 function qrSvg(t, px) { return QRCode.svg(t, px); }
+

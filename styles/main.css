@@ -17,7 +17,8 @@
   --brand-50: #eaf5f7;             /* pale cerulean tint — chips, soft fills */
   --grad-brand: linear-gradient(135deg, #12a0c4 0%, #007EA7 60%, #005f7d 100%);
   --grad-brand-strong: linear-gradient(135deg, #17a7c9 0%, #007EA7 48%, #003249 100%);
-  --header-color: #003249;
+  --header-color: #0b1437;         /* Galaxy Blue — deep indigo-navy header strip */
+  --header-galaxy: linear-gradient(100deg, #0a1030 0%, #141c53 46%, #21205f 72%, #0d1a44 100%);
   --accent: #007EA7;               /* legacy alias → cerulean (folds the old orange) */
   --accent-dark: #00617f;
   --star: #f5b301;                 /* warm gold — Save / favorite star ONLY */
@@ -77,7 +78,8 @@
   --surface: #0a222d;
   --surface-2: #123542;
   --input-bg: #06171f;
-  --header-color: #001a26;
+  --header-color: #070c22;
+  --header-galaxy: linear-gradient(100deg, #05081f 0%, #0e1440 48%, #17163f 74%, #070d2c 100%);
   --glass-bg: rgba(12, 39, 51, 0.72);
   --glass-bg-hover: rgba(12, 39, 51, 0.92);
   --glass-border: rgba(128, 206, 215, 0.22);
@@ -187,8 +189,10 @@ input, select, textarea { font-family: inherit; font-size: 0.95rem; }
   height: var(--header-h);
   min-height: var(--header-h);
   flex-shrink: 0;                 /* never shrink in the column flex layout, even on short pages */
-  background: var(--header-color); /* solid blue header strip */
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: var(--header-color);
+  background: var(--header-galaxy); /* galaxy-blue gradient strip */
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 2px 18px rgba(9, 14, 45, 0.35);
 }
 /* three-column grid keeps the nav visually centered */
 .header-inner { height: 100%; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; }
@@ -421,8 +425,11 @@ input, select, textarea { font-family: inherit; font-size: 0.95rem; }
 .card-meta { font-size: 0.8rem; color: var(--faint); }
 .card-desc { font-size: 0.9rem; color: var(--muted); flex: 1;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.card-foot { display: flex; gap: 8px; margin-top: 4px; }
-.card-foot .btn, .card-foot .fav-btn { flex: 1; }
+.card-foot { display: flex; gap: 8px; margin-top: auto; }   /* pin to card bottom so footers align across a row */
+.card-foot .btn, .card-foot .fav-btn { flex: 1; white-space: nowrap; min-width: 0; }
+.card-idline { margin-top: -2px; }
+/* Saved → the bookmark icon turns gold */
+.fav-btn.on .bm-ico, .banner-ico.on .bm-ico { color: var(--star); }
 
 .empty {
   text-align: center; color: var(--muted); padding: 60px 20px;
@@ -646,7 +653,9 @@ input, select, textarea { font-family: inherit; font-size: 0.95rem; }
 .club-reviews-full { margin-bottom: 24px; }
 /* Action button row in the left main column wraps cleanly */
 .modal-actions.wrap { flex-wrap: wrap; }
+.club-actions { margin: 2px 0 22px; }   /* gap so the buttons don't touch the Officers/Members card */
 .club-actions > * { min-width: 130px; }
+.club-actions svg { vertical-align: -3px; }
 /* About: mini box capped at ~3 lines, then scroll (keeps the main column a fixed size) */
 .about-box { margin: 0 0 4px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--line);
   border-radius: var(--r-sm); color: var(--muted); font-size: 0.92rem; line-height: 1.55;

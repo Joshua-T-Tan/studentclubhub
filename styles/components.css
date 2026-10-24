@@ -82,6 +82,10 @@
   color: rgba(255,255,255,0.85); font-size: 0.85rem; background: rgba(255,255,255,0.12); padding: 4px 12px; border-radius: var(--r-pill); }
 
 /* Confirm modal */
+/* Always stack the confirm dialog above other overlays (e.g. the roster
+   settings in #bizOverlay) so a confirmation fired from inside another
+   modal appears on top of it immediately, not hidden behind it. */
+#confirmOverlay.overlay { z-index: 250; }
 .confirm { max-width: 400px; text-align: center; padding: 26px; }
 .confirm .c-ico { width: 56px; height: 56px; border-radius: var(--r-pill); margin: 0 auto 14px;
   display: grid; place-items: center; font-size: 1.5rem; background: var(--brand-50); }
@@ -106,3 +110,20 @@
 .qr-wrap { margin-top: 16px; }
 .qr-box { display: flex; justify-content: center; padding: 12px; background: #fff; border: 1px solid var(--line); border-radius: var(--r); }
 .qr-box svg { width: 190px; height: 190px; display: block; }
+
+/* Contact Us card (overlay) */
+.contact-card { position: relative; text-align: center; }
+.contact-x { position: absolute; top: 10px; right: 10px; }
+.contact-ico { width: 58px; height: 58px; border-radius: var(--r-pill); margin: 4px auto 12px;
+  display: grid; place-items: center; font-size: 1.6rem; background: var(--grad-brand); color: #fff; box-shadow: var(--shadow-md); }
+.contact-h { font-size: 1.35rem; font-weight: 800; margin-bottom: 8px; }
+.contact-sub { color: var(--muted); font-size: 0.92rem; line-height: 1.5; margin: 0 auto 18px; max-width: 430px; }
+.contact-form { text-align: left; }
+.contact-box { width: 100%; min-height: 150px; padding: 12px 14px; border: 1px solid var(--line);
+  border-radius: var(--r); background: #fff; color: var(--ink); outline: none; resize: vertical;
+  font-family: inherit; font-size: 0.95rem; line-height: 1.5; }
+.contact-box::placeholder { color: var(--muted); }
+.contact-box:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-50); }
+.contact-divider { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 0.78rem;
+  text-transform: uppercase; letter-spacing: .04em; margin: 16px 0 12px; }
+.contact-divider::before, .contact-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }

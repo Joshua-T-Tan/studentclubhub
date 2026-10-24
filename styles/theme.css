@@ -1,0 +1,331 @@
+/* ============================================================
+   Student Club Hub - Paper theme (styles/theme.css)
+   Loaded LAST so it re-skins main/pages/components without
+   touching their layout. White graph-paper page, red as the main
+   accent, yellow sticky-note tags. Boxes are square-edged cards
+   with a solid ink border and a hard offset shadow, like cut-out
+   paper on a bulletin board. Delete this file's <link> to revert.
+   ============================================================ */
+
+/* ---- Tokens: light (default) ---- */
+:root[data-theme="light"], :root:not([data-theme]) {
+  --ground: #ffffff;
+  --grid-line: rgba(26, 26, 26, 0.045);
+  --box-ink: #1a1a1a;              /* box borders + hard shadows */
+
+  --navy: #1a1a1a;
+  --brand: #d62828;                /* red - buttons, links, focus */
+  --brand-dark: #a91d1d;
+  --brand-light: #f4a3a3;
+  --brand-50: #fdecec;
+  --note: #ffd84d;                 /* yellow sticky note */
+  --note-soft: #fff4c2;
+  --grad-brand: #d62828;
+  --grad-brand-strong: #d62828;
+  --accent: #d62828;
+  --accent-dark: #a91d1d;
+  --join: #d62828;
+  --join-dark: #a91d1d;
+
+  --ink: #1a1a1a;
+  --muted: #555555;
+  --faint: #8a8a8a;
+  --line: #1a1a1a;
+  --bg: var(--ground);
+  --card: #ffffff;
+  --surface: #faf8f3;
+  --surface-2: #f1eee6;
+  --input-bg: #ffffff;
+  --header-color: #ffffff;
+  --header-bg: #ffffff;
+  --modal-bg: #ffffff;
+
+  --shadow-sm: 4px 4px 0 var(--box-ink);
+  --shadow-md: 6px 6px 0 var(--box-ink);
+  --shadow-lg: 8px 8px 0 var(--box-ink);
+}
+
+/* ---- Tokens: dark (same palette on charcoal) ---- */
+:root[data-theme="dark"] {
+  --ground: #161616;
+  --grid-line: rgba(255, 255, 255, 0.04);
+  --box-ink: #000000;
+
+  --navy: #161616;
+  --brand: #ef4444;
+  --brand-dark: #ff7a7a;
+  --brand-light: #7f1d1d;
+  --brand-50: rgba(239, 68, 68, 0.14);
+  --note: #ffd84d;
+  --note-soft: rgba(255, 216, 77, 0.16);
+  --grad-brand: #e03131;
+  --grad-brand-strong: #e03131;
+  --accent: #ef4444;
+  --accent-dark: #ff7a7a;
+  --join: #e03131;
+  --join-dark: #c92a2a;
+
+  --ink: #f2efe8;
+  --muted: #b3aea4;
+  --faint: #7c776e;
+  --line: #3a3835;
+  --bg: var(--ground);
+  --card: #222120;
+  --surface: #1c1b1a;
+  --surface-2: #2b2a28;
+  --input-bg: #1c1b1a;
+  --header-color: #161616;
+  --header-bg: #161616;
+  --modal-bg: #222120;
+
+  --shadow-sm: 4px 4px 0 var(--box-ink);
+  --shadow-md: 6px 6px 0 var(--box-ink);
+  --shadow-lg: 8px 8px 0 var(--box-ink);
+}
+
+/* ---- Shared tokens ---- */
+:root {
+  --font-body: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-head: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --r-sm: 3px;
+  --r: 4px;
+  --r-lg: 6px;
+  --r-pill: 4px;                   /* pills become small square tags too */
+  --edge: 1.5px solid var(--line);
+}
+
+/* ---- Ground: white graph paper ---- */
+body { background: var(--ground); }
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 28px 28px;
+}
+main, .app-view { position: relative; }
+
+/* ---- Type ---- */
+h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+.hero h1 {
+  color: var(--ink); text-shadow: none;
+  font-size: clamp(2.2rem, 5.2vw, 3.6rem); font-weight: 900; line-height: 1.04;
+}
+.hero p { color: var(--muted); text-shadow: none; }
+.hero { color: var(--ink); }
+
+/* ---- Boxes: square edges, ink border, hard offset shadow ---- */
+.card, .tcard, .stat, .step, .spot-card, .poly-front, .prow, .modal, .nav-menu {
+  background: var(--card);
+  border: var(--edge);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+}
+[data-theme] .step, [data-theme] .tcard, [data-theme] .stat, [data-theme] .spot-card { background: var(--card); }
+.card { transition: transform .12s ease, box-shadow .12s ease; }
+.card:hover { transform: translate(-2px, -2px); box-shadow: var(--shadow-md); }
+.modal { box-shadow: var(--shadow-lg); }
+
+.site-header { background: var(--header-bg); border-bottom: 2px solid var(--line); }
+.brand { color: var(--ink); }
+.site-header .nav-trigger { color: var(--ink); }
+.site-header .nav-trigger:hover, .site-header .nav-trigger.active { background: var(--note-soft); color: var(--ink); }
+.site-header .nav-toggle { color: var(--ink); }
+.site-header .btn.header-outline { color: var(--ink); border: var(--edge); background: var(--card); }
+.site-header .btn.header-outline:hover { background: var(--note); border-color: var(--line); }
+.site-header .user-chip .name { color: var(--ink); }
+.site-header .logout-btn { color: var(--ink); background: var(--card); border: var(--edge); }
+.site-footer { background: var(--ground); border-top: 2px solid var(--line); }
+
+/* ---- Modals: dark scrim, square paper card ---- */
+.overlay { background: rgba(20, 20, 20, 0.5); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+
+/* ---- Controls ---- */
+.btn { border-radius: var(--r); }
+.btn.primary, .btn.cta, .btn.join, .site-header .btn.header-cta {
+  background: var(--brand); color: #fff; border: var(--edge);
+  box-shadow: 3px 3px 0 var(--box-ink);
+}
+.btn.primary:hover, .btn.cta:hover, .btn.join:hover, .site-header .btn.header-cta:hover {
+  background: var(--brand-dark); filter: none;
+  transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--box-ink);
+}
+.btn.primary:active, .btn.cta:active, .btn.join:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--box-ink); }
+[data-theme] .btn.ghost, .btn.glass, .btn.blue {
+  background: var(--card); color: var(--ink); border: var(--edge);
+}
+[data-theme] .btn.ghost:hover, .btn.glass:hover, .btn.blue:hover { background: var(--note); color: var(--ink); }
+.fav-btn, [data-theme] .fav-btn { background: var(--card); color: var(--ink); border: var(--edge); }
+.fav-btn.on, [data-theme] .fav-btn.on { background: var(--note); color: var(--ink); }
+
+.cat-pill, [data-theme] .cat-pill { background: var(--card); border: var(--edge); color: var(--ink); }
+.cat-pill:hover { background: var(--note-soft); border-color: var(--line); color: var(--ink); }
+.cat-pill.active { background: var(--note); border-color: var(--line); color: var(--ink); box-shadow: 2px 2px 0 var(--box-ink); }
+.search input, [data-theme] .search input { background-color: var(--input-bg); border: var(--edge); border-radius: var(--r); }
+.search input:focus { border-color: var(--brand); box-shadow: 3px 3px 0 var(--brand); }
+.field input, .field select, .field textarea, .select { border-radius: var(--r-sm); }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* ---- Nav dropdowns: a note pinned to the board with a strip of yellow tape ---- */
+.site-header .nav-item.open > .nav-trigger,
+.site-header .nav-item.has-menu:hover > .nav-trigger { background: var(--note); color: #1a1a1a; box-shadow: inset 0 0 0 1.5px var(--line); }
+@media (min-width: 900px) {
+  .nav-menu {
+    top: calc(100% + 14px); min-width: 230px; padding: 10px 0 6px;
+    border-radius: 2px; box-shadow: 5px 5px 0 var(--box-ink); overflow: visible;
+  }
+  .nav-menu::before { top: -14px; height: 14px; }            /* hover bridge across the bigger gap */
+  .nav-menu::after {                                          /* the tape */
+    content: ''; position: absolute; top: -9px; left: 50%; width: 64px; height: 18px;
+    transform: translateX(-50%) rotate(-3deg);
+    background: rgba(255, 216, 77, 0.88); border-left: 1px dashed rgba(26, 26, 26, 0.25); border-right: 1px dashed rgba(26, 26, 26, 0.25);
+  }
+  .nav-item.open > .nav-menu, .nav-item.has-menu:hover > .nav-menu { animation: notePin .22s cubic-bezier(.2, .9, .3, 1.25); }
+}
+@keyframes notePin {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px) rotate(-2.5deg); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) rotate(0); }
+}
+.nav-menu button {
+  position: relative; border-radius: 0; padding: 11px 18px 11px 22px;
+  border-bottom: 1px dashed rgba(26, 26, 26, 0.18);
+  transition: background .12s, padding-left .12s, color .12s;
+}
+.nav-menu button:last-child { border-bottom: none; }
+.nav-menu button::before {                                    /* little square bullet */
+  content: ''; position: absolute; left: 10px; top: 50%; width: 5px; height: 5px; margin-top: -2.5px;
+  background: rgba(26, 26, 26, 0.3); transition: background .12s;
+}
+.nav-menu button:hover { background: var(--note); color: #1a1a1a; padding-left: 28px; box-shadow: inset 4px 0 0 var(--brand); }
+.nav-menu button:hover::before { background: var(--brand); left: 14px; }
+
+/* ---- Select boxes: ink outline + a yellow arrow block on the right ---- */
+[data-theme] select, [data-theme] .select, [data-theme] .field select, [data-theme] .field select.select {
+  -webkit-appearance: none; -moz-appearance: none; appearance: none;
+  border: var(--edge) !important; border-radius: var(--r) !important;
+  background-color: var(--input-bg) !important; color: var(--ink) !important;
+  padding-right: 56px; cursor: pointer;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231a1a1a' stroke-width='3' stroke-linecap='square'%3E%3Cpath d='m5 9 7 7 7-7'/%3E%3C/svg%3E"),
+    linear-gradient(var(--line), var(--line)),
+    linear-gradient(var(--note), var(--note));
+  background-size: 12px 12px, 1.5px 100%, 40px 100%;
+  background-position: right 14px center, right 40px top, right top;
+  background-repeat: no-repeat;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+[data-theme] select:hover, [data-theme] .select:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--box-ink); }
+[data-theme] select:focus, [data-theme] .select:focus, [data-theme] .field select:focus {
+  outline: none; border-color: var(--line) !important; box-shadow: 3px 3px 0 var(--brand); transform: translate(-1px, -1px);
+}
+[data-theme] select option { background-color: var(--card); color: var(--ink); }
+[data-theme] .roster-row select {                            /* tiny role pickers: slimmer arrow block */
+  padding-right: 40px; background-size: 10px 10px, 1.5px 100%, 28px 100%;
+  background-position: right 9px center, right 28px top, right top;
+}
+
+/* Badges and tags read as little yellow labels */
+.badge, .privacy-badge { border-radius: var(--r-sm); }
+.privacy-badge { background: var(--note); color: #1a1a1a; border: 1px solid var(--line); }
+
+/* ---- Hero: white paper + looping motion graphic ---- */
+.hero-bg-layer { background-image: none !important; }
+.hero-overlay { background: transparent; }
+.hero-motion { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; display: block; }
+.hero { border-bottom: 2px solid var(--line); }
+.hero-dot { background: rgba(26, 26, 26, 0.14); border-radius: 2px; }
+.hero-dot.active { background: rgba(26, 26, 26, 0.14); }
+.hero-dot span { background: var(--brand); }
+.hero .btn.glass, .hero .btn.ghost { color: var(--ink); }
+
+/* Hero stats: three equal yellow sticky notes, each a little off-square */
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 190px)); justify-content: center; gap: 18px; }
+.stat, [data-theme] .stat {
+  min-width: 0; padding: 18px 12px; text-align: center;
+  background: var(--note); border: var(--edge); border-radius: 2px;
+  box-shadow: 3px 3px 0 var(--box-ink);
+}
+.stat:nth-child(1) { transform: rotate(-1.2deg); }
+.stat:nth-child(2) { transform: rotate(0.8deg); }
+.stat:nth-child(3) { transform: rotate(-0.5deg); }
+.stat .n { color: #1a1a1a; }
+.stat .l { color: #3d3d3d; }
+
+/* ---- Top Clubs band: white strip, one bold red panel ---- */
+.spotlight { background: var(--surface); border-top: 2px solid var(--line); border-bottom: 2px solid var(--line); box-shadow: none; }
+.spotlight::before { display: none; }
+.spotlight-head { color: var(--ink); }
+.spotlight-head .form-note, .spotlight-head span { color: var(--muted) !important; }
+.tc-slideshow { height: 240px; border: var(--edge); border-radius: var(--r); box-shadow: var(--shadow-md); }
+.tc-slide { background: var(--brand) !important; }
+.tc-scrim { background: none; }
+.tc-body h3 { color: #fff; text-shadow: none; }
+.tc-body .badge { background: #fff; color: #1a1a1a; border: 1px solid #1a1a1a; }
+.tc-body .btn.primary { background: #fff; color: #1a1a1a; }
+.tc-body .btn.primary:hover { background: var(--note); color: #1a1a1a; }
+.tc-arrow { background: #fff; color: #1a1a1a; border: var(--edge); border-radius: var(--r); }
+.tc-arrow:hover { background: var(--note); }
+
+/* ---- Feature cards (Students / Businesses / Community): equal square boxes ---- */
+.feature-cards { align-items: stretch; gap: 24px; }
+.poly-card { padding: 0; display: flex; }
+.poly-card:hover { transform: none; }
+.poly-back { display: none; }
+.fc-a .poly-front, .fc-b .poly-front, .fc-c .poly-front { clip-path: none; }
+.poly-front { flex: 1; min-height: 0; padding: 26px 24px; color: var(--ink); }
+.poly-front p { color: var(--muted); }
+.poly-ico, .prow-ico { background: var(--note); border: var(--edge); border-radius: var(--r-sm); box-shadow: none; }
+.poly-ico svg *, .prow-ico svg * { fill: #1a1a1a; }
+.prow { border-left-width: 1.5px; }
+
+/* ---- Club cards: plain cover strip with a yellow category tag ---- */
+.card-cover:has(.cover-mark) { height: 56px; background: var(--surface) !important; border-bottom: var(--edge); }
+.card-cover .cover-mark { display: none; }
+.card-cover .cover-cat, .card-cover:has(.cover-mark) .cover-cat {
+  top: 50%; bottom: auto; transform: translateY(-50%); left: 16px;
+  background: var(--note); border: 1px solid var(--line); color: #1a1a1a;
+  border-radius: 2px; backdrop-filter: none; letter-spacing: .02em;
+}
+.card-cover .cover-fav { border-radius: var(--r-sm); border: var(--edge); box-shadow: none; background: var(--card); }
+.grid { align-items: stretch; }
+.card-body { flex: 1; }
+
+/* Home reviews header: no floating logo, button lined up with the title */
+.reviews-logo { display: none; }
+.reviews-head-main { margin-top: 72px; align-items: center; }
+
+@media (max-width: 520px) {
+  .site-header .container { padding: 0 12px; }
+  .header-inner { gap: 6px; }
+  .brand { gap: 7px; padding-left: 0; }
+  .brand-text { white-space: nowrap; font-size: 0.9rem; }
+  .brand-logo { width: 30px; height: 30px; }
+  .auth-area { gap: 6px; }
+  .site-header .btn.header-outline, .site-header .btn.header-cta { padding: 6px 11px; font-size: 0.8rem; }
+  .stats { gap: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card:hover, .btn:hover { transform: none; }
+}
+
+
+/* ---- Paper-theme coverage for components added after the redesign ----
+   (Partnership Requests cards, review toggle, verify row, report flags,
+   contact card). `[data-theme] X` matches both light and dark and beats
+   the older `[data-theme="dark"] X` rules in pages.css. */
+.pr-card, [data-theme] .pr-card {
+  background: var(--note-soft); border: var(--edge); border-radius: var(--r); box-shadow: var(--shadow-sm);
+}
+.pr-body svg { color: var(--brand); }
+.review-toggle, [data-theme] .review-toggle {
+  background: var(--note-soft); border: var(--edge); border-radius: var(--r); box-shadow: var(--shadow-sm);
+}
+.verify-row { border-top: var(--edge); }
+.verify-row.done { color: var(--ink); }
+.card-flag { background: var(--card); border: var(--edge); border-radius: var(--r); box-shadow: none; color: var(--ink); }
+.card-flag:hover { background: var(--brand); color: #fff; }
+.profile-head .name-ico { border: var(--edge); border-radius: var(--r); background: var(--card); color: var(--ink); }
+.profile-head .name-ico:hover { background: var(--brand); color: #fff; border-color: var(--line); }
+.contact-ico { background: var(--brand); border: var(--edge); border-radius: var(--r); box-shadow: var(--shadow-sm); }
+.contact-box { border: var(--edge); border-radius: var(--r); background: var(--input-bg, #fff); }
+.contact-box:focus { box-shadow: var(--shadow-sm); border-color: var(--line); }

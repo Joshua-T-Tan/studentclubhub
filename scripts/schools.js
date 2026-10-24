@@ -1,5 +1,5 @@
 /* ============================================================
-   schools.js — pre-populated LA County high schools + their
+   schools.js - pre-populated LA County high schools + their
    districts. Powers the searchable School dropdown and the
    auto-filled District dropdown in registration + Start a Club.
    ============================================================ */
@@ -137,12 +137,13 @@ function districtForSchool(name) {
 }
 /* Options HTML for a School <select>; `sel` is the currently-selected school name. */
 function schoolOptionsHTML(sel) {
-  return '<option value="">— Select your school —</option>' +
+  return '<option value="">Select your school…</option>' +
     SCHOOLS.map(function (s) { return '<option' + (s.n === sel ? ' selected' : '') + '>' + s.n + '</option>'; }).join('') +
     '<option value="Other"' + (sel === 'Other' ? ' selected' : '') + '>Other / Not listed</option>';
 }
 function districtOptionsHTML(sel) {
-  return '<option value="">— Select district —</option>' +
+  return '<option value="">Select a district…</option>' +
     DISTRICTS.map(function (d) { return '<option' + (d === sel ? ' selected' : '') + '>' + d + '</option>'; }).join('') +
     '<option value="Other"' + (sel === 'Other' ? ' selected' : '') + '>Other</option>';
 }
+
