@@ -1,7 +1,7 @@
 -- ============================================================
 -- Student Club Hub — schema for the Oct 2026 feature batch.
--- Run this in the Supabase SQL editor. MVP-permissive RLS
--- (matches the rest of the app; see CLAUDE.md §6 security notes).
+-- APPLIED to project xadmwmwagxeiidmeqspa on 2026-10-24 (migration
+-- "reports_contact_business_flags"). Kept here for reference/re-creation.
 -- ============================================================
 
 -- 1) Reports (club / business / user) — Roblox-style report form
@@ -20,7 +20,9 @@ create table if not exists public.reports (
 );
 alter table public.reports enable row level security;
 drop policy if exists reports_all on public.reports;
-create policy reports_all on public.reports for all using (true) with check (true);
+drop policy if exists reports_insert on public.reports;
+-- write-only from the site: the public key can add reports but never read them
+create policy reports_insert on public.reports for insert to anon, authenticated with check (true);
 
 -- 2) Contact-Us messages (logged-in users submit; you review in the dashboard)
 create table if not exists public.contact_messages (
@@ -35,7 +37,8 @@ create table if not exists public.contact_messages (
 );
 alter table public.contact_messages enable row level security;
 drop policy if exists contact_all on public.contact_messages;
-create policy contact_all on public.contact_messages for all using (true) with check (true);
+drop policy if exists contact_insert on public.contact_messages;
+create policy contact_insert on public.contact_messages for insert to anon, authenticated with check (true);
 
 -- 3) Businesses: self-serve verification flag + review-section toggle
 --    (clubs store these in their JSONB blob — no migration needed for clubs)
