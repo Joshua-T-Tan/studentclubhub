@@ -24,7 +24,7 @@ function styleForCategory(cat) {
 }
 /* Cover background: uploaded banner if present, otherwise a clean gradient block */
 function coverStyle(club) {
-  if (club.banner) return 'background:center/cover no-repeat url(' + club.banner + ')';
+  if (club.banner) return 'background:center/cover no-repeat url(\'' + String(club.banner).replace(/['"\\<>\s]/g, '') + '\')';
   return 'background:' + styleForCategory(club.category).grad;
 }
 
@@ -111,27 +111,8 @@ function initDirectory() {
   seedCreateLinks(['']);
   if ($('ccSchool') && typeof schoolOptionsHTML === 'function') $('ccSchool').innerHTML = schoolOptionsHTML('');
   if ($('ccDistrict') && typeof districtOptionsHTML === 'function') $('ccDistrict').innerHTML = districtOptionsHTML('');
-  reconcileMemberships();     // make sure joined clubs (incl. non-persisted seed clubs) show the user in their roster
   applyFilters();
   loadClubs();                // replace the local snapshot with the shared server copy (syncs across accounts)
-  // Deep link: ?club=A8K9X2 opens that club directly
-  var dl = location.search.match(/[?&]club=([A-Za-z0-9]+)/);
-  if (dl) { var dc = getClubByClubId(dl[1]); if (dc) setTimeout(function () { openClub(dc.id); }, 60); }
-}
-/* Ensure every club the current user has joined lists them in its roster/members array.
-   Seed clubs are not persisted by saveUserClubs, so their roster resets on reload - this
-   re-applies the user's membership from the (persisted) currentUser.joined list. */
-function reconcileMemberships() {
-  if (!currentUser || !currentUser.joined) return;
-  currentUser.joined.forEach(function (cid) {
-    var c = getClub(cid); if (!c) return;
-    c.roster = c.roster || [];
-    var mine = c.roster.find(function (m) { return (m.memberId && m.memberId === currentUser.memberId) || m.name === currentUser.name; });
-    if (!mine) {
-      c.roster.push({ name: currentUser.name, role: 'Member', memberId: currentUser.memberId });
-      c.memberCount = Math.max(c.memberCount || 0, c.roster.length);
-    }
-  });
 }
 function cloneClub(c) { return JSON.parse(JSON.stringify(c)); }
 function normalizeClub(c, i) {
@@ -155,6 +136,15 @@ function normalizeClub(c, i) {
     c.roster = (c.leaders || []).map(function (l) { return { name: l.name, role: l.role, memberId: null }; });
   }
 }
+/* Private clubs are unlisted: only their members see them in Browse, Top Clubs, stats, and filters
+   (anyone with the direct link can still open one). */
+function isListedFor(c) {
+  if (!c) return false;
+  if (typeof isBanned === 'function' && isBanned(c)) return false;
+  if (c.recruitment !== 'Private') return true;
+  return typeof isClubMember === 'function' && !!isClubMember(c);
+}
+function listedClubs() { return CLUBS.filter(isListedFor); }
 function getClub(id) { return CLUBS.find(function (c) { return c.id === id; }) || null; }
 function getClubByClubId(cid) { cid = (cid || '').toUpperCase(); return CLUBS.find(function (c) { return c.clubId === cid; }) || null; }
 /* Deterministic 6-char alpha-numeric ID from a club's internal id, so seed IDs stay stable across reloads. */
@@ -170,20 +160,31 @@ function deriveClubId(seed) {
 function saveUserClubs(club) {
   var seedIds = SEED_CLUBS.map(function (c) { return c.id; });
   var userClubs = CLUBS.filter(function (c) { return seedIds.indexOf(c.id) === -1; });
-  var ok = true;
-  try { localStorage.setItem(LS.clubs, JSON.stringify(userClubs)); }
-  catch (e) { toast('That file is too big to save on this device. Try a smaller or more compressed file.'); ok = false; }
-  if (ok) {
-    var c = club || (typeof currentClubId !== 'undefined' && currentClubId ? getClub(currentClubId) : null);
-    if (c) sbSaveClub(c);
-  }
-  return ok;
+  // The local copy is only a cache (it can overflow with big media); the server copy is what counts.
+  try { localStorage.setItem(LS.clubs, JSON.stringify(userClubs)); } catch (e) {}
+  var c = club || (typeof currentClubId !== 'undefined' && currentClubId ? getClub(currentClubId) : null);
+  if (c) sbSaveClub(c);
+  return true;
+}
+/* Clubs whose last save didn't reach the server (retried on next load). */
+var LS_UNSYNCED = 'sch_unsynced_clubs';
+function _unsynced(id, on) {
+  var l = []; try { l = JSON.parse(localStorage.getItem(LS_UNSYNCED)) || []; } catch (e) {}
+  if (id === undefined) return l;
+  var i = l.indexOf(id); if (on && i < 0) l.push(id); if (!on && i > -1) l.splice(i, 1);
+  try { localStorage.setItem(LS_UNSYNCED, JSON.stringify(l)); } catch (e) {}
+  return l;
 }
 /* ---------- Supabase club sync ---------- */
 function sbSaveClub(club) {
   if (typeof sbRest !== 'function' || !club || !club.id) return Promise.resolve();
   return sbRest('clubs?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify({ id: club.id, data: club, updated_at: new Date().toISOString() }) }).catch(function () {});
+    body: JSON.stringify({ id: club.id, data: club, updated_at: new Date().toISOString() }) })
+    .then(function () { _unsynced(club.id, false); })
+    .catch(function (ex) {
+      _unsynced(club.id, true);
+      toast(/too large|413|payload/i.test(ex.message || '') ? 'Couldn’t save — the club’s media is too large. Remove a photo or video and try again.' : 'Couldn’t save your changes to the server. Check your connection; they’ll retry next time you open the site.');
+    });
 }
 function sbDeleteClub(id) {
   if (typeof sbRest !== 'function') return Promise.resolve();
@@ -200,20 +201,35 @@ function loadClubs(cb) {
     rows.forEach(function (r) { if (r && r.data && r.id) byId[r.id] = r.data; });
     var toUpsert = [];
     SEED_CLUBS.forEach(function (s) { if (!byId[s.id]) { var c = cloneClub(s); byId[s.id] = c; toUpsert.push(c); } });
+    // Only push up MY clubs whose last save failed — never resurrect clubs that were deleted on the server.
     var localStored = []; try { localStored = JSON.parse(localStorage.getItem(LS.clubs)) || []; } catch (e) {}
-    localStored.forEach(function (lc) { if (lc && lc.id && !byId[lc.id]) { byId[lc.id] = lc; toUpsert.push(lc); } });
+    var pending = _unsynced();
+    localStored.forEach(function (lc) {
+      if (!lc || !lc.id || pending.indexOf(lc.id) === -1) return;
+      if (currentUser && lc.verifiedOwner === currentUser.memberId) { byId[lc.id] = lc; toUpsert.push(lc); }
+      else _unsynced(lc.id, false);
+    });
     CLUBS = Object.keys(byId).map(function (k) { return byId[k]; });
     CLUBS.forEach(function (c, i) { normalizeClub(c, i); });
     _clubsServerLoaded = true;
+    try { var seedIds = SEED_CLUBS.map(function (s) { return s.id; }); localStorage.setItem(LS.clubs, JSON.stringify(CLUBS.filter(function (c) { return seedIds.indexOf(c.id) === -1; }))); } catch (e) {}
     toUpsert.forEach(function (c) { sbSaveClub(c); });
+    _loadAllMembers();            // every club's roster + member count from club_members (the source of truth)
     reconcileMyMemberships();     // pull my joined-club list from the server (memberships made on any device)
-    reconcileMemberships();
-    if (typeof refreshCanPartner === 'function') refreshCanPartner();   // do I own an open club/shop? (puzzle color)
     buildSchoolFilter(); renderStats(); renderTopClubs();
     if (typeof applyFilters === 'function') applyFilters();
     if (typeof refreshClubModalState === 'function') refreshClubModalState();
+    _openClubFromQuery();
     if (typeof cb === 'function') cb();
-  }).catch(function () { if (typeof cb === 'function') cb(); });
+  }).catch(function () { _openClubFromQuery(); if (typeof cb === 'function') cb(); });
+}
+/* ?club=A8K9X2 deep links — run after the server list arrives (new clubs aren't in the local snapshot). */
+var _deepLinkDone = false;
+function _openClubFromQuery() {
+  if (_deepLinkDone) return; _deepLinkDone = true;
+  var dl = location.search.match(/[?&]club=([A-Za-z0-9]+)/); if (!dl) return;
+  var dc = getClubByClubId(dl[1]);
+  if (dc) openClub(dc.id); else toast('That club link isn’t valid anymore.');
 }
 /* ---------- Club members (roster) sync — Step 2 ---------- */
 function _memberToRosterEntry(r) { return { name: r.name, role: r.role, memberId: r.member_id, email: r.email }; }
@@ -240,6 +256,15 @@ function loadClubMembers(clubId, cb) {
     if (club) _applyMembers(club, rows);
     if (typeof cb === 'function') cb();
   }).catch(function () { if (typeof cb === 'function') cb(); });
+}
+/* One request for all rosters, so Browse cards, counts, and "am I a member?" never come from a stale club blob. */
+function _loadAllMembers() {
+  if (typeof sbRest !== 'function') return;
+  sbRest('club_members?select=club_id,member_id,name,role,email&order=joined_at.asc').then(function (rows) {
+    var by = {}; (rows || []).forEach(function (r) { (by[r.club_id] = by[r.club_id] || []).push(r); });
+    CLUBS.forEach(function (c) { if (by[c.id]) _applyMembers(c, by[c.id]); });
+    renderStats(); renderTopClubs(); if (typeof applyFilters === 'function') applyFilters();
+  }).catch(function () {});
 }
 function sbAddMember(clubId, m) {
   if (typeof sbRest !== 'function') return Promise.resolve();
@@ -268,18 +293,17 @@ function reconcileMyMemberships(cb) {
     if (rows.some(function (r) { return r.name !== currentUser.name; }) && typeof sbRenameMember === 'function') {
       sbRenameMember(currentUser.memberId, currentUser.name);
     }
-    // 2) Push up any local-only memberships (legacy joins made before the server migration).
-    (currentUser.joined || []).forEach(function (id) {
-      if (serverIds.indexOf(id) === -1 && typeof sbAddMember === 'function') {
-        var club = getClub(id);
-        var role = (club && club.verifiedOwner === currentUser.memberId) ? 'President' : 'Member';
-        sbAddMember(id, { memberId: currentUser.memberId, email: currentUser.email, name: currentUser.name, role: role });
+    // 2) The server roster is the truth: if a President removed or banned me, I'm no longer a member
+    //    (re-adding local-only joins used to undo removals). Clubs I own always count.
+    var ids = serverIds.slice();
+    CLUBS.forEach(function (c) {
+      if (c.verifiedOwner === currentUser.memberId && ids.indexOf(c.id) === -1) {
+        ids.push(c.id);
+        if (typeof sbAddMember === 'function') sbAddMember(c.id, { memberId: currentUser.memberId, email: currentUser.email, name: currentUser.name, role: 'President' });
       }
     });
-    // 3) Union server + local for the joined list.
-    var ids = serverIds.slice();
-    (currentUser.joined || []).forEach(function (id) { if (ids.indexOf(id) === -1) ids.push(id); });
     currentUser.joined = ids; if (typeof persistUser === 'function') persistUser();
+    if (typeof applyFilters === 'function') applyFilters();
     if (typeof cb === 'function') cb();
   }).catch(function () { if (typeof cb === 'function') cb(); });
 }
@@ -288,7 +312,7 @@ function refetchClub(id, cb) {
   if (typeof sbRest !== 'function') { if (typeof cb === 'function') cb(); return; }
   sbRest('clubs?id=eq.' + encodeURIComponent(id) + '&select=data').then(function (rows) {
     var d = rows && rows[0] && rows[0].data;
-    if (d) { normalizeClub(d, 0); var i = CLUBS.findIndex(function (c) { return c.id === id; }); if (i > -1) CLUBS[i] = d; else CLUBS.push(d); reconcileMemberships(); }
+    if (d) { normalizeClub(d, 0); var i = CLUBS.findIndex(function (c) { return c.id === id; }); if (i > -1) CLUBS[i] = d; else CLUBS.push(d); }
     if (typeof cb === 'function') cb();
   }).catch(function () { if (typeof cb === 'function') cb(); });
 }
@@ -332,10 +356,11 @@ function validateLinkInput(el) {
 /* ---------- Main-page stats ---------- */
 function renderStats() {
   var row = $('statsRow'); if (!row) return;
-  var students = CLUBS.reduce(function (s, c) { return s + (c.memberCount || 0); }, 0);
-  var schools = new Set(CLUBS.map(function (c) { return c.school; })).size;
+  var pub = CLUBS.filter(function (c) { return c.recruitment !== 'Private'; });
+  var students = pub.reduce(function (s, c) { return s + (c.memberCount || 0); }, 0);
+  var schools = new Set(pub.map(function (c) { return c.school; })).size;
   row.innerHTML = stat(students.toLocaleString() + '+', 'Students connected') +
-    stat(CLUBS.length + '+', 'Active clubs') + stat(schools + '+', 'Local schools');
+    stat(pub.length + '+', 'Active clubs') + stat(schools + '+', 'Local schools');
 }
 function stat(n, label) { return '<div class="stat"><div class="n">' + n + '</div><div class="l">' + escHtml(label) + '</div></div>'; }
 
@@ -343,7 +368,7 @@ function stat(n, label) { return '<div class="stat"><div class="n">' + n + '</di
 var _tcIndex = 0, _tcTimer = null, _tcTop = [];
 function renderTopClubs() {
   var row = $('topClubs'); if (!row) return;
-  _tcTop = CLUBS.slice().sort(function (a, b) { return (b.memberCount || 0) - (a.memberCount || 0); }).slice(0, 3);
+  _tcTop = CLUBS.filter(function (c) { return c.recruitment !== 'Private' && !(typeof isBanned === 'function' && isBanned(c)); }).sort(function (a, b) { return (b.memberCount || 0) - (a.memberCount || 0); }).slice(0, 3);
   row.className = 'tc-slideshow';
   if (!_tcTop.length) { row.innerHTML = ''; return; }
   var slides = _tcTop.map(function (c, i) {
@@ -393,9 +418,11 @@ function setFocus(f) {
 }
 function buildSchoolFilter() {
   var sel = $('schoolFilter'); if (!sel) return;
-  var schools = Array.from(new Set(CLUBS.map(function (c) { return c.school; }).filter(Boolean))).sort();
+  var schools = Array.from(new Set(listedClubs().map(function (c) { return c.school; }).filter(Boolean))).sort();
+  var cur = sel.value;
   sel.innerHTML = '<option value="">All schools</option>' +
     schools.map(function (s) { return '<option>' + escHtml(s) + '</option>'; }).join('');
+  if (cur && schools.indexOf(cur) > -1) sel.value = cur;   // rebuilding must not silently clear the user's pick
 }
 function buildCreateCategoryOptions() {
   var sel = $('ccCategory'); if (!sel) return;
@@ -422,7 +449,7 @@ function applyFilters() {
   var sort = ($('sortSelect') && $('sortSelect').value) || 'az';
 
   var list = CLUBS.filter(function (c) {
-    if (typeof isBanned === 'function' && isBanned(c)) return false;   // banned users never see the club
+    if (!isListedFor(c)) return false;   // banned users never see the club; private clubs are members-only
     if (activeFocus && (c.focus || []).indexOf(activeFocus) === -1) return false;
     if (school && c.school !== school) return false;
     if (sort === 'public' && c.recruitment !== 'Public') return false;   // Public/Private are filters
@@ -477,7 +504,7 @@ function renderCard(club) {
       '<div class="card-cover" style="' + coverStyle(club) + '" onclick="openClub(\'' + club.id + '\')">' +
         (club.banner ? '' : '<span class="cover-mark">' + styleForCategory(club.category).icon + '</span>' + cardDoodles(club.id)) +
         '<button class="card-share" title="' + escAttr(t('share_club')) + '" onclick="event.stopPropagation(); openShare(\'' + club.id + '\')">' + (typeof ICON_SHARE !== 'undefined' ? ICON_SHARE : '') + '</button>' +
-        '<button class="card-flag" title="Report this club" onclick="event.stopPropagation(); openReport(\'club\',\'' + club.id + '\',\'' + escAttr(club.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>' +
+        '<button class="card-flag" title="Report this club" onclick="event.stopPropagation(); openReport(\'club\',\'' + club.id + '\',\'' + jsArg(club.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>' +
         '<span class="cover-cat">' + escHtml(club.category) + '</span></div>' +
       '<div class="card-body">' +
         (typeof partnershipBadge === 'function' ? partnershipBadge('club', club.id) : '') +
@@ -576,6 +603,7 @@ function publishClub() {
   if (!name || !cat || !school || !district) return toast('Please complete all required fields, including school district.');
   if (!$('ccZip').value.trim() || !$('ccEmail').value.trim()) return toast('Zip code and leader contact email are required.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('ccEmail').value.trim())) return toast('Enter a valid leader contact email (name@example.com).');
+  if (!/^\d{5}$/.test($('ccZip').value.trim())) return toast('Enter a 5-digit zip code.');
 
   var tags = $('ccTags').value.split(',').map(function (t) { return t.trim(); }).filter(Boolean);
   var club = {
@@ -594,6 +622,7 @@ function publishClub() {
   };
   CLUBS.push(club);
   saveUserClubs(club);
+  if (typeof sbAddMember === 'function') sbAddMember(club.id, { memberId: currentUser.memberId, email: currentUser.email, name: currentUser.name, role: 'President' });
   if (currentUser.joined.indexOf(club.id) === -1) { currentUser.joined.push(club.id); persistUser(); }
   if (editingDraftId) { deleteDraft(editingDraftId, true); editingDraftId = null; }
 
@@ -661,7 +690,8 @@ function saveDrafts(list) {
   if (!currentUser) return;
   var all = {}; try { all = JSON.parse(localStorage.getItem(LS.drafts)) || {}; } catch (e) {}
   all[currentUser.email.toLowerCase()] = list;
-  localStorage.setItem(LS.drafts, JSON.stringify(all));
+  try { localStorage.setItem(LS.drafts, JSON.stringify(all)); return true; }
+  catch (e) { toast('This draft is too big to save on this device (usually large photos or videos). Remove some media and try again.'); return false; }
 }
 function saveDraft() {
   if (!currentUser) { pendingAuthAction = saveDraft; return openAuth('login'); }
@@ -676,7 +706,7 @@ function saveDraft() {
   var list = loadDrafts();
   var i = list.findIndex(function (d) { return d.id === draft.id; });
   if (i > -1) list[i] = draft; else list.push(draft);
-  saveDrafts(list);
+  if (!saveDrafts(list)) return;
   resetCreateForm();
   toast('Draft saved. You’ll find it in My Clubs → Drafts.');
   showView('myclubs'); myClubsTab('drafts');

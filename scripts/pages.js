@@ -82,7 +82,7 @@ function setNavActive(view) {
    navy campus-toned backgrounds so the image visibly changes with no extra files. */
 var HERO_SLIDES = [
   { img: 'var(--hero-img)', h: 'Find a club at your school.<br>Or start your own.',
-    p: 'Search by zip code or school, save the clubs you like, and message the students who run them.' },
+    p: 'Search by zip code or school, save the clubs you like, and contact the students who run them.' },
   { img: heroPattern('#0a2540', '#0083B0'), h: 'Local shops,<br>backing local clubs.',
     p: 'Businesses near your school sponsor clubs and give members discounts. Clubs get help, and shops get regulars.' },
   { img: heroPattern('#0b3a55', '#00B4DB'), h: 'Your school and your neighborhood,<br>on the same page.',
@@ -178,7 +178,7 @@ function _sendContactMessage(msg, source) {
 /* ---- PAGE (About Us → "Contact Us"): fuller info + how to report ---- */
 function navContact() { closeMobileNav(); showView('contact'); renderContactPage(); }
 function renderContactPage() {
-  var el = $('contactBody'); if (!el) return;
+  var el = $('contactPageBody'); if (!el) return;
   var li = !!currentUser;
   var form = li
     ? '<div class="contact-form" style="max-width:620px"><div id="cpErr" class="auth-error hidden"></div>' +
@@ -327,21 +327,21 @@ function renderHowItWorks() {
    ============================================================ */
 var FAQ_ITEMS = [
   { q: 'How do students join or start a club on Student Club Hub?',
-    a: 'Search the directory by zip code, school or district, then open a club to save it, join it or message its leaders. To start your own, sign in and use “Register a Club.” Add your meeting details, photos and social links, and it shows up in the directory right away.' },
+    a: 'Search the directory by zip code, school or district, then open a club to save it, join it or contact its leaders. To start your own, sign in and use “Register a Club.” Add your meeting details, photos and social links, and it shows up in the directory right away.' },
   { q: 'How do local businesses partner with student clubs and post exclusive deals?',
-    a: 'Owners can register a shop from the Local Businesses menu, set up a storefront, and offer sponsorships or member discounts to nearby clubs. Some of the shop tools are still being built and will arrive in a later update.' },
+    a: 'Sign in, then register your shop from the Local Businesses menu. It goes live right away. Use the pencil icons on your page to add a student deal, hours, photos and links. To team up with a club, open a club that’s “open to partnerships” and tap Reach Out.' },
   { q: 'How do community members access local business perks?',
     a: 'Browse the shops in the Local Businesses directory and use the deals listed on each one. Every purchase helps the businesses that back student projects.' },
   { q: 'Is Student Club Hub free to use for schools and clubs?',
     a: 'Yes. It’s free for students, advisors and schools. Student Club Hub is a directory and a community network, so no payments go through the site.' },
   { q: 'Who is responsible for partnerships, sponsorships, and discounts arranged on the platform?',
     a: 'You are. Student Club Hub is solely a directory and introduction service — it helps clubs, businesses, and community members find and message one another. Any partnership, sponsorship, discount, promotion, payment, or other agreement is made directly and exclusively between the parties involved. Student Club Hub is not a party to those arrangements, does not review, endorse, guarantee, or mediate them, and accepts no responsibility or legal liability for the conduct of any user or for any loss, dispute, or damage arising from them. Always confirm who you are dealing with and put important terms in writing before you commit.' },
-  { q: 'What does the “Verified Partner” badge on a business actually mean?',
-    a: 'The blue verified seal means our team has reviewed the listing and confirmed it belongs to a real, operating local business — not that we endorse its products, prices, or any deal it offers. Verification is about legitimacy and reducing impersonation, so students and clubs can reach out with more confidence. A business earns the seal by submitting its listing for review; until it’s approved, the listing stays hidden from the public directory.' },
+  { q: 'What does the gold “Verified” seal mean?',
+    a: 'A club’s President or a business owner can turn on the seal in Page settings to show the page is the real, official one. Right now it’s self-reported. Student Club Hub doesn’t check it yet, so it isn’t an endorsement of the club, business or any deal. Always confirm who you’re dealing with before agreeing to anything important.' },
   { q: 'How do clubs and businesses form a partnership on the platform?',
-    a: 'Partnerships are mutual. Either side opens the other’s profile (one that’s “open to partnerships”) and taps the puzzle icon to propose one; a short agreement form opens. The other side reviews and signs it under their Partnership Requests. Only once both confirm does a green “Partnered with [Name]” badge appear on both banners. A club or business can be partnered with someone and still stay “open to partnerships” to welcome more. Nothing about the deal itself — discounts, terms, money — is handled or guaranteed by Student Club Hub.' },
+    a: 'A club President or business owner opens the other side’s page (it has to be “open to partnerships”) and taps Reach Out. They choose a partnership type, describe it, and set start and end dates. The other side approves or rejects it under Partnership Requests. Once it’s approved, a “Partnership” tag shows on both banners from the start date through the end date, and either side can end it early. Nothing about the deal itself (discounts, terms, money) is handled or guaranteed by Student Club Hub.' },
   { q: 'What’s the difference between “open to partnerships” and being “partnered”?',
-    a: '“Open to partnerships” is a green flag a club or business turns on to say they’re looking to collaborate — it’s a standing invitation anyone can respond to. “Partnered with [Name]” is a confirmed, mutual link between two specific groups. They’re independent: you can show both at once.' },
+    a: '“Open to partnerships” is a badge a club or business turns on to say they’re looking to collaborate — it’s a standing invitation anyone can respond to. A “Partnership” tag means two specific groups have a confirmed, approved partnership. They’re independent: you can show both at once.' },
   { q: 'What is the ID shown on a club or business page for?',
     a: 'Every club and business gets a short unique ID (for example, #HQ3YN7). It’s a quick, unambiguous way to refer to or search for a specific listing — handy when two groups share a similar name, or when a leader wants to point someone straight to their page.' },
   { q: 'How do I contact a club or business?',

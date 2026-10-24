@@ -153,13 +153,13 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 [data-theme] .btn.ghost, .btn.glass, .btn.blue {
   background: var(--card); color: var(--ink); border: var(--edge);
 }
-[data-theme] .btn.ghost:hover, .btn.glass:hover, .btn.blue:hover { background: var(--note); color: var(--ink); }
+[data-theme] .btn.ghost:hover, .btn.glass:hover, .btn.blue:hover { background: var(--note); color: #1a1a1a; }
 .fav-btn, [data-theme] .fav-btn { background: var(--card); color: var(--ink); border: var(--edge); }
-.fav-btn.on, [data-theme] .fav-btn.on { background: var(--note); color: var(--ink); }
+.fav-btn.on, [data-theme] .fav-btn.on { background: var(--note); color: #1a1a1a; }
 
 .cat-pill, [data-theme] .cat-pill { background: var(--card); border: var(--edge); color: var(--ink); }
 .cat-pill:hover { background: var(--note-soft); border-color: var(--line); color: var(--ink); }
-.cat-pill.active { background: var(--note); border-color: var(--line); color: var(--ink); box-shadow: 2px 2px 0 var(--box-ink); }
+.cat-pill.active { background: var(--note); border-color: var(--line); color: #1a1a1a; box-shadow: 2px 2px 0 var(--box-ink); }
 .search input, [data-theme] .search input { background-color: var(--input-bg); border: var(--edge); border-radius: var(--r); }
 .search input:focus { border-color: var(--brand); box-shadow: 3px 3px 0 var(--brand); }
 .field input, .field select, .field textarea, .select { border-radius: var(--r-sm); }
@@ -335,10 +335,10 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 .ico { display: inline-block; vertical-align: -0.15em; flex-shrink: 0; }
 .inline-ico svg { width: 15px; height: 15px; vertical-align: -2px; }
 .spot-ico { display: inline-grid; place-items: center; width: 30px; height: 30px; margin-right: 8px; vertical-align: middle;
-  background: var(--note); color: var(--ink); border: var(--edge); border-radius: var(--r-sm); }
+  background: var(--note); color: #1a1a1a; border: var(--edge); border-radius: var(--r-sm); }
 .empty .big { color: var(--ink); line-height: 1; }
 .soon-ico .ico, .empty .big .ico { vertical-align: middle; }
-.confirm .c-ico { color: var(--ink); background: var(--note) !important; border: var(--edge); border-radius: var(--r); }
+.confirm .c-ico { color: #1a1a1a; background: var(--note) !important; border: var(--edge); border-radius: var(--r); }
 .up-ico { display: inline-grid; place-items: center; }
 
 /* ---- School doodles (blank banners + About Us page banners) ---- */
@@ -366,20 +366,20 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 .biz-slideshow.is-paper .biz-slide-scrim { display: none; }
 .biz-slideshow.is-paper .biz-hero-info, .biz-slideshow.is-paper .biz-hero-info h1 { color: var(--ink); text-shadow: none; }
 .biz-slideshow.is-paper .biz-cuisines, .biz-slideshow.is-paper .biz-rev-count { color: var(--muted); opacity: 1; }
-.biz-slideshow.is-paper .biz-idchip { background: var(--note); color: var(--ink); border: var(--edge); border-radius: var(--r-sm); }
+.biz-slideshow.is-paper .biz-idchip { background: var(--note); color: #1a1a1a; border: var(--edge); border-radius: var(--r-sm); }
 .biz-slideshow.is-paper .banner-back, .biz-slideshow.is-paper .banner-ico,
 .biz-slideshow.is-paper .banner-gear, .biz-slideshow.is-paper .name-ico {
   background: var(--card); color: var(--ink); border: var(--edge); border-radius: var(--r); box-shadow: var(--shadow-sm);
   backdrop-filter: none; -webkit-backdrop-filter: none; }
 .biz-slideshow.is-paper .banner-back:hover, .biz-slideshow.is-paper .banner-ico:hover,
-.biz-slideshow.is-paper .name-ico:hover { background: var(--note); color: var(--ink); }
+.biz-slideshow.is-paper .name-ico:hover { background: var(--note); color: #1a1a1a; }
 .biz-slideshow.is-paper .name-ico.flag:hover { background: var(--brand); color: #fff; }
 .biz-slideshow.is-paper .banner-ico.on { color: var(--brand); }
 /* Photo banners keep a white, shadowed title so it reads over any image */
 .biz-slideshow:not(.is-paper) .biz-hero-info h1 { color: #fff; text-shadow: 0 2px 14px rgba(0,0,0,.55); }
 
 /* ---- Hero chips: no leftover blue/teal ---- */
-.open-partner-chip { background: var(--note); color: var(--ink); border: var(--edge); border-radius: var(--r-sm); box-shadow: none; }
+.open-partner-chip { background: var(--note); color: #1a1a1a; border: var(--edge); border-radius: var(--r-sm); box-shadow: none; }
 .partnered-badge { background: var(--brand); color: #fff; border: var(--edge); border-radius: var(--r-sm); }
 
 /* ---- About Us page banners: white paper + doodles instead of the old navy band ---- */
@@ -403,3 +403,39 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
   .biz-slideshow.is-paper .biz-hero-info { position: relative; bottom: auto; padding-top: 66px; padding-bottom: 16px; }
   .biz-slideshow.is-paper .dd { display: none; }
 }
+
+/* ---- Deal controls (edit / show-hide / delete) — visible in light AND dark mode ---- */
+.deal-eye, .pdeal-eye {
+  background: var(--card); color: var(--ink); border: var(--edge); border-radius: var(--r); box-shadow: none; }
+.deal-eye:hover, .pdeal-eye:hover { background: var(--note); color: #1a1a1a; }
+.deal-eye.danger:hover { background: var(--brand); color: #fff; }
+.deal-ctrls { gap: 6px; }
+/* Owner-only status chip on a deal */
+.deal-vis { display: inline-flex; align-items: center; gap: 5px; margin-left: 4px; padding: 2px 8px; vertical-align: middle;
+  font-size: .72rem; font-weight: 700; border: var(--edge); border-radius: var(--r-sm); }
+.deal-vis svg { width: 13px; height: 13px; }
+.deal-vis.is-private { background: var(--note); color: #1a1a1a; }
+.deal-vis.is-public { background: var(--card); color: var(--ink); }
+/* A deal only the owner can see: dashed outline so it reads as "not public" at a glance */
+.perk-box.is-private, .pdeal-box.is-private { border: 2px dashed var(--brand); }
+
+/* Yellow is light in BOTH themes, so text on it is always dark ink. */
+.stat, .stat * { color: #1a1a1a; }   /* stat cards are yellow notes in both themes */
+/* "Open to partnerships" mark next to a business name: no leftover blue/purple */
+.name-openp-ico { background: var(--note); color: #1a1a1a; border: var(--edge); border-radius: var(--r-sm); box-shadow: none; }
+
+/* Page settings → President-only danger zone */
+.edit-modal .danger-zone { margin: 16px 0 12px; padding-top: 12px; border-top: var(--edge); }
+.edit-modal .danger-zone .tr-title { flex-basis: 100%; font-weight: 700; }
+
+/* QA contrast fixes */
+.site-header .logout-btn:hover { background: var(--note); color: #1a1a1a; }
+.hiw-group-ico { background: var(--card); color: var(--ink); }
+.perk-box .perk-tag { background: var(--brand); color: #fff; }
+
+/* Deal controls float in the flow, so the type tags wrap beside them at any width (no overlap on phones). */
+.perk-box.big .deal-ctrls { position: static; float: right; margin: -2px -2px 6px 10px; }
+/* The gold Verified chip is light in the middle of its shimmer — dark text stays readable in both themes. */
+.biz-verified, .biz-verified .bv-label { color: #1a1a1a; text-shadow: none; }
+/* Owner gear sits beside "Back" (stacked below it, it covered the page title on phones). */
+.banner-gear { top: 14px; left: 96px; width: 33px; height: 33px; }

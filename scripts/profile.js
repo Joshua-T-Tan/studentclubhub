@@ -5,8 +5,16 @@
 
 var currentProfileName = null;
 
-function clubsLedBy(name) {
-  return CLUBS.filter(function (c) { return (c.leaders || []).some(function (l) { return l.name === name; }); });
+/* Clubs where this person holds an officer role, from the live roster (by member ID when known). */
+function clubsLedBy(name, memberId) {
+  if (!memberId && currentUser && name === currentUser.name) memberId = currentUser.memberId;
+  return CLUBS.filter(function (c) {
+    if (memberId && c.verifiedOwner === memberId) return true;
+    return (c.roster || []).some(function (m) {
+      var me = memberId ? m.memberId === memberId : (!m.memberId && m.name === name);
+      return me && m.role && m.role !== 'Member';
+    }) || (!memberId && !(c.roster || []).some(function (m) { return m.memberId; }) && (c.leaders || []).some(function (l) { return l.name === name; }));
+  });
 }
 function userRecordByName(name) {
   try { return Object.values(loadUsers()).find(function (u) { return u.name === name; }) || null; } catch (e) { return null; }
@@ -35,13 +43,14 @@ function renderProfile(name) {
   var isSelf = !!(currentUser && currentUser.name === name);
   var rec = userRecordByName(name);
   var data = isSelf ? currentUser : (rec || {});
-  var priv = isSelf ? !!currentUser.private : !!(rec && rec.private);
-  var memberId = isSelf ? currentUser.memberId : (rec && rec.memberId) || '';
-  var led = clubsLedBy(name);
+  var info = _profileInfo[name];   // server copy (profiles table) for people who never used this browser
+  var priv = isSelf ? !!currentUser.private : !!((rec && rec.private) || (info && info.private));
+  var memberId = isSelf ? currentUser.memberId : (rec && rec.memberId) || (info && info.memberId) || '';
+  var led = clubsLedBy(name, memberId);
   var ledLine = 'Leads ' + led.length + ' club' + (led.length === 1 ? '' : 's');
 
   // ----- Profile card (identity) -----
-  var metaBits = [data.school, data.grad ? 'Class of ' + data.grad : ''].filter(Boolean);
+  var metaBits = [data.school, data.grad ? 'Class of ' + data.grad : ''].filter(Boolean).map(escHtml);
   var identity;
   if (priv) {
     // Private: only Name, Member ID, and number of clubs led
@@ -57,21 +66,30 @@ function renderProfile(name) {
     '<div style="padding-top:16px"><button class="btn ghost" onclick="backFromProfile()">← Back</button></div>' +
     '<div class="profile-head">' + avatarHTML(name, 'lg') +
       '<div class="meta"><div class="name-row"><h1>' + escHtml(name) + '</h1>' +
-        (isSelf ? '' : '<button class="name-ico flag" title="Report this user" onclick="openReport(\'user\',\'' + escAttr(memberId || name) + '\',\'' + escAttr(name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>') + '</div>' + identity +
+        (isSelf ? '' : '<button class="name-ico flag" title="Report this user" onclick="openReport(\'user\',\'' + jsArg(memberId || name) + '\',\'' + jsArg(name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>') + '</div>' + identity +
         (isSelf ? '<div class="profile-edit"><button class="btn ghost sm-btn" onclick="openSettings()">Edit Profile &amp; Settings</button></div>' : '') +
       '</div></div>' +
     '<div id="profileLists"></div>';
   body.innerHTML = html;
   // Club + business lists (hidden entirely when private) — Saved Clubs never shown here
   if (!priv) _populateProfileLists(name, isSelf, rec);
+  // Someone else's profile: check the server for their privacy setting / member ID, then repaint once.
+  if (!isSelf && !info && typeof sbRest === 'function') {
+    _resolveProfilePerson(name, null).then(function () { if (currentProfileName === name && _profileInfo[name]) renderProfile(name); });
+  }
 }
+var _profileInfo = {};
 /* Resolve the profile person's email + member ID (for looking up their shops / joined clubs). */
 function _resolveProfilePerson(name, rec) {
   if (currentUser && currentUser.name === name) return Promise.resolve({ email: (currentUser.email || '').toLowerCase(), memberId: currentUser.memberId || '' });
   if (rec && (rec.email || rec.memberId)) return Promise.resolve({ email: (rec.email || '').toLowerCase(), memberId: rec.memberId || '' });
+  if (_profileInfo[name]) return Promise.resolve(_profileInfo[name]);
   if (typeof sbRest !== 'function') return Promise.resolve({ email: '', memberId: '' });
-  return sbRest('profiles?name=eq.' + encodeURIComponent(name) + '&select=member_id,email&limit=1')
-    .then(function (r) { var p = r && r[0]; return p ? { email: (p.email || '').toLowerCase(), memberId: p.member_id || '' } : { email: '', memberId: '' }; })
+  return sbRest('profiles?name=eq.' + encodeURIComponent(name) + '&select=member_id,email,private&limit=1')
+    .then(function (r) {
+      var p = r && r[0], out = p ? { email: (p.email || '').toLowerCase(), memberId: p.member_id || '', private: !!p.private } : { email: '', memberId: '', private: false };
+      _profileInfo[name] = out; return out;
+    })
     .catch(function () { return { email: '', memberId: '' }; });
 }
 /* Build every applicable section for a profile: clubs led, businesses led (shops
@@ -79,10 +97,10 @@ function _resolveProfilePerson(name, rec) {
 function _populateProfileLists(name, isSelf, rec) {
   var host = $('profileLists'); if (!host) return;
   host.innerHTML = '<p class="form-note" style="padding:14px 0">Loading…</p>';
-  var led = clubsLedBy(name);
   var first = name.split(' ')[0];
   _resolveProfilePerson(name, rec).then(function (pp) {
     if (currentProfileName !== name) return;   // profile changed while loading
+    var led = clubsLedBy(name, pp.memberId);
     var bizP = pp.email
       ? sbRest('businesses?owner_email=eq.' + encodeURIComponent(pp.email) + '&select=*' + (isSelf ? '' : '&status=eq.verified')).catch(function () { return []; })
       : Promise.resolve([]);
@@ -93,7 +111,9 @@ function _populateProfileLists(name, isSelf, rec) {
       if (currentProfileName !== name) return;
       var bizzes = res[0] || [], mem = res[1];
       // Cache fetched shops so their cards' "View Details" can open them.
-      if (bizzes.length) { window._bizCache = (typeof _bizCache !== 'undefined' && _bizCache) || []; bizzes.forEach(function (b) { if (!_bizCache.some(function (x) { return x.id === b.id; })) _bizCache.push(b); }); }
+      // Visitors don't see private listings; your own profile shows everything you own.
+      if (!isSelf) bizzes = bizzes.filter(function (b) { return !b.is_private; });
+      if (typeof _rememberBiz === 'function') bizzes.forEach(_rememberBiz);
       var ledIds = led.map(function (c) { return String(c.id); });
       var joined;
       if (isSelf) {
@@ -291,7 +311,8 @@ function doChangePassword() {
   var cur = $('pwCurrent').value, nw = $('pwNew').value, cf = $('pwConfirm').value;
   if (!cur) return toast('Enter your current password.');
   if (cur !== currentUser.pass) return toast('Your current password is incorrect.');
-  if (!nw || nw.length < 6) return toast('New password must be at least 6 characters.');
+  if (!validPassword(nw)) return toast('New password must be at least 8 characters and include a number or symbol.');
+  if (nw === cur) return toast('Pick a new password that’s different from your current one.');
   if (nw !== cf) return toast('New passwords don’t match.');
   currentUser.pass = nw;
   var users = loadUsers(), key = currentUser.email.toLowerCase();
@@ -299,13 +320,51 @@ function doChangePassword() {
   $('pwCurrent').value = ''; $('pwNew').value = ''; $('pwConfirm').value = '';
   toast('Your password has been updated.');
 }
-function openForgot() { $('forgotEmail').value = (currentUser && currentUser.email) || ''; openOverlay('forgotOverlay'); }
+/* Forgot password: email a 6-digit code (same Supabase OTP as sign-up), then set a new password.
+   Accounts live in the browser where they were created, so the reset works on that device. */
+var _fpEmail = null;
+function _fpHead(sub) {
+  return '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h3 style="font-size:1.15rem;font-weight:800">Reset your password</h3>' +
+    '<button class="icon-btn" onclick="closeForgot()">✕</button></div><p class="form-note" style="margin-bottom:14px">' + sub + '</p><div id="fpErr" class="auth-error hidden"></div>';
+}
+function _fpErr(m) { var e = $('fpErr'); if (e) { e.textContent = m; e.classList.remove('hidden'); } }
+function openForgot() {
+  if ($('authOverlay') && !$('authOverlay').classList.contains('hidden')) {
+    var typed = $('alEmail') && $('alEmail').value; closeOverlay('authOverlay'); _fpEmail = typed || null;
+  } else _fpEmail = (currentUser && currentUser.email) || null;
+  $('forgotBody').innerHTML = _fpHead('Enter your account email and we’ll email you a 6-digit code.') +
+    '<div class="field"><label>Email</label><input id="forgotEmail" type="email" placeholder="you@school.edu" value="' + escAttr(_fpEmail || '') + '"></div>' +
+    '<button id="fpSend" class="btn primary block lg" onclick="submitForgot()">Email me a code</button>';
+  openOverlay('forgotOverlay');
+}
 function closeForgot() { closeOverlay('forgotOverlay'); }
 function submitForgot() {
-  var e = ($('forgotEmail').value || '').trim();
-  if (!e) return toast('Enter your email address.');
-  closeForgot();
-  toast('If an account exists for ' + e + ', a password reset link is on its way.');
+  var e = ($('forgotEmail').value || '').trim().toLowerCase();
+  if (!(typeof isValidEmail === 'function' ? isValidEmail(e) : /@/.test(e))) return _fpErr('Enter a valid email address.');
+  if (!loadUsers()[e]) return _fpErr('No account with that email is saved in this browser. Reset it on the device where you signed up.');
+  _fpEmail = e; authBusy2('fpSend', true, 'Sending…');
+  sbSendOtp(e).then(function () {
+    $('forgotBody').innerHTML = _fpHead('We sent a code to <strong>' + escHtml(e) + '</strong>. Enter it and choose a new password.') +
+      '<div class="field"><label>6-digit code</label><input id="fpCode" type="text" inputmode="numeric" maxlength="8" autocomplete="one-time-code"></div>' +
+      '<div class="field"><label>New password</label><input id="fpNew" type="password"></div>' +
+      '<p class="form-note" style="margin:-6px 0 12px">' + t('au_pwhint') + '</p>' +
+      '<div class="field"><label>Confirm new password</label><input id="fpConfirm" type="password"></div>' +
+      '<button id="fpReset" class="btn primary block lg" onclick="submitForgotReset()">Reset password</button>';
+  }).catch(function (ex) { authBusy2('fpSend', false); _fpErr(ex.message); });
+}
+function submitForgotReset() {
+  var code = ($('fpCode').value || '').trim(), nw = $('fpNew').value, cf = $('fpConfirm').value;
+  if (!code) return _fpErr('Enter the code from your email.');
+  if (!validPassword(nw)) return _fpErr('Password must be at least 8 characters and include a number or symbol.');
+  if (nw !== cf) return _fpErr('Passwords don’t match.');
+  authBusy2('fpReset', true, 'Checking code…');
+  sbVerifyOtp(_fpEmail, code).then(function () {
+    var users = loadUsers(); if (!users[_fpEmail]) throw new Error('Account not found.');
+    users[_fpEmail].pass = nw; saveUsers(users);
+    if (currentUser && currentUser.email.toLowerCase() === _fpEmail) currentUser.pass = nw;
+    closeForgot(); toast('Password reset. You can log in with your new password.');
+    if (!currentUser && typeof openAuth === 'function') openAuth('login');
+  }).catch(function (ex) { authBusy2('fpReset', false); _fpErr(ex.message || 'That code is incorrect or has expired.'); });
 }
 
 /* Update the avatar in place - never re-render the whole Settings panel (keeps unsaved text). */
@@ -319,10 +378,16 @@ function paintSettingsAvatar() {
   }
 }
 function onSettingsAvatar(e) {
-  var f = e.target.files[0]; if (!f) return;
+  var f = e.target.files[0]; e.target.value = '';   // reset so picking the same file again still fires
+  if (!f) return;
+  if (!/^image\//i.test(f.type)) return toast('Please choose an image.');
+  if (f.size > 1.5 * 1024 * 1024) return toast('That photo is too large (max 1.5 MB). Try a smaller one.');
   var r = new FileReader();
   r.onload = function (ev) {
+    var prev = currentUser.avatar;
     currentUser.avatar = ev.target.result; persistUser();
+    var users = loadUsers(), k = currentUser.email.toLowerCase();
+    if (!users[k] || users[k].avatar !== currentUser.avatar) { currentUser.avatar = prev; persistUser(); paintSettingsAvatar(); return; }
     renderAuthArea(); paintSettingsAvatar();
     if (typeof syncUserEverywhere === 'function') syncUserEverywhere();
     toast('Profile photo updated.');
@@ -341,12 +406,14 @@ function saveSettings() {
   currentUser.grad = ($('setGrad').value || '').trim();
   currentUser.headline = ($('setHeadline').value || '').trim();
   currentUser.bio = ($('setBio').value || '').slice(0, 200).trim();
+  if (currentUser.school && typeof districtForSchool === 'function') { var dist = districtForSchool(currentUser.school); if (dist) currentUser.district = dist; }
   persistUser(); renderAuthArea();
+  if (typeof sbUpsertProfile === 'function') sbUpsertProfile();
   if (currentUser.name !== oldName && typeof syncUserRename === 'function') syncUserRename(oldName, currentUser.name);
   if (typeof syncUserEverywhere === 'function') syncUserEverywhere();
   renderSettings(); toast('Your changes have been saved.');
 }
-function togglePrivacy() { currentUser.private = !currentUser.private; persistUser(); renderSettings(); toast(currentUser.private ? 'Profile is now private.' : 'Profile is now public.'); }
+function togglePrivacy() { currentUser.private = !currentUser.private; persistUser(); if (typeof sbUpsertProfile === 'function') sbUpsertProfile(); renderSettings(); toast(currentUser.private ? 'Profile is now private.' : 'Profile is now public.'); }
 function toggleEmailNotif() { currentUser.emailNotif = (currentUser.emailNotif === false); persistUser(); renderSettings(); toast(currentUser.emailNotif ? 'Email notifications on.' : 'Email notifications off.'); }
 function setLanguage(lang) { applyLanguage(lang); onLanguageChanged(); if (currentUser) { currentUser.lang = lang; persistUser(); } }
 /* Deleting an account requires re-entering the correct password */
@@ -367,10 +434,25 @@ function confirmDeleteAccount() {
     var p = $('delAcctPass'); if (p) { p.value = ''; p.focus(); }
     return;
   }
-  var users = loadUsers(); delete users[currentUser.email.toLowerCase()]; saveUsers(users);
-  currentUser = null; if (typeof clearSessionEmail === 'function') { clearSessionEmail(); } else { localStorage.removeItem(LS.session); }
-  closeDeleteAccount();
-  renderAuthArea(); if (typeof refreshFavUI === 'function') refreshFavUI();
-  showView('main'); toast('Your account has been deleted.');
+  // A club must always have a President, and a business needs an owner — hand those off first.
+  var owned = CLUBS.filter(function (c) { return c.verifiedOwner === currentUser.memberId; });
+  if (owned.length) { closeDeleteAccount(); return toast('You’re President of ' + owned.map(function (c) { return c.name; }).join(', ') + '. Hand off the presidency or delete the club first.'); }
+  var me = currentUser, mid = me.memberId, del = { method: 'DELETE', headers: { Prefer: 'return=minimal' } };
+  sbRest('businesses?owner_email=eq.' + encodeURIComponent(me.email.toLowerCase()) + '&select=name').catch(function () { return []; }).then(function (biz) {
+    if (biz && biz.length) { closeDeleteAccount(); return toast('You still own ' + biz.map(function (b) { return b.name; }).join(', ') + '. Remove your business listing first.'); }
+    if (mid) {
+      sbRest('club_members?member_id=eq.' + encodeURIComponent(mid), del).catch(function () {});
+      sbRest('profiles?member_id=eq.' + encodeURIComponent(mid), del).catch(function () {});
+    }
+    CLUBS.forEach(function (c) { var i = (c.roster || []).findIndex(function (m) { return m.memberId === mid; }); if (i > -1) { c.roster.splice(i, 1); c.memberCount = c.roster.length; } });
+    var users = loadUsers(); delete users[me.email.toLowerCase()]; saveUsers(users);
+    try { localStorage.removeItem('sch_saved_biz:' + me.email.toLowerCase()); } catch (e) {}
+    currentUser = null; if (typeof clearSessionEmail === 'function') { clearSessionEmail(); } else { localStorage.removeItem(LS.session); }
+    applyLanguage('en'); applyTheme('light');   // guests always get the defaults
+    closeDeleteAccount();
+    renderAuthArea(); if (typeof refreshFavUI === 'function') refreshFavUI();
+    if (typeof applyFilters === 'function') applyFilters();
+    showView('main'); toast('Your account has been deleted.');
+  });
 }
 

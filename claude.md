@@ -17,9 +17,15 @@ monetary features have been intentionally removed and must not be reintroduced.
   Fonts stylesheet (Space Grotesk + Inter, MP31) — both degrade gracefully to
   system fonts / an error toast if offline, so the rest of the app still runs
   from `file://` or any static host.
-- **Persistence is `localStorage` only.** No backend, no database, no cookies.
-  All state (accounts, sessions, favorites, joined clubs, user-created clubs)
-  lives in `localStorage`.
+- **Persistence: Supabase REST + `localStorage`.** Accounts, sessions, saves and
+  preferences live in `localStorage`. Shared data lives in Supabase (project
+  `xadmwmwagxeiidmeqspa`) via plain `fetch` (`sbRest()` in business.js, no SDK):
+  `clubs` (one JSONB blob per club), `club_members` (**the source of truth for
+  rosters/roles/counts** — never trust a blob's `roster`), `club_chat`,
+  `club_reviews`, `businesses`, `biz_reviews` (a DB trigger keeps
+  `businesses.rating/review_count` in sync), `partner_agreements`, `profiles`
+  (name + `private` flag, readable from other browsers), `site_reviews`,
+  `reports`, `contact_messages`. Schema changes go in `supabase/*.sql`.
 - **One deliberate network exception: email OTP.** `scripts/supabase.js` calls
   Supabase Auth (`/auth/v1/otp` + `/auth/v1/verify`) via plain `fetch` to email
   and verify the 6-digit sign-up / 2FA code — no SDK, no CDN. The publishable key
@@ -28,7 +34,10 @@ monetary features have been intentionally removed and must not be reintroduced.
   fully offline); everything else still does. Do not "restore" the on-screen demo
   code — it was intentionally removed.
 - **Scripts load as plain classic scripts** (not ES modules), in a fixed order
-  (`auth → directory → modal → profile → pages`) so they share one global scope.
+  (`schools, qr, supabase, icons → auth → directory → modal → reviews → profile → pages →
+  hero-motion → business → messages → partnerships → editors`) so they share one
+  global scope. Files loaded before business.js must not call `sbRest` at load
+  time — defer to `DOMContentLoaded`.
   Keep cross-file calls to clearly named global functions.
 
 ## 2. File Structure & Size Limits
@@ -49,6 +58,11 @@ monetary features have been intentionally removed and must not be reintroduced.
 | `scripts/supabase.js` | Minimal Supabase Auth email-OTP client (`sbSendOtp`/`sbVerifyOtp`) via plain `fetch`. Holds the public project URL + publishable key. Loaded before auth.js. |
 | `styles/theme.css` | The active "Paper" theme (red/yellow, graph paper, ink borders, hard shadows, Roboto). Loaded LAST; token-only re-skin. Remove its `<link>` to revert. |
 | `scripts/icons.js` | The drawn icon set (`svgIcon(name, size)`, line icons in one ink style) + school doodles (`doodleLayer('banner'|'page')`) for blank banners and About Us page banners. Loaded before auth.js. |
+| `scripts/reviews.js` | Club reviews (members only, one per member) + homepage website reviews (static seeds + `site_reviews` table) and the shared review composer. Loaded right after modal.js. |
+| `scripts/business.js` | Local-business directory: `sbRest()`, cards, business page, deal visibility (`dealVisibleToPublic` / `dealVisibleTo` / owner status chip), reviews (one per member), hours (Pacific time, overnight spans), registration (login required), `#biz=<id>` links. |
+| `scripts/messages.js` | "Reach Out" popup (public contact email + partnership request form), profiles table sync, Partnership Requests inbox + FAB badge. |
+| `scripts/partnerships.js` | Partnership lifecycle (pending → launched/declined/deleted, launched → ended; every transition is status-guarded), the "Partnership" tag and deal boxes. Requests are addressed to the club/business id, not a person. |
+| `scripts/editors.js` | Per-section owner editors (gear/pencil popups) for clubs and businesses, incl. the President-only danger zone (hand off & leave, delete club) and Delete business. |
 | `scripts/hero-motion.js` | Canvas animation behind the homepage hero (10-second seamless loop). Loaded after pages.js. |
 
 - **Maximum 1,000 lines per file module.** If a module approaches the limit,
@@ -131,6 +145,12 @@ feeds, Stripe/payout/bank fields, shoutouts, or any money movement or pricing.
 ## 5. Conventions
 
 - Escape all user-supplied strings before injecting into HTML (`escHtml`).
+  In attributes use `escAttr`; for a string argument inside an inline handler
+  (`onclick="fn('…')"`) use `jsArg` — `escAttr` alone is NOT safe there.
+- Identify people by `memberId`, never by display name (names aren't unique).
+- A failed save must be visible: surface it with `toast`, don't swallow it.
+- Private clubs are **unlisted**: hidden from Browse / Top Clubs / stats for
+  non-members (`isListedFor`), still reachable by direct link.
 - Guard DOM lookups (`el && ...`) so a missing element never throws.
 - One responsibility per function; name functions for what they render/do.
 - Keep `localStorage` keys namespaced with the `sch_` prefix.
@@ -148,15 +168,18 @@ the current architecture. Understand these before shipping to real users:
   (`ownerOf`, `canEditClub`, `isBizOwner`, officer gates) are **client-side only
   and trivially bypassable**. *Fix path:* adopt real Supabase Auth sessions, then
   rewrite RLS to `auth.uid()`-scoped policies and move authorization server-side.
-- **Business "verified" seal is self-assigned.** `submitBusiness()` writes
-  `status:'verified'` (a `// TEMP:` auto-approve). The blue "Verified Partner"
-  seal is therefore **not** a trust signal yet. *Fix path:* restore
-  `status:'pending'` and add an officer/admin approval step before a listing goes
-  public — do both together so creation isn't silently broken.
-- **No message storage (intentional).** In-app DMs/inbox were removed; the
-  platform is an initial connector. "Reach Out" opens the visitor's email client
-  via `mailto:` to the listing's **public** contact address only (never a private
-  login email). The address is format-validated before use.
+- **Listings go live immediately and the gold "Verified" seal is self-assigned.**
+  `submitBusiness()` writes `status:'verified'` (a `// TEMP:` auto-approve), and
+  the club/business `verified` flag is a one-time owner toggle. Neither is a
+  trust signal yet. *Fix path:* an admin approval step for listings + seals.
+- **Club saves are whole-blob, last-writer-wins.** Two officers editing different
+  fields of one club at the same moment can overwrite each other.
+- **Invite codes** (`VALID_INVITE_CODES` in directory.js) are visible to anyone
+  who reads the JS.
+- **No message storage (intentional).** In-app DMs were removed; the platform is
+  an initial connector. "Reach Out" opens the visitor's email client via
+  `mailto:` to the listing's **public** contact address only (never a private
+  login email). Only structured partnership requests are stored.
 - **Hardening in place:** user strings are escaped (`escHtml`/`escAttr`), query
   params are `encodeURIComponent`-ed, and contact/creation emails are
   format-validated. The publishable key is public by design (not a leak).

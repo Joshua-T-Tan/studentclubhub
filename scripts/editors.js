@@ -33,6 +33,12 @@ function _timeSlots() {
   }
   return out;
 }
+/* Map a stored time ("9:15 am", "09:00 AM") onto the nearest half-hour option so edits don't silently reset it. */
+function _snapSlot(s) {
+  var m = (typeof parseClock === 'function') ? parseClock(s) : null; if (m == null) return s;
+  m = Math.round(m / 30) * 30 % (24 * 60);
+  var h = Math.floor(m / 60), mm = m % 60; return ((h % 12) || 12) + ':' + (mm ? '30' : '00') + ' ' + (h < 12 ? 'AM' : 'PM');
+}
 function _timeOpts(sel) {
   return _timeSlots().map(function (t) { return '<option' + (t === sel ? ' selected' : '') + '>' + t + '</option>'; }).join('');
 }
@@ -59,8 +65,11 @@ function editClubBanner(id) {
     '<div class="field"><label>Banner image</label><div id="emBannerPrev"></div>' +
       '<label class="uploader"><input type="file" accept="image/*" hidden onchange="emClubBannerUpload(\'' + id + '\',event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Upload banner image</label></div>' +
     _toggleRow('emPrivate', 'Private club', 'Hidden from public Browse unless someone has your link.', c.recruitment === 'Private') +
-    _toggleRow('emPartner', 'Open to partnerships', 'Shows a blue “Open to partnerships” badge on your banner.', !!c.partnershipOpen) +
-    _verifyRowHTML(c.verified, 'verifyClub(\'' + id + '\')', 'club');
+    _toggleRow('emPartner', 'Open to partnerships', 'Shows an “Open to partnerships” badge on your banner.', !!c.partnershipOpen) +
+    (ownerOf(c) ? _verifyRowHTML(c.verified, 'verifyClub(\'' + id + '\')', 'club') +
+      '<div class="danger-zone"><div class="tr-title">President only</div>' +
+        '<button type="button" class="btn ghost" onclick="closeReach();leaveClubFlow(\'' + id + '\')">Hand off presidency &amp; leave</button>' +
+        '<button type="button" class="btn danger" onclick="closeReach();deleteClub(\'' + id + '\')">Delete club</button></div>' : '');
   _emOpen('Page settings', body, 'saveClubBanner(\'' + id + '\')');
   emPaintClubBanner(id);
 }
@@ -69,13 +78,14 @@ function _verifyRowHTML(isVerified, onclick, kind) {
   if (isVerified) return '<div class="verify-row done">' + verifiedSeal(18, '#e6b422', '#ffffff') +
     '<span>This ' + kind + ' is verified.</span></div>';
   return '<div class="verify-row"><div><div class="tr-title">Verify this ' + kind + '</div>' +
-    '<div class="form-note">Adds a blue verified seal to your page and card. One-time — it can’t be undone.</div></div>' +
+    '<div class="form-note">Adds a gold Verified seal to your page and card. One-time — it can’t be undone.</div></div>' +
     '<button type="button" class="btn ghost sm-btn" onclick="' + onclick + '">Verify</button></div>';
 }
 function verifyClub(id) {
   var c = _club(id); if (!c || !ownerOf(c) || c.verified) return;
-  openConfirm('Verify this club?', 'This adds a blue verified seal to your club’s page and card. It’s one-time and can’t be undone.', verifiedSeal(22, '#e6b422', '#ffffff'), function () {
-    c.verified = true; _clubSave(id, 'Club verified ✓');
+  openConfirm('Verify this club?', 'This adds a gold Verified seal to your club’s page and card. It’s one-time and can’t be undone.', verifiedSeal(22, '#e6b422', '#ffffff'), function () {
+    if ($('emTitle')) _applyClubBannerForm(c);   // keep any unsaved Page settings edits
+    c.verified = true; _clubSave(id, 'Club verified.');
   }, 'Verify');
 }
 function emPaintClubBanner(id) {
@@ -91,15 +101,18 @@ function emClubBannerUpload(id, e) {
   var r = new FileReader(); r.onload = function (ev) { _emClubBanner = ev.target.result; emPaintClubBanner(id); }; r.readAsDataURL(f);
 }
 function emClubBannerRemove(id) { _emClubBanner = ''; emPaintClubBanner(id); }
-function saveClubBanner(id) {
-  var c = _club(id); if (!c) return;
+function _applyClubBannerForm(c) {
   var name = _emVal('emTitle'); if (name) c.name = name;
   if ($('emCat')) c.category = $('emCat').value;
   c.recruitment = ($('emPrivate') && $('emPrivate').checked) ? 'Private' : 'Public';
   c.partnershipOpen = !!($('emPartner') && $('emPartner').checked);
   if (_emClubBanner !== undefined) c.banner = _emClubBanner;
+}
+function saveClubBanner(id) {
+  var c = _club(id); if (!c) return;
+  if (!_emVal('emTitle')) return _emErr('Club name can’t be empty.');
+  _applyClubBannerForm(c);
   _clubSave(id, 'Page settings saved.');
-  if (typeof refreshCanPartner === 'function') refreshCanPartner();
 }
 
 /* About */
@@ -120,10 +133,24 @@ function _meetRow(m) {
     '<button type="button" class="mini-x" title="Remove" onclick="this.closest(\'.meet-row\').remove()">✕</button></div>';
 }
 function emAddMeet() { var w = $('emMeets'); if (w) w.insertAdjacentHTML('beforeend', _meetRow({})); }
+/* Turn an old free-text meeting ("Mondays & Thursdays @ 3:15 PM · Rm 108") into editor rows, so opening
+   the editor never wipes it. Anything we can't parse stays in the Place box. */
+function _legacyMeetRows(c) {
+  var pairs = (typeof clubMeetingPairs === 'function') ? clubMeetingPairs(c) : [];
+  if (!pairs.length || /^(schedule )?tbd$/i.test((c.meeting || '').trim())) return [{}];
+  return pairs.map(function (p) {
+    var dm = (p.time || '').match(/(Sun|Mon|Tue|Wed|Thu|Fri|Sat)[a-z]*/i), tm = (p.time || '').match(/\d{1,2}:\d{2}\s*(AM|PM)/i);
+    var days = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
+    var day = dm ? days.find(function (d) { return d.slice(0, 3).toLowerCase() === dm[1].toLowerCase(); }) : '';
+    var clean = dm && tm && /^[A-Za-z]+\s*@?\s*\d{1,2}:\d{2}\s*(AM|PM)$/i.test((p.time || '').trim());
+    if (!clean) return { day: '', time: '', place: [p.time, p.place].filter(Boolean).join(' · ') };   // keep the original wording as-is
+    return { day: day || '', time: _to24(tm[0].toUpperCase().replace(/\s+/, ' ')), place: p.place };
+  });
+}
 function editClubDetails(id) {
   var c = _club(id); if (!c) return;
   var meetings = (c.meetings && c.meetings.length) ? c.meetings
-    : ((c.meetDay || c.meetTime || c.meetLoc) ? [{ day: c.meetDay || '', time: _to24(c.meetTime), place: c.meetLoc || '' }] : [{}]);
+    : ((c.meetDay || c.meetTime || c.meetLoc) ? [{ day: c.meetDay || '', time: _to24(c.meetTime), place: c.meetLoc || '' }] : _legacyMeetRows(c));
   var body =
     '<div class="field"><label>Meeting times</label><div id="emMeets">' + meetings.map(_meetRow).join('') + '</div>' +
       '<button class="btn ghost sm-btn" type="button" onclick="emAddMeet()" style="margin-top:4px">+ Add meeting time</button></div>' +
@@ -136,6 +163,9 @@ function editClubDetails(id) {
 }
 function saveClubDetails(id) {
   var c = _club(id); if (!c) return;
+  var email0 = _emVal('emEmail'), zip0 = _emVal('emZip');
+  if (email0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email0)) return _emErr('Enter a valid leader contact email (name@example.com).');
+  if (zip0 && !/^\d{5}$/.test(zip0)) return _emErr('Enter a 5-digit zip code.');
   var meets = Array.prototype.map.call(document.querySelectorAll('#emMeets .meet-row'), function (row) {
     return { day: row.querySelector('.mt-day').value, time: row.querySelector('.mt-time').value, place: row.querySelector('.mt-place').value.trim() };
   }).filter(function (m) { return m.day || m.time || m.place; });
@@ -211,7 +241,7 @@ function editClubRoster(id) {
   var c = getClub(id); if (!c || !ownerOf(c)) return; _rosterEditId = id;   // roster moderation stays President-only
   var roleOpts = function (cur) { return OFFICER_ROLES.map(function (r) { return '<option' + (r === cur ? ' selected' : '') + '>' + r + '</option>'; }).join(''); };
   var rows = sortedRoster(c).map(function (m) {
-    var idx = c.roster.indexOf(m), isMe = m.name === currentUser.name, lockSelf = isMe && m.role === 'President';
+    var idx = c.roster.indexOf(m), isMe = !!m.memberId && m.memberId === currentUser.memberId, lockSelf = isMe && m.role === 'President';
     var sel = lockSelf ? '<select disabled>' + roleOpts(m.role) + '</select>'
       : '<select onchange="requestRoleChange(\'' + c.id + '\',' + idx + ',this.value)">' + roleOpts(m.role) + '</select>';
     var mod = isMe ? '' : '<button class="btn ghost sm-btn" onclick="removeMember(\'' + c.id + '\',' + idx + ')">Remove</button>' +
@@ -235,7 +265,7 @@ function _bizSave(id, patch, msg) {
     if (u) { if (currentBiz && currentBiz.id === id) currentBiz = u; _bizOwned[id] = u; }
     else Object.keys(patch).forEach(function (k) { b[k] = patch[k]; });
     _bizCache = null; closeReach(); renderBusinessPage(currentBiz && currentBiz.id === id ? currentBiz : (u || b)); toast(msg || 'Saved.');
-  }).catch(function (ex) { authBusy2('emSave', false); _emErr(ex.message); });
+  }).catch(function (ex) { authBusy2('emSave', false); if ($('emErr')) _emErr(ex.message); else toast(ex.message); });
 }
 
 /* Banner gear → page settings popup (title, type, publicity, partnerships, slideshow photos) */
@@ -252,16 +282,36 @@ function editBizBanner(id) {
     '<div class="field"><label>Slideshow photos <span class="form-note">(top of your profile — up to 10)</span></label><div id="emBizPhotos" class="biz-photostrip"></div>' +
       '<label class="uploader"><input type="file" accept="image/*" multiple hidden onchange="emBizPhotosUpload(\'' + id + '\',event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Add slideshow photos</label></div>' +
     _toggleRow('emPrivate', 'Private listing', 'Hidden from public Browse unless someone has your link.', !!b.is_private) +
-    _toggleRow('emPartner', 'Open to partnerships', 'Shows a blue “Open to partnerships” badge on your banner.', !!b.partnership_open) +
-    _verifyRowHTML(b.verified, 'verifyBusiness(\'' + id + '\')', 'business');
+    _toggleRow('emPartner', 'Open to partnerships', 'Shows an “Open to partnerships” badge on your banner.', !!b.partnership_open) +
+    _verifyRowHTML(b.verified, 'verifyBusiness(\'' + id + '\')', 'business') +
+    '<div class="danger-zone"><div class="tr-title">Remove listing</div>' +
+      '<button type="button" class="btn danger" onclick="deleteBusiness(\'' + id + '\')">Delete business</button></div>';
   _emOpen('Page settings', body, 'saveBizBanner(\'' + id + '\')');
   emPaintBizBanner(id); emPaintBizPhotos(id);
 }
 function verifyBusiness(id) {
   var b = _biz(id); if (!b || !isBizOwner(b) || b.verified) return;
-  openConfirm('Verify this business?', 'This adds a blue verified seal to your business’s page and card. It’s one-time and can’t be undone.', verifiedSeal(22, '#e6b422', '#ffffff'), function () {
-    _bizSave(id, { verified: true }, 'Business verified ✓');
+  openConfirm('Verify this business?', 'This adds a gold Verified seal to your business’s page and card. It’s one-time and can’t be undone.', verifiedSeal(22, '#e6b422', '#ffffff'), function () {
+    // Save whatever is in the open Page settings form too, so verifying never discards edits.
+    var patch = $('emTitle') ? _bizBannerPatch(id) : {}; patch.verified = true;
+    _bizSave(id, patch, 'Business verified.');
   }, 'Verify');
+}
+/* Remove the listing for good (its reviews go with it; live partnerships end). */
+function deleteBusiness(id) {
+  var b = _biz(id); if (!b) return;
+  closeReach();
+  openConfirm('Delete “' + b.name + '”?', 'This permanently removes your business page, its deal, and its reviews. This can’t be undone.', svgIcon('warning', 26), function () {
+    var q = encodeURIComponent(id);
+    sbRest('partner_agreements?or=(and(a_type.eq.business,a_id.eq.' + q + '),and(b_type.eq.business,b_id.eq.' + q + '))&status=in.(pending,launched)',
+      { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'ended' }) }).catch(function () {});
+    sbRest('businesses?id=eq.' + q, { method: 'DELETE', headers: { Prefer: 'return=representation' } }).then(function (rows) {
+      if (!rows || !rows.length) throw new Error('Couldn’t delete this business. Try again.');
+      delete _bizOwned[id]; if (typeof _bizExtra !== 'undefined') delete _bizExtra[id]; _bizCache = null; currentBiz = null;
+      if (typeof loadPartnerAgreements === 'function') loadPartnerAgreements();
+      toast('Business deleted.'); openShops('my');
+    }).catch(function (ex) { toast(ex.message); });
+  }, 'Delete');
 }
 function toggleBizReviews(id) {
   var b = _biz(id); if (!b || !isBizOwner(b)) return;
@@ -280,20 +330,28 @@ function emPaintBizPhotos(id) {
   el.innerHTML = (_emBizPhotos && _emBizPhotos.length) ? _emBizPhotos.map(function (u, i) { return '<div class="biz-photo" style="background-image:url(' + escAttr(u) + ')"><button class="mini-x" onclick="emBizPhotoRemove(\'' + id + '\',' + i + ')">✕</button></div>'; }).join('') : '<p class="form-note" style="grid-column:1/-1">No slideshow photos yet.</p>';
 }
 function emBizPhotosUpload(id, e) {
-  Array.prototype.slice.call(e.target.files).forEach(function (f) {
-    if (_emBizPhotos.length >= 10) { toast('Up to 10 slideshow photos.'); return; }
-    toast('Uploading…'); sbUploadMedia(f, false).then(function (u) { if (_emBizPhotos.length < 10) { _emBizPhotos.push(u); emPaintBizPhotos(id); } }).catch(function (ex) { toast(ex.message); });
-  });
-  e.target.value = '';
+  var files = Array.prototype.slice.call(e.target.files); e.target.value = '';
+  var room = 10 - _emBizPhotos.length;
+  if (room <= 0) return toast('Up to 10 slideshow photos.');
+  if (files.length > room) toast('Only the first ' + room + ' will be added (10 max).');
+  files = files.slice(0, room); if (!files.length) return;
+  toast('Uploading ' + files.length + (files.length === 1 ? ' photo…' : ' photos…'));
+  files.reduce(function (p, f) {
+    return p.then(function () { return sbUploadMedia(f, false).then(function (u) { _emBizPhotos.push(u); emPaintBizPhotos(id); }).catch(function (ex) { toast(ex.message); }); });
+  }, Promise.resolve());
 }
 function emBizPhotoRemove(id, i) { _emBizPhotos.splice(i, 1); emPaintBizPhotos(id); }
-function saveBizBanner(id) {
-  var b = _biz(id); if (!b) return;
+function _bizBannerPatch(id) {
+  var b = _biz(id) || {};
   var patch = { name: _emVal('emTitle') || b.name, category: $('emCat') ? $('emCat').value : b.category,
     is_private: !!($('emPrivate') && $('emPrivate').checked), partnership_open: !!($('emPartner') && $('emPartner').checked), photos: _emBizPhotos || [] };
   if (_emBizBanner !== undefined) patch.banner = _emBizBanner || null;
-  _bizSave(id, patch, 'Page settings saved.');
-  if (typeof refreshCanPartner === 'function') setTimeout(refreshCanPartner, 400);
+  return patch;
+}
+function saveBizBanner(id) {
+  if (!_biz(id)) return;
+  if (!_emVal('emTitle')) return _emErr('Business name can’t be empty.');
+  _bizSave(id, _bizBannerPatch(id), 'Page settings saved.');
 }
 
 /* Deal / perk */
@@ -313,6 +371,9 @@ function editBizPerk(id) {
   _emOpen('Edit deal', body, 'saveBizPerk(\'' + id + '\')');
 }
 function saveBizPerk(id) {
+  if (!_emVal('emPerk')) return _emErr('Describe the deal, or use the trash icon to remove it.');
+  var s = _emVal('emStart'), en = _emVal('emEnd');
+  if (s && en && en < s) return _emErr('The end date can’t be before the start date.');
   _bizSave(id, {
     perk_type: _emVal('emPerkType') || 'discount', perk_audience: _emVal('emAud') || 'student',
     perk_description: _emVal('emPerk'), redemption_instructions: _emVal('emRedeem'),
@@ -335,14 +396,17 @@ function editBizContact(id) {
     '<div class="two-col"><div class="field"><label>City</label><input id="emCity" type="text" value="' + escAttr(b.city || '') + '"></div>' +
       '<div class="field"><label>Zip</label><input id="emZip" type="text" value="' + escAttr(b.zip || '') + '"></div></div>' +
     '<div class="two-col"><div class="field"><label>Phone</label><input id="emPhone" type="tel" value="' + escAttr(b.phone || '') + '"></div>' +
-      '<div class="field"><label>Website</label><input id="emWeb" type="text" value="' + escAttr(b.website || '') + '"></div></div>';
+      '<div class="field"><label>Website</label><input id="emWeb" type="text" value="' + escAttr(b.website || '') + '"></div></div>' +
+    '<div class="field"><label>Public contact email <span class="form-note">(used for Reach Out)</span></label><input id="emCEmail" type="email" value="' + escAttr(b.contact_email || '') + '"></div>';
   _emOpen('Edit Contact & Location', body, 'saveBizContact(\'' + id + '\')');
 }
 function saveBizContact(id) {
   if (!_emVal('emCity') || !_emVal('emZip')) return _emErr('City and zip are required.');
-  var web = _emVal('emWeb');
+  if (!_emVal('emPhone')) return _emErr('A phone number is required.');
+  var web = _emVal('emWeb'), ce = _emVal('emCEmail').toLowerCase();
   if (web && !(typeof isValidLink === 'function' ? isValidLink(web) : /\./.test(web))) return _emErr('Please enter a valid website URL (e.g. example.com) or leave it blank.');
-  _bizSave(id, { address: _emVal('emAddr'), city: _emVal('emCity'), zip: _emVal('emZip'), phone: _emVal('emPhone'), website: web || null }, 'Contact updated.');
+  if (!(typeof isValidEmail === 'function' ? isValidEmail(ce) : /@/.test(ce))) return _emErr('Enter a valid public contact email.');
+  _bizSave(id, { address: _emVal('emAddr'), city: _emVal('emCity'), zip: _emVal('emZip'), phone: _emVal('emPhone'), website: web || null, contact_email: ce }, 'Contact updated.');
 }
 /* Delete the whole deal (with confirm) */
 function deleteBizPerk(id) {
@@ -358,14 +422,14 @@ function editBizHours(id) {
   var days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   var rows = days.map(function (d) {
     var val = (h[d] || '').trim(), closed = !val || /closed/i.test(val);
-    var p = val.split('-'), o = (p[0] || '').trim(), c = (p[1] || '').trim();
+    var p = val.split('-'), o = _snapSlot((p[0] || '').trim()), c = _snapSlot((p[1] || '').trim());
     return '<div class="hours-edit2"><span class="hd">' + d + '</span>' +
       '<label class="hcl-lbl"><input type="checkbox" class="hcl" data-d="' + d + '"' + (closed ? ' checked' : '') + ' onchange="emHoursToggle(this)"> Closed</label>' +
       '<select class="hopen" data-d="' + d + '"' + (closed ? ' disabled' : '') + '>' + _timeOpts(o || '9:00 AM') + '</select>' +
       '<span class="hto">to</span>' +
       '<select class="hclose" data-d="' + d + '"' + (closed ? ' disabled' : '') + '>' + _timeOpts(c || '5:00 PM') + '</select></div>';
   }).join('');
-  _emOpen('Edit Hours', '<div class="hours-editor2">' + rows + '</div>', 'saveBizHours(\'' + id + '\')');
+  _emOpen('Edit Hours', '<div class="hours-editor2">' + rows + '</div><p class="form-note" style="margin-top:8px">Times are Pacific. A closing time earlier than the opening time means you’re open past midnight.</p>', 'saveBizHours(\'' + id + '\')');
 }
 function emHoursToggle(cb) {
   var d = cb.getAttribute('data-d'), closed = cb.checked;
@@ -380,6 +444,8 @@ function saveBizHours(id) {
     var o = document.querySelector('.hopen[data-d="' + d + '"]'), c = document.querySelector('.hclose[data-d="' + d + '"]');
     if (o && c) hours[d] = o.value + ' - ' + c.value;
   });
+  var bad = days.filter(function (d) { return hours[d] && hours[d] !== 'Closed' && hours[d].split(' - ')[0] === hours[d].split(' - ')[1]; });
+  if (bad.length) return _emErr(bad.join(', ') + ': opening and closing time are the same. Pick different times, or mark the day Closed.');
   _bizSave(id, { hours: hours }, 'Hours updated.');
 }
 
@@ -403,19 +469,31 @@ function editBizGallery(id) {
   _emOpen('Edit Gallery', '<div class="biz-photostrip" style="margin-bottom:12px">' + cells + '</div>' +
     '<label class="uploader"><input type="file" accept="image/*,video/mp4,video/webm" multiple hidden onchange="emBizGalleryUpload(\'' + id + '\',event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Add photos &amp; videos</label>', '');
 }
+/* Save a new gallery list, then refresh both the editor and the page behind it. */
+function _bizSaveGallery(id, g) {
+  var b = _biz(id); if (!b) return Promise.resolve();
+  return sbUpdateBusiness(id, { gallery: g }).then(function (rows) {
+    var up = (rows && rows[0]) || null;
+    if (up) { if (currentBiz && currentBiz.id === id) currentBiz = up; _bizOwned[id] = up; if (typeof _rememberBiz === 'function') _rememberBiz(up); } else b.gallery = g;
+    _bizCache = null; editBizGallery(id);
+    if (currentBiz && currentBiz.id === id) renderBusinessPage(currentBiz);
+  });
+}
 function emBizGalleryUpload(id, e) {
   var b = _biz(id); if (!b) return;
-  Array.prototype.slice.call(e.target.files).forEach(function (f) {
-    toast('Uploading…');
-    sbUploadMedia(f, true).then(function (u) {
-      var g = (b.gallery || []).concat([u]);
-      return sbUpdateBusiness(id, { gallery: g }).then(function (rows) { var up = (rows && rows[0]) || null; if (up) { if (currentBiz && currentBiz.id === id) currentBiz = up; _bizOwned[id] = up; } else b.gallery = g; _bizCache = null; editBizGallery(id); });
-    }).catch(function (ex) { toast(ex.message); });
-  });
-  e.target.value = '';
+  var files = Array.prototype.slice.call(e.target.files); e.target.value = ''; if (!files.length) return;
+  toast('Uploading ' + files.length + (files.length === 1 ? ' file…' : ' files…'));
+  // Upload one at a time, then save the whole batch once — parallel saves used to overwrite each other.
+  var added = [];
+  files.reduce(function (p, f) {
+    return p.then(function () { return sbUploadMedia(f, true).then(function (u) { added.push(u); }).catch(function (ex) { toast(ex.message); }); });
+  }, Promise.resolve()).then(function () {
+    var cur = _biz(id); if (!added.length || !cur) return;
+    return _bizSaveGallery(id, (cur.gallery || []).concat(added)).then(function () { toast('Gallery updated.'); });
+  }).catch(function (ex) { toast(ex.message); });
 }
 function emBizGalleryRemove(id, i) {
   var b = _biz(id); if (!b) return;
   var g = (b.gallery || []).slice(); g.splice(i, 1);
-  sbUpdateBusiness(id, { gallery: g }).then(function (rows) { var up = (rows && rows[0]) || null; if (up) { if (currentBiz && currentBiz.id === id) currentBiz = up; _bizOwned[id] = up; } else b.gallery = g; _bizCache = null; editBizGallery(id); }).catch(function (ex) { toast(ex.message); });
+  _bizSaveGallery(id, g).catch(function (ex) { toast(ex.message); });
 }

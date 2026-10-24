@@ -6,7 +6,6 @@
    ============================================================ */
 
 var currentClubId = null;
-var currentManageClubId = null;   // set while the Manage tab is active (for link add/remove auto-save)
 var currentClubTab = 'about';
 var clubReturnView = 'browse';
 
@@ -100,7 +99,8 @@ function canEditClub(club) { return ownerOf(club) || (isClubMember(club) && isOf
 function isClubMember(club) { return ownerOf(club) || (currentUser && club && (currentUser.joined.indexOf(club.id) !== -1 || !!myRosterEntry(club))); }
 function myRosterEntry(club) {
   if (!currentUser || !club.roster) return null;
-  return club.roster.find(function (m) { return (m.memberId && m.memberId === currentUser.memberId) || m.name === currentUser.name; }) || null;
+  // Match on member ID only — two people can share a display name.
+  return club.roster.find(function (m) { return m.memberId && m.memberId === currentUser.memberId; }) || null;
 }
 function roleInClub(club) {
   if (ownerOf(club)) { var e = myRosterEntry(club); return (e && e.role) || 'President'; }
@@ -149,7 +149,7 @@ function startClubMemberPoll(clubId) {
     // don't re-render out from under someone typing in the club view (e.g. chat, an inline editor)
     var ae = document.activeElement;
     if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA') && ae.closest && ae.closest('#view-club')) return;
-    if (!$('bizOverlay').classList.contains('hidden') || !$('agreementOverlay').classList.contains('hidden')) return;   // an editor/modal is open
+    if (!$('bizOverlay').classList.contains('hidden')) return;   // an editor/modal is open
     _syncOpenClub(clubId);
   }, 5000);
 }
@@ -157,8 +157,6 @@ function openClubModal(id) { openClub(id); }             // backward-compatible 
 function closeClubModal() { backFromClub(); }
 function backFromClub() { showView(clubReturnView || 'browse'); }
 function switchClubTab(tab) { currentClubTab = tab; renderClub(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-/* Banner gear → open the club's Page Settings (owner only). */
-function openClubManage(id) { var c = getClub(id); if (!c || !ownerOf(c)) return; currentClubTab = 'manage'; renderClub(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 function refreshClubModalState() { if (currentClubId && !$('view-club').classList.contains('hidden')) renderClub(); }
 
 function currentViewName() { return VIEWS.find(function (v) { return !$('view-' + v).classList.contains('hidden'); }) || 'main'; }
@@ -168,17 +166,6 @@ function renderClub() {
   var owner = ownerOf(club), role = roleInClub(club), member = isClubMember(club);
   var relBadge = owner ? renderBadge(t('you_pres'), 'join') : (member ? renderBadge('You: ' + role, 'join') : '');
   var tabs = '';                                           // About/Manage tabs removed — editing is inline (gear/pens)
-  var inManage = (currentClubTab === 'manage' && owner);
-  currentManageClubId = inManage ? club.id : null;
-
-  if (inManage) {
-    // Page Settings — a single, width-constrained card reached from the banner gear.
-    $('clubBody').innerHTML = '<div class="biz-wrap" style="max-width:900px">' +
-      '<button class="back-pill" onclick="switchClubTab(\'about\')">← ' + escHtml(t('back_to_profile')) + '</button>' +
-      '<div class="club-page club-manage"><div class="settings-page-head"><span class="sp-gear">' + ICON_GEAR + '</span><h2>' + escHtml(t('page_settings')) + '</h2></div>' +
-        '<div class="club-content">' + renderManageTab(club) + '</div></div></div>';
-    return;
-  }
   // About = full-bleed Yelp-style slideshow hero, then wide content + full-width reviews.
   var slides = clubSlides(club);
   $('clubBody').innerHTML =
@@ -206,7 +193,7 @@ function _syncClubSlides(n) {
   else if (_clubSlideTimer) { clearInterval(_clubSlideTimer); _clubSlideTimer = null; }
 }
 function clubSlides(club) {
-  var g = (club.gallery || []).filter(Boolean);
+  var g = (club.gallery || []).filter(function (u) { return u && !isVideoSrc(u); });   // videos can't be a background image
   if (club.banner) g = [club.banner].concat(g);
   if (g.length) return g.map(function (u) { return { img: u }; });
   return [{ paper: true }];   // nothing uploaded → a blank sheet of paper with school doodles
@@ -234,9 +221,9 @@ function clubHeroSlideshow(club, relBadge, slides) {
     bannerTR +
     (slides.length > 1 ? '<button class="lb-btn biz-sl-prev" onclick="clubSlideStep(-1)">‹</button><button class="lb-btn biz-sl-next" onclick="clubSlideStep(1)">›</button>' : '') +
     '<div class="biz-hero-info container"><div class="name-row"><h1>' + escHtml(club.name) + '</h1>' +
-      (club.verified ? '<span class="name-verified-ico" title="Verified">' + verifiedSeal(20, '#ffffff', '#b8860b') + '</span>' : '') +
+      (club.verified ? '<span class="name-verified-ico" title="Verified">' + (paper ? verifiedSeal(20, '#e6b422', '#ffffff') : verifiedSeal(20, '#ffffff', '#b8860b')) + '</span>' : '') +
       '<button class="name-ico share" title="' + escAttr(t('share_club')) + '" onclick="openShare(\'' + club.id + '\')">' + ICON_SHARE + '</button>' +
-      (ownerOf(club) ? '' : '<button class="name-ico flag" title="Report this club" onclick="openReport(\'club\',\'' + club.id + '\',\'' + escAttr(club.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>') + '</div>' +
+      (ownerOf(club) ? '' : '<button class="name-ico flag" title="Report this club" onclick="openReport(\'club\',\'' + club.id + '\',\'' + jsArg(club.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>') + '</div>' +
       '<div class="biz-tagline">' + chips + '</div>' +
       '<div class="biz-tagline biz-meta-row" style="margin-top:6px">' + meta + '</div></div></div>';
 }
@@ -389,7 +376,7 @@ function rosterHTML(club) {
     var badge = isOfficerRole(m.role) ? '<span class="badge">' + escHtml(m.role) + '</span>' : '<span class="badge gray">Member</span>';
     var q = (m.name + ' ' + (m.role || '')).toLowerCase();
     return '<button class="leader-row roster-item" data-q="' + escAttr(q) + '"' +
-      ' onclick="openProfile(\'' + escAttr(m.name) + '\')">' + avatarHTML(m.name, 'sm') +
+      ' onclick="openProfile(\'' + jsArg(m.name) + '\')">' + avatarHTML(m.name, 'sm') +
       '<div class="who"><div class="n">' + escHtml(m.name) + '</div></div>' + badge + '</button>';
   }).join('');
   return title + search + '<div id="rosterList" class="roster-scroll">' + rows + '</div>';
@@ -432,7 +419,7 @@ function openShare(clubId) {
     '<div class="field"><label>' + t('share_direct') + '</label>' +
       '<div class="share-link-row"><input id="shareLinkInput" type="text" readonly value="' + escAttr(link) + '">' +
       '<button class="btn primary sm-btn" onclick="copyShareLink()">' + t('copy_link') + '</button></div></div>' +
-    '<button class="btn blue block" style="margin-bottom:14px" onclick="nativeShare(\'' + escAttr(link) + '\',\'' + escAttr(club.name) + '\')">↗ Share via…</button>' +
+    '<button class="btn blue block" style="margin-bottom:14px" onclick="nativeShare(\'' + jsArg(link) + '\',\'' + jsArg(club.name) + '\')">↗ Share via…</button>' +
     '<div class="qr-wrap"><div class="qr-box">' + (qr || '<p class="form-note">This link is too long for a QR code, so use the link above instead.</p>') + '</div>' +
       '<p class="form-note" style="text-align:center;margin-top:6px">' + t('share_qr') + '</p></div>';
   openOverlay('shareOverlay');
@@ -514,11 +501,16 @@ function postChat(clubId) {
   if (input) input.value = '';
   var row = { club_id: clubId, sender_id: currentUser.memberId, sender_name: currentUser.name, text: text, announce: !!announce };
   // optimistic append
-  (_clubChat[clubId] = _clubChat[clubId] || []).push({ id: 'tmp', who: currentUser.name, memberId: currentUser.memberId, text: text, ts: Date.now(), announce: !!announce });
+  var tmp = { id: 'tmp', who: currentUser.name, memberId: currentUser.memberId, text: text, ts: Date.now(), announce: !!announce };
+  (_clubChat[clubId] = _clubChat[clubId] || []).push(tmp);
   renderClub(); var feed0 = document.querySelector('.chat-feed'); if (feed0) feed0.scrollTop = feed0.scrollHeight;
   sbRest('club_chat', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(row) })
     .then(function () { loadClubChat(clubId, function () { renderClub(); var f = document.querySelector('.chat-feed'); if (f) f.scrollTop = f.scrollHeight; }); })
-    .catch(function (ex) { toast(ex.message); });
+    .catch(function (ex) {
+      var list = _clubChat[clubId] || [], k = list.indexOf(tmp); if (k > -1) list.splice(k, 1);
+      renderClub(); var inp = $('chatInput'); if (inp && !inp.value) inp.value = text;   // give the text back so it isn't lost
+      toast('Message not sent: ' + ex.message);
+    });
 }
 function _findChatMsg(clubId, id) { return (_clubChat[clubId] || []).find(function (m) { return m.id === id; }); }
 function editChat(clubId, id) {
@@ -547,167 +539,12 @@ function emailForMember(club, m) {
   if (m.memberId) { try { var u = Object.values(loadUsers()).find(function (x) { return x.memberId === m.memberId; }); if (u) return u.email; } catch (e) {} }
   return '';
 }
-function renderManageTab(club) {
-  var roleOpts = function (cur) { return OFFICER_ROLES.map(function (r) { return '<option' + (r === cur ? ' selected' : '') + '>' + r + '</option>'; }).join(''); };
-  var otherCount = club.roster.filter(function (x) { return x.name !== currentUser.name; }).length;
-  var roster = sortedRoster(club).map(function (m) {
-    var idx = club.roster.indexOf(m);
-    var isMe = m.name === currentUser.name;
-    var lockSelf = isMe && m.role === 'President';        // a President can't directly change their own role
-    var q = (m.name + ' ' + emailForMember(club, m)).toLowerCase();
-    var sel = lockSelf
-      ? '<select disabled title="A club must always have a President">' + roleOpts(m.role) + '</select>'
-      : '<select onchange="requestRoleChange(\'' + club.id + '\',' + idx + ',this.value)">' + roleOpts(m.role) + '</select>';
-    var modActions = isMe ? '' :
-      '<button class="btn ghost sm-btn" onclick="removeMember(\'' + club.id + '\',' + idx + ')">' + t('mod_remove_label') + '</button>' +
-      '<button class="btn danger sm-btn" onclick="banMember(\'' + club.id + '\',' + idx + ')">' + t('mod_ban_label') + '</button>';
-    var item = '<div class="roster-item" data-q="' + escAttr(q) + '"><div class="roster-row">' + avatarHTML(m.name, 'sm') +
-      '<div class="who"><div class="n">' + escHtml(m.name) + (m.role === 'President' ? ' <span class="badge">President</span>' : '') + '</div></div>' +
-      sel + modActions + '</div>';
-    // Sole-President inline notice (the only role note we keep)
-    if (lockSelf && otherCount === 0) {
-      item += '<div class="role-lock">You cannot change your role because a club must have a President, and there are no other members to transfer leadership to.</div>';
-    }
-    return item + '</div>';
-  }).join('') || '<p class="form-note">No members yet.</p>';
-
-  var bannerBlock = (club.banner
-    ? '<div class="banner-preview has-img"><img src="' + club.banner + '" alt="banner"><button class="mini-x" title="' + escAttr(t('mg_remove_banner')) + '" onclick="mgRemoveBanner(\'' + club.id + '\')">✕</button></div>'
-    : '') +
-    '<label class="uploader"><input type="file" accept="image/*" hidden onchange="mgBannerUpload(\'' + club.id + '\',event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> ' + escHtml(t('mg_banner_drop')) + '</label>';
-  var linkRows = ((club.socials && club.socials.length) ? club.socials : ['']).map(linkInputRow).join('');
-
-  return (
-    // 1) Title, Description & Details
-    '<div class="section-title">' + t('mg_details') + '</div>' +
-    '<div class="field"><label>' + t('mg_title') + '</label><input id="mgTitle" type="text" value="' + escAttr(club.name) + '" oninput="mgAutoSave(\'' + club.id + '\')"></div>' +
-    '<div class="field"><label>' + t('mg_desc') + '</label><textarea id="mgDesc" oninput="mgAutoSave(\'' + club.id + '\')">' + escHtml(club.desc) + '</textarea></div>' +
-    '<div class="field"><label>' + t('mg_meeting') + '</label><input id="mgMeeting" type="text" value="' + escAttr(club.meeting || '') + '" oninput="mgAutoSave(\'' + club.id + '\')"></div>' +
-    '<div class="field"><label>' + t('mg_tags') + '</label><input id="mgTags" type="text" placeholder="' + escAttr(t('mg_tags_ph')) + '" value="' + escAttr((club.tags || []).join(', ')) + '" oninput="mgAutoSave(\'' + club.id + '\')"><div class="form-note">' + t('mg_tags_note') + '</div></div>' +
-    // 2) Banners, Gallery & Social Links
-    '<div class="section-title">' + t('mg_media_h') + '</div>' +
-    '<div class="field"><label>' + t('mg_banner') + '</label>' + bannerBlock + '</div>' +
-    '<div class="field"><label>' + t('mg_gallery') + '</label><label class="btn ghost sm-btn">' + t('mg_upload') + '<input type="file" accept="image/*,video/mp4,video/webm,video/ogg" multiple hidden onchange="mgAddGallery(\'' + club.id + '\',event)"></label>' +
-      '<div class="gallery" style="margin-top:10px">' + (club.gallery || []).map(function (src, i) {
-        var media = isVideoSrc(src) ? '<video src="' + src + '" muted></video>' : '<img src="' + src + '" alt="">';
-        return '<div class="thumb">' + media + '<button class="mini-x" onclick="mgRemoveGallery(\'' + club.id + '\',' + i + ')">✕</button></div>';
-      }).join('') + '</div></div>' +
-    '<div class="field"><label>' + t('mg_social') + '</label><div id="mgLinks" oninput="mgAutoSave(\'' + club.id + '\')">' + linkRows + '</div>' +
-      '<button class="btn ghost sm-btn" type="button" onclick="addLinkRow()">' + t('mg_addlink') + '</button></div>' +
-    // 3) Chat permissions
-    '<div class="section-title">' + t('mg_chat_h') + '</div>' +
-    '<div class="toggle-row"><div><div class="tr-title">' + t('mg_chat_allow') + '</div><div class="form-note">' + t('mg_chat_note') + '</div></div>' +
-      '<button id="mgChatSwitch" class="switch ' + (club.chatAccess !== 'officers' ? 'on' : '') + '" onclick="mgToggleChat(\'' + club.id + '\')"><span></span></button></div>' +
-    // 4) Members & Roles (with search)
-    '<div class="section-title">' + t('mg_members_h') + '</div>' +
-    '<div class="search" style="margin-bottom:12px"><span class="ico">⌕</span><input id="mgMemberSearch" type="text" placeholder="' + escAttr(t('mg_member_search_ph')) + '" oninput="filterMembers()"></div>' +
-    '<div class="roster" id="mgRoster">' + roster + '</div>' +
-    // Banned Users
-    bannedSectionHTML(club) +
-    // Club Privacy Status toggle (below Banned Users, above Save Changes)
-    '<div class="section-title">' + t('mg_privacy_h') + '</div>' +
-    '<div class="toggle-row"><div><div class="tr-title">' + t('mg_privacy_title') + '</div>' +
-      '<div class="form-note">' + t('mg_privacy_desc') + '</div></div>' +
-      '<button id="mgPrivacySwitch" class="switch ' + (club.recruitment === 'Private' ? 'on' : '') + '" onclick="mgTogglePrivacy(\'' + club.id + '\')"><span></span></button></div>' +
-    // Open to partnerships
-    '<div class="section-title">' + t('mg_partner_h') + '</div>' +
-    '<div class="toggle-row"><div><div class="tr-title">' + t('mg_partner_title') + '</div>' +
-      '<div class="form-note">' + t('mg_partner_desc') + '</div></div>' +
-      '<button id="mgPartnerSwitch" class="switch ' + (club.partnershipOpen ? 'on' : '') + '" onclick="mgTogglePartner(\'' + club.id + '\')"><span></span></button></div>' +
-    // Changes auto-save as you type/toggle — a small status line replaces the manual button.
-    '<p class="form-note mg-autosave" style="text-align:center;margin-top:14px">' + t('mg_autosaved') + '</p>' +
-    // Danger Zone
-    '<div class="section-title">' + t('mg_danger') + '</div>' +
-    '<div class="danger-zone"><button class="btn ghost" onclick="leaveClubFlow(\'' + club.id + '\')">' + t('mg_leave') + '</button>' +
-      '<button class="btn danger" onclick="deleteClub(\'' + club.id + '\')">' + t('mg_delete') + '</button></div>'
-  );
-}
-function filterMembers() {
-  var q = ($('mgMemberSearch') && $('mgMemberSearch').value || '').trim().toLowerCase();
-  document.querySelectorAll('#mgRoster .roster-item').forEach(function (el) {
-    el.style.display = (!q || (el.getAttribute('data-q') || '').indexOf(q) !== -1) ? '' : 'none';
-  });
-}
 function linkInputRow(url) {
   var bad = (url && !isValidLink(url)) ? ' invalid' : '';
   return '<div class="link-row"><input class="mg-link' + bad + '" type="text" placeholder="Link (https://…)" value="' + escAttr(url || '') + '" oninput="validateLinkInput(this)">' +
-    '<button class="mini-x-inline" type="button" title="Remove" onclick="this.parentElement.remove(); mgLinksChanged()">✕</button></div>';
+    '<button class="mini-x-inline" type="button" title="Remove" onclick="this.parentElement.remove()">✕</button></div>';
 }
-function addLinkRow() {
-  var w = $('mgLinks'); if (!w) return;
-  if (w.querySelectorAll('.mg-link').length >= 8) { toast(t('links_max')); return; }
-  w.insertAdjacentHTML('beforeend', linkInputRow('')); mgLinksChanged();
-}
-function mgLinksChanged() { if (currentManageClubId) mgAutoSave(currentManageClubId, true); }
-
-/* ---- Auto-save Manage inputs (debounced, no full re-render so focus/scroll are kept) ---- */
-var _mgSaveTimer = null;
-function mgAutoSave(clubId, immediate) {
-  clearTimeout(_mgSaveTimer);
-  var run = function () {
-    var club = getClub(clubId); if (!club || !ownerOf(club)) return;
-    if ($('mgTitle')) club.name = $('mgTitle').value.trim() || club.name;
-    if ($('mgDesc')) club.desc = $('mgDesc').value.trim() || club.desc;
-    if ($('mgMeeting')) club.meeting = $('mgMeeting').value.trim() || club.meeting;
-    if ($('mgTags')) club.tags = $('mgTags').value.split(',').map(function (x) { return x.trim(); }).filter(Boolean).slice(0, 12);
-    // Only genuine links persist; flag (but don't drop the row for) anything that isn't a URL. Cap at 8.
-    document.querySelectorAll('#mgLinks .mg-link').forEach(function (el) { validateLinkInput(el); });
-    club.socials = Array.prototype.map.call(document.querySelectorAll('#mgLinks .mg-link'), function (el) { return el.value.trim(); }).filter(isValidLink).slice(0, 8);
-    saveUserClubs(); applyFilters(); renderTopClubs();      // refresh cards, but DON'T renderClub (keeps focus)
-    var s = document.querySelector('.mg-autosave'); if (s) { s.textContent = t('mg_saved_note'); setTimeout(function () { if (document.querySelector('.mg-autosave')) document.querySelector('.mg-autosave').textContent = t('mg_autosaved'); }, 1200); }
-  };
-  if (immediate) run(); else _mgSaveTimer = setTimeout(run, 400);
-}
-/* Public/Private toggle - persists immediately (keeps scroll position) */
-function mgTogglePrivacy(clubId) {
-  var c = getClub(clubId); if (!c || !ownerOf(c)) return;
-  c.recruitment = (c.recruitment === 'Private') ? 'Public' : 'Private';
-  saveUserClubs(); applyFilters(); renderTopClubs();
-  var el = $('mgPrivacySwitch'); if (el) el.classList.toggle('on', c.recruitment === 'Private');
-  toast(c.recruitment === 'Private' ? 'Club is now Private.' : 'Club is now Public.');
-}
-/* Open-to-partnerships toggle — persists immediately (keeps scroll position) */
-function mgTogglePartner(clubId) {
-  var c = getClub(clubId); if (!c || !ownerOf(c)) return;
-  c.partnershipOpen = !c.partnershipOpen;
-  saveUserClubs(c); applyFilters(); renderTopClubs();
-  if (typeof refreshCanPartner === 'function') refreshCanPartner();
-  var el = $('mgPartnerSwitch'); if (el) el.classList.toggle('on', !!c.partnershipOpen);
-  toast(c.partnershipOpen ? 'Now open to partnerships.' : 'No longer shown as open to partnerships.');
-}
-/* Chat permission toggle — persists immediately without a full re-render (keeps scroll position) */
-function mgToggleChat(clubId) {
-  var c = getClub(clubId); if (!c || !ownerOf(c)) return;
-  c.chatAccess = (c.chatAccess === 'officers') ? 'all' : 'officers';
-  saveUserClubs();
-  var el = $('mgChatSwitch'); if (el) el.classList.toggle('on', c.chatAccess !== 'officers');
-}
-function mgBannerUpload(clubId, e) {
-  var club = getClub(clubId); if (!club) return;
-  var f = e.target.files[0]; if (!f) return;
-  if (!validateMediaFile(f)) { e.target.value = ''; return; }
-  var r = new FileReader(); r.onload = function (ev) { var prev = club.banner; club.banner = ev.target.result; if (!saveUserClubs()) { club.banner = prev; } applyFilters(); renderTopClubs(); renderClub(); }; r.readAsDataURL(f);
-  e.target.value = '';
-}
-function mgRemoveBanner(clubId) { var c = getClub(clubId); if (c) { c.banner = ''; saveUserClubs(); applyFilters(); renderTopClubs(); renderClub(); } }
-function mgAddGallery(clubId, e) {
-  var club = getClub(clubId); if (!club) return;
-  Array.prototype.forEach.call(e.target.files, function (f) {
-    if (!validateMediaFile(f)) return;
-    var r = new FileReader();
-    r.onload = function (ev) {
-      club.gallery = club.gallery || [];
-      club.gallery.push(ev.target.result);
-      if (!saveUserClubs()) { club.gallery.pop(); }   // roll back if it didn't fit in local storage
-      renderClub();
-    };
-    r.readAsDataURL(f);
-  });
-  e.target.value = '';
-}
-function mgRemoveGallery(clubId, i) { var c = getClub(clubId); if (c) { c.gallery.splice(i, 1); saveUserClubs(); renderClub(); } }
-
-/* Role change with confirmation + President-always-exists rule + presidency swap */
+/* Roster moderation (owner, from the Members & roles editor) */
 function requestRoleChange(clubId, idx, newRole) {
   var club = getClub(clubId); if (!club) return;
   var m = club.roster[idx]; if (!m || m.role === newRole) return;
@@ -806,13 +643,13 @@ function bannedSectionHTML(club) {
 function unbanMember(clubId, i) {
   var c = getClub(clubId); if (!c || !c.banned_members || i < 0 || i >= c.banned_members.length) return;
   var key = c.banned_members[i]; c.banned_members.splice(i, 1);
-  saveUserClubs(); renderClub(); toast(bannedLabel(key).split(' · ')[0] + ' has been unbanned.');
+  saveUserClubs(c); renderClub(); if (typeof _reopenRoster === 'function') _reopenRoster(); toast(bannedLabel(key).split(' · ')[0] + ' has been unbanned.');
 }
 /* Owner leaving must first designate a new President */
 function leaveClubFlow(clubId) {
   var club = getClub(clubId); if (!club) return;
   if (!ownerOf(club)) { return toggleJoin(clubId); }
-  var others = sortedRoster(club).filter(function (m) { return m.name !== currentUser.name; });
+  var others = sortedRoster(club).filter(function (m) { return m.memberId && m.memberId !== currentUser.memberId; });
   if (!others.length) { return toast('You’re the only member. Use “Delete club” instead.'); }
   openTransfer(clubId);
 }
@@ -820,7 +657,7 @@ function leaveClubFlow(clubId) {
 /* ---------- Transfer ownership / delete ---------- */
 function openTransfer(clubId) {
   var club = getClub(clubId); if (!club || !ownerOf(club)) return;
-  var candidates = sortedRoster(club).filter(function (m) { return m.name !== currentUser.name; });
+  var candidates = sortedRoster(club).filter(function (m) { return m.memberId && m.memberId !== currentUser.memberId; });
   if (!candidates.length) {
     $('transferBody').innerHTML = '<h3 style="font-size:1.15rem;font-weight:800;margin-bottom:8px">You’re the only member</h3>' +
       '<p class="form-note" style="margin-bottom:16px">A club must always have a President, so you can’t leave as the sole member. Use “Delete club” instead.</p>' +
@@ -828,7 +665,7 @@ function openTransfer(clubId) {
     openOverlay('transferOverlay'); return;
   }
   var opts = candidates.map(function (m, i) {
-    return '<label class="pick-row"><input type="radio" name="xfer" value="' + escAttr(m.name) + '"' + (i === 0 ? ' checked' : '') + '> ' +
+    return '<label class="pick-row"><input type="radio" name="xfer" value="' + escAttr(m.memberId) + '" data-name="' + escAttr(m.name) + '"' + (i === 0 ? ' checked' : '') + '> ' +
       escHtml(m.name) + ' <span class="badge">' + escHtml(m.role) + '</span></label>';
   }).join('');
   $('transferBody').innerHTML = '<h3 style="font-size:1.15rem;font-weight:800;margin-bottom:6px">Choose a new President</h3>' +
@@ -841,12 +678,14 @@ function openTransfer(clubId) {
 function closeTransfer() { closeOverlay('transferOverlay'); }
 function confirmTransfer(clubId) {
   var picked = document.querySelector('input[name="xfer"]:checked'); if (!picked) return;
-  var name = picked.value;
+  var pickedId = picked.value, name = picked.getAttribute('data-name') || '';
   closeTransfer();
   openConfirm('Transfer to ' + name + '?', 'They become President and you’ll leave the club. This can’t be undone here.', svgIcon('crown', 26), function () {
     var club = getClub(clubId); if (!club) return;
-    var newOwner = club.roster.find(function (m) { return m.name === name; }); if (!newOwner) return;
-    newOwner.role = 'President'; club.verifiedOwner = newOwner.memberId || null;
+    var newOwner = club.roster.find(function (m) { return m.memberId === pickedId; }); if (!newOwner) return;
+    newOwner.role = 'President'; club.verifiedOwner = newOwner.memberId;
+    (club.leaders || []).forEach(function (l) { if (l.role === 'President') { l.name = newOwner.name; l.email = club.email || l.email; } });
+    if (typeof postSystemChat === 'function') postSystemChat(clubId, newOwner.name + ' is now President; ' + currentUser.name + ' left the club.');
     // Old owner leaves
     var meIdx = club.roster.indexOf(myRosterEntry(club)); if (meIdx > -1) club.roster.splice(meIdx, 1);
     var j = currentUser.joined.indexOf(clubId); if (j > -1) currentUser.joined.splice(j, 1);
@@ -863,7 +702,14 @@ function deleteClub(clubId) {
   openConfirm('Delete “' + club.name + '”?', 'This permanently removes the club and its listing. This cannot be undone.', svgIcon('warning', 26), function () {
     var i = CLUBS.indexOf(club); if (i > -1) CLUBS.splice(i, 1);
     var j = currentUser.joined.indexOf(clubId); if (j > -1) currentUser.joined.splice(j, 1);
-    persistUser(); saveUserClubs(); if (typeof sbDeleteClub === 'function') sbDeleteClub(clubId); buildSchoolFilter(); renderStats(); renderTopClubs();
+    persistUser(); saveUserClubs(); if (typeof sbDeleteClub === 'function') sbDeleteClub(clubId);
+    if (typeof sbRest === 'function') {
+      var q = encodeURIComponent(clubId), del = { method: 'DELETE', headers: { Prefer: 'return=minimal' } };
+      ['club_members', 'club_chat', 'club_reviews'].forEach(function (tb) { sbRest(tb + '?club_id=eq.' + q, del).catch(function () {}); });
+      sbRest('partner_agreements?or=(and(a_type.eq.club,a_id.eq.' + q + '),and(b_type.eq.club,b_id.eq.' + q + '))&status=in.(pending,launched)',
+        { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'ended' }) }).catch(function () {});
+    }
+    if (typeof applyFilters === 'function') applyFilters(); buildSchoolFilter(); renderStats(); renderTopClubs();
     toast('Club deleted.'); showView('myclubs');
   });
 }
@@ -912,10 +758,13 @@ function syncUserRename(oldName, newName) {
   if (!oldName || oldName === newName) return;
   var mid = currentUser.memberId, re = new RegExp(oldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
   CLUBS.forEach(function (c) {
-    (c.roster || []).forEach(function (m) { if (m.name === oldName || (m.memberId && m.memberId === mid)) m.name = newName; });
-    (c.leaders || []).forEach(function (l) { if (l.name === oldName) l.name = newName; });
+    var touched = false;
+    (c.roster || []).forEach(function (m) { if (m.memberId && m.memberId === mid) { m.name = newName; touched = true; } });
+    if (c.verifiedOwner === mid) (c.leaders || []).forEach(function (l) { if (l.name === oldName) { l.name = newName; touched = true; } });
+    if (touched) saveUserClubs(c);   // save every club that shows my name, not just the open one
   });
-  saveUserClubs();
+  if (typeof sbUpsertProfile === 'function') sbUpsertProfile();
+  if (typeof sbRest === 'function' && mid) sbRest('biz_reviews?author_id=eq.' + encodeURIComponent(mid), { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ author: newName }) }).catch(function () {});
   if (typeof sbRenameMember === 'function') sbRenameMember(mid, newName);   // update my name across all club rosters (server)
   // Update my chat author name across all clubs on the server
   if (typeof sbRest === 'function' && mid) sbRest('club_chat?sender_id=eq.' + encodeURIComponent(mid), { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ sender_name: newName }) }).catch(function () {});
@@ -923,7 +772,7 @@ function syncUserRename(oldName, newName) {
   Object.keys(rv).forEach(function (cid) { rv[cid].forEach(function (x) { if (x.name === oldName) { x.name = newName; rchg = true; } }); });
   if (rchg) saveReviews(rv);
   if (typeof sbRest === 'function' && mid) sbRest('club_reviews?author_id=eq.' + encodeURIComponent(mid), { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ author: newName }) }).catch(function () {});
-  var sr = loadSiteReviews(); if (sr) { var schg = false; sr.forEach(function (x) { if (x.name === oldName) { x.name = newName; schg = true; } }); if (schg) saveSiteReviews(sr); }
+  if (typeof sbRest === 'function' && mid) sbRest('site_reviews?author_id=eq.' + encodeURIComponent(mid), { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ author: newName }) }).then(fetchSiteReviews).catch(function () {});
 }
 /* Re-render every surface that shows the current user's avatar/name/bio/etc. */
 function syncUserEverywhere() {
@@ -933,214 +782,6 @@ function syncUserEverywhere() {
   if (typeof renderProfileIfOpen === 'function') renderProfileIfOpen();
   if (typeof renderMyClubs === 'function' && !$('view-myclubs').classList.contains('hidden')) renderMyClubs();
 }
-
-/* ============================================================
-   REVIEWS - clubs (members only) + website reviews
-   ============================================================ */
-var SEED_SITE_REVIEWS = [
-  { name: 'Maya T.', role: 'Junior · West High School', rating: 5, text: 'I found three clubs in my zip code the same afternoon and joined robotics that week. So much easier than asking around.' },
-  { name: 'Mr. Alvarez', role: 'Advisor · Palos Verdes Peninsula HS', rating: 5, text: 'Our sign-ups doubled once we listed here. Students can see exactly when and where we meet.' },
-  { name: 'Devin R.', role: 'Sophomore · Mira Costa HS', rating: 5, text: 'Saving clubs is clutch. I bookmarked a bunch and messaged the leaders when I was ready.' }
-];
-function loadReviews() { try { return JSON.parse(localStorage.getItem(LS.reviews)) || null; } catch (e) { return null; } }
-function saveReviews(r) { localStorage.setItem(LS.reviews, JSON.stringify(r)); }
-function loadSiteReviews() { try { return JSON.parse(localStorage.getItem(LS.siteReviews)) || null; } catch (e) { return null; } }
-function saveSiteReviews(r) { localStorage.setItem(LS.siteReviews, JSON.stringify(r)); }
-var DAY = 1000 * 60 * 60 * 24;
-function seedReviewsIfEmpty() {
-  if (!loadReviews()) saveReviews({
-    'c-robotics': [{ name: 'Maya T.', rating: 5, text: 'Incredible mentors and hands-on builds every week.', ts: Date.now() - DAY * 16 }, { name: 'Andre P.', rating: 4, text: 'Competitive and welcoming.', ts: Date.now() - DAY * 44 }],
-    'c-green': [{ name: 'Priya S.', rating: 5, text: 'Genuinely makes a difference on campus.', ts: Date.now() - DAY * 5 }]
-  });
-  if (!loadSiteReviews()) {
-    var base = Date.now();
-    saveSiteReviews(SEED_SITE_REVIEWS.map(function (r, i) {
-      return { name: r.name, role: r.role, rating: r.rating, text: r.text, ts: base - DAY * (7 * (i + 1) + 2) };
-    }));
-  } else {
-    // Browsers that saved the old seed copy get the reworded seed text (user-written reviews are untouched)
-    var saved = loadSiteReviews(), changed = false;
-    saved.forEach(function (r) {
-      var seed = SEED_SITE_REVIEWS.filter(function (s) { return s.name === r.name && s.role === r.role; })[0];
-      if (seed && r.text !== seed.text && /\u2014/.test(r.text)) { r.text = seed.text; changed = true; }
-    });
-    if (changed) saveSiteReviews(saved);
-  }
-}
-/* Club reviews are server-backed (club_reviews table) + a per-club cache. */
-var _clubReviews = {};
-function clubReviews(clubId) { return _clubReviews[clubId] || []; }
-function _reviewRowToObj(r) { return { id: r.id, author_id: r.author_id, name: r.author, rating: r.rating, text: r.text, ts: r.created_at ? new Date(r.created_at).getTime() : Date.now(), replies: r.replies || [] }; }
-function loadClubReviews(clubId, cb) {
-  if (typeof sbRest !== 'function') { if (typeof cb === 'function') cb(); return; }
-  sbRest('club_reviews?club_id=eq.' + encodeURIComponent(clubId) + '&select=*&order=created_at.asc').then(function (rows) {
-    rows = rows || [];
-    if (!rows.length) {
-      var legacy = ((typeof loadReviews === 'function' && loadReviews()) || {})[clubId] || [];
-      if (legacy.length) {
-        var ins = legacy.map(function (x) { return { club_id: clubId, author_id: x.author_id || null, author: x.name, rating: x.rating, text: x.text, replies: x.replies || [] }; });
-        sbRest('club_reviews', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(ins) })
-          .then(function (insd) { _clubReviews[clubId] = (insd || []).map(_reviewRowToObj); if (typeof cb === 'function') cb(); })
-          .catch(function () { if (typeof cb === 'function') cb(); });
-        return;
-      }
-    }
-    _clubReviews[clubId] = rows.map(_reviewRowToObj);
-    if (typeof cb === 'function') cb();
-  }).catch(function () { if (typeof cb === 'function') cb(); });
-}
-function _saveReviewReplies(clubId, reviewId, replies) {
-  var rv = _findReview(clubId, reviewId); if (rv) rv.replies = replies;
-  return sbRest('club_reviews?id=eq.' + reviewId, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ replies: replies }) });
-}
-function _findReview(clubId, id) { return (_clubReviews[clubId] || []).find(function (r) { return r.id === id; }); }
-function clubRatingSummary(clubId) {
-  var l = clubReviews(clubId); if (!l.length) return { avg: 0, count: 0 };
-  return { avg: l.reduce(function (s, x) { return s + (x.rating || 0); }, 0) / l.length, count: l.length };
-}
-function starRow(rating, size) {
-  var out = ''; for (var i = 1; i <= 5; i++) out += '<span class="star ' + (i <= Math.round(rating) ? 'fill' : '') + '">' + ICON_STAR + '</span>';
-  return '<span class="stars ' + (size || '') + '">' + out + '</span>';
-}
-/* Owner toggle for the Ratings & Reviews section (shared club + business markup). */
-function _reviewToggleHTML(kind, id, enabled) {
-  var fn = kind === 'club' ? 'toggleClubReviews' : 'toggleBizReviews';
-  return '<div class="review-toggle"><div><div class="tr-title">Ratings &amp; Reviews are ' + (enabled ? 'ON' : 'OFF') + '</div>' +
-    '<div class="form-note">' + (enabled
-      ? 'Visitors can rate and review. Turn this off to hide the review section from everyone.'
-      : 'The review section is hidden from visitors. Turn it on to allow ratings and reviews.') + '</div></div>' +
-    '<button class="btn ghost sm-btn" onclick="' + fn + '(\'' + id + '\')">Turn ' + (enabled ? 'off' : 'on') + '</button></div>';
-}
-function toggleClubReviews(id) {
-  var c = getClub(id); if (!c || !ownerOf(c)) return;
-  c.reviewsEnabled = (c.reviewsEnabled === false);   // false → on; on/undefined → off
-  if (typeof saveUserClubs === 'function') saveUserClubs(c);
-  renderClub();
-  toast(c.reviewsEnabled ? 'Reviews turned on.' : 'Reviews turned off.');
-}
-function reviewsSectionHTML(club) {
-  var owner = ownerOf(club);
-  var enabled = club.reviewsEnabled !== false;
-  var toggle = owner ? _reviewToggleHTML('club', club.id, enabled) : '';
-  if (!enabled) {
-    return '<div class="reviews-head"><div class="section-title" style="margin:0">' + t('sec_reviews') + '</div></div>' + toggle +
-      '<p class="form-note" style="padding:10px 0">Reviews are turned off' + (owner ? ' — turn them back on above to let people rate and review your club.' : ' for this club.') + '</p>';
-  }
-  var sum = clubRatingSummary(club.id), list = clubReviews(club.id).slice().reverse();
-  var member = isClubMember(club);
-  var btn = member ? '<button class="btn primary" onclick="openWriteReview(\'' + club.id + '\')">' + t('write_review') + '</button>'
-    : '<span class="form-note">Join this club to leave a review</span>';
-  var header = '<div class="reviews-head"><div><div class="section-title" style="margin:0">' + t('sec_reviews') + '</div>' +
-    (sum.count ? '<div class="rating-line">' + starRow(sum.avg) + '<strong>' + sum.avg.toFixed(1) + '</strong><span class="form-note">· ' + sum.count + ' review' + (sum.count === 1 ? '' : 's') + '</span></div>' : '<div class="form-note">No reviews yet.</div>') + '</div>' + btn + '</div>';
-  var canReply = canReplyReview(club);
-  var body = clubReviews(club.id).slice().reverse().map(function (r) {
-    var mine = currentUser && (r.author_id ? r.author_id === currentUser.memberId : r.name === currentUser.name);
-    var ctrls = mine ? '<span class="review-ctrls"><button onclick="openEditReview(\'' + club.id + '\',\'' + r.id + '\')">' + t('rv_edit') + '</button>' +
-      '<button onclick="deleteReview(\'' + club.id + '\',\'' + r.id + '\')">' + t('rv_delete') + '</button></span>' : '';
-    var replies = (r.replies || []).map(function (rep, j) {
-      var canDel = currentUser && (rep.name === currentUser.name || ownerOf(club));
-      return '<div class="review-reply"><div class="rr-top">' + avatarHTML(rep.name, 'sm') +
-        '<span class="rr-name">' + escHtml(rep.name) + '</span><span class="badge">' + escHtml(rep.role || 'Officer') + '</span>' +
-        (rep.ts ? '<span class="review-time">' + escHtml(timeAgo(rep.ts)) + '</span>' : '') +
-        (canDel ? '<button class="rr-del" onclick="deleteReviewReply(\'' + club.id + '\',\'' + r.id + '\',' + j + ')">' + t('rv_delete') + '</button>' : '') +
-        '</div><p class="rr-text">' + escHtml(rep.text) + '</p></div>';
-    }).join('');
-    var replyBtn = canReply ? '<button class="review-reply-btn" onclick="replyReview(\'' + club.id + '\',\'' + r.id + '\')">↩ ' + t('rv_reply') + '</button>' : '';
-    return '<div class="review"><div class="review-top">' + avatarHTML(r.name, 'sm') +
-      '<div class="review-who"><div class="n">' + escHtml(r.name) + '</div>' + starRow(r.rating, 'sm') + '</div>' +
-      (r.ts ? '<span class="review-time">' + escHtml(timeAgo(r.ts)) + '</span>' : '') + '</div>' +
-      '<p class="review-text">' + escHtml(r.text) + '</p>' + ctrls + replies + replyBtn + '</div>';
-  }).join('');
-  return toggle + header + body;
-}
-/* Only club leadership (owner / President / VP / Treasurer / Secretary) may reply to reviews. */
-function canReplyReview(club) { return ownerOf(club) || isOfficerRole(roleInClub(club)); }
-function replyReview(clubId, reviewId) {
-  var club = getClub(clubId); if (!club || !canReplyReview(club)) return;
-  var r = _findReview(clubId, reviewId); if (!r) return;
-  var text = window.prompt(t('rv_reply_prompt')); if (text == null) return;
-  text = text.trim(); if (!text) return;
-  var replies = (r.replies || []).slice();
-  replies.push({ name: currentUser.name, role: roleInClub(club) || 'Officer', text: text, ts: Date.now() });
-  _saveReviewReplies(clubId, reviewId, replies).then(function () { refreshClubModalState(); toast(t('rv_reply_done')); }).catch(function (ex) { toast(ex.message); });
-}
-function deleteReviewReply(clubId, reviewId, j) {
-  var club = getClub(clubId); if (!club) return;
-  var r = _findReview(clubId, reviewId); if (!r || !r.replies || !r.replies[j]) return;
-  var rep = r.replies[j];
-  if (!currentUser || (rep.name !== currentUser.name && !ownerOf(club))) return;   // reply author or owner only
-  openConfirm(t('rv_reply_del_h'), t('rv_reply_del_msg'), svgIcon('trash', 26), function () {
-    var replies = r.replies.slice(); replies.splice(j, 1);
-    _saveReviewReplies(clubId, reviewId, replies).then(refreshClubModalState).catch(function (ex) { toast(ex.message); });
-  }, t('rv_delete'));
-}
-function renderSiteReviews() {
-  var wrap = $('siteReviews'); if (!wrap) return;
-  var store = loadSiteReviews() || SEED_SITE_REVIEWS;
-  wrap.innerHTML = store.map(function (r, i) { return { i: i, r: r }; }).reverse().map(function (o) {
-    var t2 = o.r, mine = currentUser && t2.name === currentUser.name;
-    var ctrls = mine ? '<div class="review-ctrls" style="margin-top:8px"><button onclick="openEditReview(\'site\',' + o.i + ')">' + t('rv_edit') + '</button>' +
-      '<button onclick="deleteReview(\'site\',' + o.i + ')">' + t('rv_delete') + '</button></div>' : '';
-    return '<div class="tcard">' + starRow(t2.rating || 5, 'sm') + '<p class="tquote">“' + escHtml(t2.text) + '”</p>' +
-      '<div class="tby">' + avatarHTML(t2.name, 'sm') + '<div class="tby-text"><div class="tn">' + escHtml(t2.name) + '</div><div class="tr">' + escHtml(t2.role || 'Student Club Hub member') + '</div>' +
-      (t2.ts ? '<div class="ttime">' + escHtml(timeAgo(t2.ts)) + '</div>' : '') + '</div></div>' + ctrls + '</div>';
-  }).join('');
-}
-
-var reviewTarget = null, reviewRating = 0, reviewEditIndex = null;
-function reviewComposer(target, titleText, submitLabel, prefill) {
-  $('reviewBody').innerHTML =
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
-      '<h3 style="font-size:1.15rem;font-weight:800">' + escHtml(titleText) + '</h3><button class="icon-btn" onclick="closeReview()">✕</button></div>' +
-    '<p class="form-note" style="margin-bottom:14px">Share your experience to help other students.</p>' +
-    '<div class="field"><label>Your rating</label><div id="starPicker" class="star-picker">' +
-      [1,2,3,4,5].map(function (i) { return '<button type="button" data-v="' + i + '" onclick="setReviewStars(' + i + ')">' + ICON_STAR + '</button>'; }).join('') + '</div></div>' +
-    '<div class="field"><label>Your review</label><textarea id="reviewText" placeholder="What did you like? What should others know?">' + escHtml(prefill || '') + '</textarea></div>' +
-    '<button class="btn primary block lg" onclick="submitReview()">' + escHtml(submitLabel) + '</button>';
-  openOverlay('reviewOverlay');
-}
-function openWriteReview(target) {
-  if (!currentUser) { pendingAuthAction = function () { openWriteReview(target); }; openAuth('login'); return; }
-  if (target !== 'site') { var c = getClub(target); if (!isClubMember(c)) { return toast('Only members can review a club. Join it first.'); } }
-  reviewTarget = target; reviewRating = 0; reviewEditIndex = null;
-  reviewComposer(target, target === 'site' ? 'Review Student Club Hub' : 'Review ' + getClub(target).name, 'Post Review', '');
-  setReviewStars(0);
-}
-function openEditReview(target, ref) {
-  var r = (target === 'site') ? (loadSiteReviews() || [])[ref] : _findReview(target, ref);
-  if (!r || !currentUser) return;
-  var mine = (target === 'site') ? (r.name === currentUser.name) : (r.author_id ? r.author_id === currentUser.memberId : r.name === currentUser.name);
-  if (!mine) return;
-  reviewTarget = target; reviewEditIndex = ref; reviewRating = r.rating || 0;   // reviewEditIndex holds an index (site) or review id (club)
-  reviewComposer(target, t('rv_edit_h'), t('rv_save'), r.text);
-  setReviewStars(reviewRating);
-}
-function setReviewStars(v) { reviewRating = v; document.querySelectorAll('#starPicker button').forEach(function (b) { b.classList.toggle('on', parseInt(b.dataset.v, 10) <= v); }); }
-function submitReview() {
-  if (!reviewRating) return toast('Pick a star rating first.');
-  var text = ($('reviewText').value || '').trim(); if (!text) return toast('Add a short review.');
-  if (reviewTarget === 'site') {
-    var s = loadSiteReviews() || SEED_SITE_REVIEWS.slice();
-    if (reviewEditIndex != null && s[reviewEditIndex]) { s[reviewEditIndex].rating = reviewRating; s[reviewEditIndex].text = text; }
-    else s.push({ name: currentUser.name, role: 'Student Club Hub member', rating: reviewRating, text: text, ts: Date.now() });
-    saveSiteReviews(s); closeReview(); renderSiteReviews();
-  } else {
-    var tgt = reviewTarget, ref = reviewEditIndex, isEdit = ref != null, rating = reviewRating;
-    closeReview();
-    var done = function () { loadClubReviews(tgt, refreshClubModalState); toast(isEdit ? 'Your review has been updated.' : 'Thanks! Your review has been posted.'); };
-    if (isEdit) sbRest('club_reviews?id=eq.' + ref, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ rating: rating, text: text }) }).then(done).catch(function (ex) { toast(ex.message); });
-    else sbRest('club_reviews', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ club_id: tgt, author_id: currentUser.memberId, author: currentUser.name, rating: rating, text: text, replies: [] }) }).then(done).catch(function (ex) { toast(ex.message); });
-    return;
-  }
-  toast(reviewEditIndex != null ? 'Your review has been updated.' : 'Thanks! Your review has been posted.');
-}
-function deleteReview(target, ref) {
-  openConfirm(t('rv_delete_h'), t('rv_delete_msg'), svgIcon('trash', 26), function () {
-    if (target === 'site') { var s = loadSiteReviews() || []; if (s[ref]) s.splice(ref, 1); saveSiteReviews(s); renderSiteReviews(); toast('Review deleted.'); }
-    else sbRest('club_reviews?id=eq.' + ref, { method: 'DELETE', headers: { Prefer: 'return=minimal' } }).then(function () { loadClubReviews(target, refreshClubModalState); toast('Review deleted.'); }).catch(function (ex) { toast(ex.message); });
-  }, t('rv_delete'));
-}
-function closeReview() { closeOverlay('reviewOverlay'); reviewTarget = null; reviewRating = 0; reviewEditIndex = null; }
 
 /* ============================================================
    CONTACT LEADER
@@ -1197,7 +838,11 @@ function openConfirm(title, msg, icon, onOk, confirmLabel) {
 }
 function closeConfirm() { closeOverlay('confirmOverlay'); confirmCb = null; }
 
-function escAttr(s) { return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+/* HTML attribute value (value="", title="", href="", option values, style url()). Entity-encodes;
+   never inserts backslashes, so names like "Joe's Club" round-trip through edit fields intact. */
+function escAttr(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+/* A string ARGUMENT inside an inline handler, e.g. onclick="fn('…')": JS-escape first, then
+   HTML-encode. Prevents a crafted name (x\');alert(1)//) from breaking out and running code. */
+function jsArg(s) { return escAttr(String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n')); }
 
-seedReviewsIfEmpty();
 

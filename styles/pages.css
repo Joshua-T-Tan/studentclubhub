@@ -171,7 +171,7 @@
 .faq-caret { font-size: 1rem; color: var(--brand); transition: transform .2s ease; flex-shrink: 0; }
 .faq-item.open .faq-caret { transform: rotate(180deg); }
 .faq-a { max-height: 0; overflow: hidden; transition: max-height .25s ease; }
-.faq-item.open .faq-a { max-height: 320px; }
+.faq-item.open .faq-a { max-height: 1200px; }   /* long answers wrap to many lines on phones */
 .faq-a p { padding: 0 18px 16px; color: var(--muted); font-size: 0.92rem; line-height: 1.6; }
 
 /* ---- Local Business shop scaffolds ---- */

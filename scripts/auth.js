@@ -185,7 +185,7 @@ var I18N_EXTRA = {
     empty_joined:'You haven’t joined any clubs yet.', empty_search:'No clubs match your search yet.', empty_drafts:'No drafts yet. Register a club and tap Save as Draft to keep it here.',
     roster_gated:'Join this club to view its members and leadership roster.', join_to_review:'Join this club to leave a review', roster_search_ph:'Search members by name...',
     search_saved_ph:'Search by club name, ID, or zip...', welcome_h:'Welcome to your new club!', welcome_p1:'Your unique Club ID is:',
-    welcome_p2:'Share this ID or your direct link so students can quickly search for and join your club!', copy_link:'Copy Direct Link', continue_mgmt:'Continue to Club Management' },
+    welcome_p2:'Share this ID or your direct link so students can quickly search for and join your club!', copy_link:'Copy Direct Link', id_copied:'Direct link copied!', continue_mgmt:'Continue to Club Management' },
   es: { card_save:'Guardar club', save_club:'Guardar club', back:'← Atrás', cc_cancel:'Cancelar', cc_savedraft:'Guardar borrador', cc_publish:'Publicar en el directorio',
     roster_gated:'Únete a este club para ver sus miembros y su directiva.', join_to_review:'Únete a este club para dejar una reseña' },
   fr: { card_save:'Enregistrer le club', save_club:'Enregistrer le club', back:'← Retour', cc_cancel:'Annuler', cc_savedraft:'Enregistrer le brouillon', cc_publish:'Publier dans l’annuaire',
@@ -464,13 +464,25 @@ function bookmarkSvg(saved) {
    USER STORE
    ============================================================ */
 function loadUsers() { try { return JSON.parse(localStorage.getItem(LS.users)) || {}; } catch (e) { return {}; } }
-function saveUsers(u) { localStorage.setItem(LS.users, JSON.stringify(u)); }
+function saveUsers(u) {
+  try { localStorage.setItem(LS.users, JSON.stringify(u)); return true; }
+  catch (e) { toast('This device’s storage is full (usually a large profile photo). Use a smaller photo.'); return false; }
+}
 
+/* Member IDs are 6 digits (#123456) and must be unique across ALL accounts, not just this browser,
+   so each candidate is checked against the shared profiles table. */
 function genMemberId() {
   var users = loadUsers(), id;
-  do { id = '#' + Math.floor(1000 + Math.random() * 9000); }
+  do { id = '#' + Math.floor(100000 + Math.random() * 900000); }
   while (Object.values(users).some(function (u) { return u.memberId === id; }));
   return id;
+}
+function genMemberIdUnique(tries) {
+  var id = genMemberId(); tries = tries || 0;
+  if (typeof sbRest !== 'function' || tries > 5) return Promise.resolve(id);
+  return sbRest('profiles?member_id=eq.' + encodeURIComponent(id) + '&select=member_id').then(function (rows) {
+    return (rows && rows.length) ? genMemberIdUnique(tries + 1) : id;
+  }).catch(function () { return id; });
 }
 /* 6-character alpha-numeric public Club ID, e.g. A8K9X2 - unique across all clubs. */
 function genClubId() {
@@ -516,8 +528,8 @@ function initAuth() {
     if (e.key === 'Escape') {
       if (!$('lightbox').classList.contains('hidden')) return closeLightbox();
       if ($('galleryPage') && !$('galleryPage').classList.contains('hidden')) return closeGalleryPage();
-      ['confirmOverlay', 'contactOverlay', 'contactUsOverlay', 'deleteAccountOverlay', 'reviewOverlay', 'transferOverlay', 'forgotOverlay', 'welcomeOverlay', 'shareOverlay', 'authOverlay'].forEach(function (id) {
-        if (!$(id).classList.contains('hidden')) closeOverlay(id);
+      ['confirmOverlay', 'contactOverlay', 'contactUsOverlay', 'deleteAccountOverlay', 'reviewOverlay', 'transferOverlay', 'forgotOverlay', 'welcomeOverlay', 'shareOverlay', 'authOverlay', 'bizOverlay'].forEach(function (id) {
+        if ($(id) && !$(id).classList.contains('hidden')) closeOverlay(id);
       });
     }
   });
@@ -538,10 +550,8 @@ function setSession(rec) {
   // Apply THIS account's preferences (recalculated on every account switch — no leakage)
   applyLanguage(currentUser.lang);
   applyTheme(currentUser.theme);
-  if (typeof reconcileMemberships === 'function') reconcileMemberships();   // restore roster entries on login
   // Sync this account's memberships + current name up to the server (self-heals stale names / legacy joins).
   if (typeof reconcileMyMemberships === 'function') reconcileMyMemberships();
-  if (typeof refreshCanPartner === 'function') refreshCanPartner();   // do I own an open club/shop? (puzzle color)
   if (typeof sbUpsertProfile === 'function') sbUpsertProfile();       // register in the member directory (so others can message me by ID)
 }
 /* Read a preference from the account record (nested user.preferences first, then flat legacy) */
@@ -621,6 +631,7 @@ function renderAuth() {
     b.innerHTML = authTabs() + intro + err +
       field('alEmail', t('au_email'), 'email', 'you@school.edu') +
       field('alPass', t('au_password'), 'password', '••••••••') +
+      '<p style="margin:-6px 0 12px;text-align:right"><a href="#" class="link" onclick="openForgot();return false;">' + t('set_forgot') + '</a></p>' +
       '<button id="btnLogin" class="btn primary block lg" onclick="submitLogin()">' + t('au_login') + '</button>';
   } else if (authStage === 'signup') {
     b.innerHTML = authTabs() + intro + err +
@@ -707,12 +718,15 @@ function submitVerify() {
   sbVerifyOtp(verifyEmail, code).then(function () {
     if (otpMode === 'login') { setSession(otpLoginRec); finishAuth('Welcome back, ' + otpLoginRec.name.split(' ')[0] + '!'); return; }
     // signup verified → create the local account, then continue to onboarding
-    var users = loadUsers(), memberId = genMemberId();
-    var rec = { name: pendingReg.name, email: pendingReg.email, pass: pendingReg.pass, memberId: memberId,
-      favorites: [], joined: [], avatar: null, emailNotif: true, twofa: false };
-    users[pendingReg.email] = rec; saveUsers(users);
-    setSession(rec); renderAuthArea();
-    authStage = 'onboard'; renderAuth();
+    return genMemberIdUnique().then(function (memberId) {
+      var users = loadUsers();
+      var rec = { name: pendingReg.name, email: pendingReg.email, pass: pendingReg.pass, memberId: memberId,
+        favorites: [], joined: [], avatar: null, emailNotif: true, twofa: false };
+      users[pendingReg.email] = rec; saveUsers(users);
+      setSession(rec); renderAuthArea();
+      if (typeof sbUpsertProfile === 'function') sbUpsertProfile();
+      authStage = 'onboard'; renderAuth();
+    });
   }).catch(function (e2) {
     authBusy('btnVerify', false);
     authErr(e2.message || 'That code is incorrect or has expired.');
