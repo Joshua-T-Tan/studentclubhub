@@ -102,6 +102,10 @@ var DOODLE_LAYOUTS = {
     ['pencil', 56, 18, 170, -16, 0], ['note', 81, 14, 96, 6, 0], ['star', 93, 6, 24, -10, 1], ['cap', 19, 38, 96, -6, 1],
     ['arrow', 46, 44, 130, 0, 1], ['bulb', 70, 50, 58, 8, 1], ['apple', 61, 66, 50, -10, 1], ['books', 87, 60, 100, -4, 1]
   ],
+  /* Directory card covers with no banner image: small doodles below the share/tag/flag row */
+  card1: [['pencil', 6, 50, 92, -8, 0], ['star', 42, 58, 20, 12, 0], ['note', 60, 40, 50, 6, 0], ['apple', 86, 54, 30, -8, 0]],
+  card2: [['ruler', 5, 56, 110, 3, 0], ['aplus', 47, 42, 50, -6, 0], ['bulb', 70, 42, 34, 8, 0], ['star', 88, 62, 18, -10, 0]],
+  card3: [['books', 6, 46, 62, -4, 0], ['arrow', 30, 54, 80, 0, 0], ['clip', 62, 40, 16, 20, 0], ['cap', 76, 46, 66, -6, 0]],
   /* About Us page banner: title on the left, doodles mostly on the right */
   page: [
     ['star', 34, 14, 26, 12, 1], ['pencil', 52, 16, 160, -14, 1], ['note', 76, 12, 92, 6, 0], ['star', 92, 10, 24, -8, 1],
@@ -111,8 +115,15 @@ var DOODLE_LAYOUTS = {
 /* The doodle layer + two strips of yellow tape. Purely decorative. */
 function doodleLayer(layout) {
   var items = DOODLE_LAYOUTS[layout] || DOODLE_LAYOUTS.banner;
-  return '<div class="doodles" aria-hidden="true"><span class="dd-tape dd-tape-l"></span><span class="dd-tape dd-tape-r"></span>' +
+  var tape = layout.indexOf('card') === 0 ? '' : '<span class="dd-tape dd-tape-l"></span><span class="dd-tape dd-tape-r"></span>';
+  return '<div class="doodles" aria-hidden="true">' + tape +
     items.map(function (d) {
       return '<span class="dd' + (d[5] ? ' dd-sm-hide' : '') + '" style="left:' + d[1] + '%;top:' + d[2] + '%;width:' + d[3] + 'px;transform:rotate(' + d[4] + 'deg)">' + DOODLES[d[0]] + '</span>';
     }).join('') + '</div>';
+}
+/* Pick one of the card doodle sets per club/business (stable for a given id) so the grid isn't repetitive. */
+function cardDoodles(id) {
+  var s = String(id || ''), h = 0;
+  for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return doodleLayer('card' + (h % 3 + 1));
 }

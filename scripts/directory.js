@@ -475,7 +475,7 @@ function renderCard(club) {
   return (
     '<article class="card">' +
       '<div class="card-cover" style="' + coverStyle(club) + '" onclick="openClub(\'' + club.id + '\')">' +
-        (club.banner ? '' : '<span class="cover-mark">' + styleForCategory(club.category).icon + '</span>') +
+        (club.banner ? '' : '<span class="cover-mark">' + styleForCategory(club.category).icon + '</span>' + cardDoodles(club.id)) +
         '<button class="card-share" title="' + escAttr(t('share_club')) + '" onclick="event.stopPropagation(); openShare(\'' + club.id + '\')">' + (typeof ICON_SHARE !== 'undefined' ? ICON_SHARE : '') + '</button>' +
         '<button class="card-flag" title="Report this club" onclick="event.stopPropagation(); openReport(\'club\',\'' + club.id + '\',\'' + escAttr(club.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>' +
         '<span class="cover-cat">' + escHtml(club.category) + '</span></div>' +

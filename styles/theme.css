@@ -278,7 +278,8 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 .prow { border-left-width: 1.5px; }
 
 /* ---- Club cards: plain cover strip with a yellow category tag ---- */
-.card-cover:has(.cover-mark) { height: 56px; background: var(--surface) !important; border-bottom: var(--edge); }
+.card-cover { height: 118px; border-bottom: var(--edge); }   /* one height for every card, banner or not */
+.card-cover:has(.cover-mark) { background: var(--surface) !important; }
 .card-cover .cover-mark { display: none; }
 .card-cover .cover-cat, .card-cover:has(.cover-mark) .cover-cat {
   top: 50%; bottom: auto; transform: translateY(-50%); left: 16px;
@@ -392,9 +393,10 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 .card-share { background: var(--card); color: var(--ink); border: var(--edge); border-radius: var(--r); box-shadow: none;
   backdrop-filter: none; -webkit-backdrop-filter: none; }
 .card-share:hover { background: var(--note); transform: none; }
-.card-cover:has(.cover-mark) .card-share, .card-cover:has(.cover-mark) .card-flag { top: 12px; }
+.card-cover .card-share, .card-cover .card-flag { top: 12px; }
 .card-cover .cover-cat, .card-cover:has(.cover-mark) .cover-cat {
-  left: 52px; max-width: calc(100% - 104px); white-space: normal; line-height: 1.25; }   /* long names wrap to 2 lines */
+  top: 28px; left: 52px; z-index: 2; max-width: calc(100% - 104px); white-space: normal; line-height: 1.25; }
+/* ^ the tag always sits in the top row, centered on the share/flag buttons — on photo covers too; long names wrap to 2 lines */
 /* Phones: the paper banner grows to fit the (wrapping) name instead of overlapping it; doodles step aside */
 @media (max-width: 760px) {
   .biz-slideshow.is-paper { height: auto; min-height: 220px; }

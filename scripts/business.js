@@ -135,7 +135,7 @@ function businessCard(b) {
   var coverBg = b.banner ? 'background:center/cover no-repeat url(' + escAttr(b.banner) + ')' : 'background:' + m.grad;
   return '<article class="card biz-card">' +
     '<div class="card-cover" style="' + coverBg + '" onclick="openBusiness(\'' + b.id + '\')">' +
-      (b.banner ? '' : '<span class="cover-mark">' + m.icon + '</span>') +
+      (b.banner ? '' : '<span class="cover-mark">' + m.icon + '</span>' + cardDoodles(b.id)) +
       '<button class="card-share" title="Share" onclick="event.stopPropagation(); shareBusiness(\'' + b.id + '\')">' + (typeof ICON_SHARE !== 'undefined' ? ICON_SHARE : '') + '</button>' +
       '<button class="card-flag" title="Report this business" onclick="event.stopPropagation(); openReport(\'business\',\'' + b.id + '\',\'' + escAttr(b.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>' +
       '<span class="cover-cat">' + escHtml(b.category) + '</span></div>' +

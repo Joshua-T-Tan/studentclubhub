@@ -108,11 +108,6 @@ function renderHero() {
   if (wrap) wrap.innerHTML = HERO_SLIDES.map(function (s, i) {
     return '<div class="hero-slide' + (i === heroIndex ? ' active' : '') + '"><h1>' + s.h + '</h1><p>' + s.p + '</p></div>';
   }).join('');
-  var dots = $('heroDots');
-  if (dots) dots.innerHTML = HERO_SLIDES.map(function (s, i) {
-    return '<button class="hero-dot' + (i === heroIndex ? ' active' : '') + '" title="Slide ' + (i + 1) +
-      '" onclick="heroGo(' + i + ')"><span></span></button>';
-  }).join('');
 }
 function heroGo(i) { heroIndex = (i + HERO_SLIDES.length) % HERO_SLIDES.length; renderHero(); restartHeroAuto(); }
 function restartHeroAuto() {
