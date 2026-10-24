@@ -700,17 +700,14 @@ function confirmTransfer(clubId) {
 function deleteClub(clubId) {
   var club = getClub(clubId); if (!club || !ownerOf(club)) return;
   openConfirm('Delete “' + club.name + '”?', 'This permanently removes the club and its listing. This cannot be undone.', svgIcon('warning', 26), function () {
-    var i = CLUBS.indexOf(club); if (i > -1) CLUBS.splice(i, 1);
-    var j = currentUser.joined.indexOf(clubId); if (j > -1) currentUser.joined.splice(j, 1);
-    persistUser(); saveUserClubs(); if (typeof sbDeleteClub === 'function') sbDeleteClub(clubId);
-    if (typeof sbRest === 'function') {
-      var q = encodeURIComponent(clubId), del = { method: 'DELETE', headers: { Prefer: 'return=minimal' } };
-      ['club_members', 'club_chat', 'club_reviews'].forEach(function (tb) { sbRest(tb + '?club_id=eq.' + q, del).catch(function () {}); });
-      sbRest('partner_agreements?or=(and(a_type.eq.club,a_id.eq.' + q + '),and(b_type.eq.club,b_id.eq.' + q + '))&status=in.(pending,launched)',
-        { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'ended' }) }).catch(function () {});
-    }
-    if (typeof applyFilters === 'function') applyFilters(); buildSchoolFilter(); renderStats(); renderTopClubs();
-    toast('Club deleted.'); showView('myclubs');
+    // One server call removes the club with its members, chat, reviews, and live partnerships (President only).
+    sbRpc('delete_club', { p_id: clubId }).then(function () {
+      var i = CLUBS.indexOf(club); if (i > -1) CLUBS.splice(i, 1);
+      var j = currentUser.joined.indexOf(clubId); if (j > -1) currentUser.joined.splice(j, 1);
+      delete _clubBase[clubId]; persistUser(); saveUserClubs(null);
+      if (typeof applyFilters === 'function') applyFilters(); buildSchoolFilter(); renderStats(); renderTopClubs();
+      toast('Club deleted.'); showView('myclubs');
+    }).catch(function (ex) { toast(ex.message); });
   });
 }
 

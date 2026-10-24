@@ -33,11 +33,14 @@ function dealNotStarted(b) { return !!(b && b.perk_start && String(b.perk_start)
 function dealVisibleToPublic(b) { return dealHasText(b) && !b.deal_hidden && !dealExpired(b) && !dealNotStarted(b); }
 function dealVisibleTo(b) { return dealHasText(b) && (dealVisibleToPublic(b) || (typeof isBizOwner === 'function' && isBizOwner(b))); }
 /* Owner-only status chip: why a deal is (or isn't) public right now. */
-function dealStatusChip(b) {
-  if (b.deal_hidden) return '<span class="deal-vis is-private">' + ICON_EYE_OFF + ' Only visible to you</span>';
-  if (dealExpired(b)) return '<span class="deal-vis is-private">' + svgIcon('calendar', 13) + ' Expired, hidden from visitors</span>';
-  if (dealNotStarted(b)) return '<span class="deal-vis is-private">' + svgIcon('calendar', 13) + ' Scheduled, starts ' + _fmtPerkDate(b.perk_start) + '</span>';
-  return '<span class="deal-vis is-public">' + ICON_EYE + ' Visible to everyone</span>';
+/* Owner-only visibility chip. `compact` (directory cards) shows just the icon, with the full text as a tooltip. */
+function dealStatusChip(b, compact) {
+  var st = b.deal_hidden ? { cls: 'is-private', ico: ICON_EYE_OFF, txt: 'Only visible to you' }
+    : dealExpired(b) ? { cls: 'is-private', ico: svgIcon('calendar', 13), txt: 'Expired, hidden from visitors' }
+    : dealNotStarted(b) ? { cls: 'is-private', ico: svgIcon('calendar', 13), txt: 'Scheduled, starts ' + _fmtPerkDate(b.perk_start) }
+    : { cls: 'is-public', ico: ICON_EYE, txt: 'Visible to everyone' };
+  if (compact) return '<span class="deal-vis ' + st.cls + ' is-compact" title="' + escAttr(st.txt) + '" aria-label="' + escAttr(st.txt) + '">' + st.ico + '</span>';
+  return '<span class="deal-vis ' + st.cls + '">' + st.ico + ' ' + escHtml(st.txt) + '</span>';
 }
 function bizCatMeta(c) { return BIZ_CAT_META[c] || { icon: svgIcon('store', 22), grad: 'linear-gradient(140deg,#0a6f96,#003249)' }; }
 
@@ -45,21 +48,36 @@ var _bizCache = null, _bizError = null;
 var bizState = { cat: 'All', perk: 'All', sort: 'az', q: '' };
 
 /* ---------- Supabase REST (PostgREST) ---------- */
+/* Sends the signed-in user's access token (so row-level security knows who is acting);
+   guests use the public key. An expired token is refreshed once and the call retried. */
 function sbRest(path, opts) {
   opts = opts || {};
-  var headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' };
-  if (opts.headers) Object.keys(opts.headers).forEach(function (k) { headers[k] = opts.headers[k]; });
-  // Always bypass the browser HTTP cache — otherwise GETs (club rosters, chat, polls) can return stale data and break live sync.
-  return fetch(SUPABASE_URL + '/rest/v1/' + path, { method: opts.method || 'GET', headers: headers, body: opts.body, cache: 'no-store' })
-    .then(function (res) {
-      return res.text().then(function (txt) {
-        var d = null; try { d = txt ? JSON.parse(txt) : null; } catch (e) {}
-        if (res.ok) return d;
-        var msg = (d && (d.message || d.hint || d.details || d.error)) || ('Request failed (' + res.status + ').');
-        var err = new Error(msg); err.status = res.status; throw err;
-      });
-    }, function () { throw new Error('Couldn’t load businesses. Check your connection and try again.'); });
+  var once = function (tok) {
+    var headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (tok || SUPABASE_KEY), 'Content-Type': 'application/json' };
+    if (opts.headers) Object.keys(opts.headers).forEach(function (k) { headers[k] = opts.headers[k]; });
+    // Always bypass the browser HTTP cache — otherwise GETs (club rosters, chat, polls) can return stale data and break live sync.
+    return fetch(SUPABASE_URL + '/rest/v1/' + path, { method: opts.method || 'GET', headers: headers, body: opts.body, cache: 'no-store' })
+      .then(function (res) {
+        return res.text().then(function (txt) {
+          var d = null; try { d = txt ? JSON.parse(txt) : null; } catch (e) {}
+          if (res.ok) return d;
+          var msg = (d && (d.message || d.hint || d.details || d.error)) || ('Request failed (' + res.status + ').');
+          if (/row-level security|permission denied/i.test(msg)) msg = 'You don’t have permission to do that. If you’re signed in, try logging out and back in.';
+          else if (/JWT expired/i.test(msg)) msg = 'Your session expired. Please log in again.';
+          var err = new Error(msg); err.status = res.status; err.code = d && d.code; throw err;
+        });
+      }, function () { throw new Error('Couldn’t reach the server. Check your connection and try again.'); });
+  };
+  var tokP = (typeof sbAccessToken === 'function') ? sbAccessToken() : Promise.resolve(null);
+  return tokP.then(function (tok) {
+    return once(tok).catch(function (err) {
+      if (err.status === 401 && tok && typeof sbRefresh === 'function') return sbRefresh().then(function (s) { return once(s && s.access_token); });
+      throw err;
+    });
+  });
 }
+/* Call a database function (POST /rest/v1/rpc/<name>). */
+function sbRpc(name, args) { return sbRest('rpc/' + name, { method: 'POST', body: JSON.stringify(args || {}) }); }
 function sbFetchBusinesses() { return sbRest('businesses?status=eq.verified&select=*&order=created_at.desc'); }
 function sbRegisterBusiness(data) { return sbRest('businesses', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(data) }); }
 
@@ -172,7 +190,7 @@ function businessCard(b) {
       (b.public_id ? '<div class="card-idline"><span class="club-id-chip">#' + escHtml(b.public_id) + '</span></div>' : '') +
       (dealVisibleTo(b)
         ? '<div class="perk-box perk-2row' + (dealVisibleToPublic(b) ? '' : ' is-private') + '"><span class="perk-tag">' + escHtml(PERK_TYPES[b.perk_type] || 'Perk') + '</span>' +
-            (dealVisibleToPublic(b) ? '' : ' ' + dealStatusChip(b)) + '<p>' + escHtml(b.perk_description) + '</p></div>'
+            (dealVisibleToPublic(b) ? '' : ' ' + dealStatusChip(b, true)) + '<p>' + escHtml(b.perk_description) + '</p></div>'
         : '<div class="perk-box perk-2row perk-empty"><p class="form-note">Perks coming soon — tap to view.</p></div>') +
       '<div class="card-foot">' +
         '<button class="fav-btn ' + (saved ? 'on' : '') + '" onclick="toggleBizSave(\'' + b.id + '\')">' + bookmarkSvg(saved) + (saved ? 'Saved' : 'Save Business') + '</button>' +
@@ -664,8 +682,10 @@ function isBizOwner(b) {   // (owner emails are stored lowercase; compare case-i
   return !!(currentUser && b && b.owner_email && currentUser.email &&
     b.owner_email.toLowerCase() === currentUser.email.toLowerCase());
 }
+/* Returns the updated row; a refusal (0 rows) becomes an error instead of a silent no-op. */
 function sbUpdateBusiness(id, patch) {
-  return sbRest('businesses?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(patch) });
+  return sbRest('businesses?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(patch) })
+    .then(function (rows) { if (!rows || !rows.length) throw new Error('Couldn’t save — only the owner can edit this business. Try logging in again.'); return rows; });
 }
 var _bizOwned = {};
 

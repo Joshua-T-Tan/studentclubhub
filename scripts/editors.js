@@ -66,27 +66,46 @@ function editClubBanner(id) {
       '<label class="uploader"><input type="file" accept="image/*" hidden onchange="emClubBannerUpload(\'' + id + '\',event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Upload banner image</label></div>' +
     _toggleRow('emPrivate', 'Private club', 'Hidden from public Browse unless someone has your link.', c.recruitment === 'Private') +
     _toggleRow('emPartner', 'Open to partnerships', 'Shows an “Open to partnerships” badge on your banner.', !!c.partnershipOpen) +
-    (ownerOf(c) ? _verifyRowHTML(c.verified, 'verifyClub(\'' + id + '\')', 'club') +
+    (ownerOf(c) ? _verifyRowHTML(c.verified, 'club', id) +
       '<div class="danger-zone"><div class="tr-title">President only</div>' +
         '<button type="button" class="btn ghost" onclick="closeReach();leaveClubFlow(\'' + id + '\')">Hand off presidency &amp; leave</button>' +
         '<button type="button" class="btn danger" onclick="closeReach();deleteClub(\'' + id + '\')">Delete club</button></div>' : '');
   _emOpen('Page settings', body, 'saveClubBanner(\'' + id + '\')');
   emPaintClubBanner(id);
 }
-/* Shared Verify row for the page-settings popup (clubs + businesses). */
-function _verifyRowHTML(isVerified, onclick, kind) {
+/* Verification: owners REQUEST the gold seal; an admin confirms it's the official club/business and
+   approves it on the Admin page. (The database refuses any other way of setting it.) */
+function _verifyRowHTML(isVerified, kind, id) {
   if (isVerified) return '<div class="verify-row done">' + verifiedSeal(18, '#e6b422', '#ffffff') +
     '<span>This ' + kind + ' is verified.</span></div>';
-  return '<div class="verify-row"><div><div class="tr-title">Verify this ' + kind + '</div>' +
-    '<div class="form-note">Adds a gold Verified seal to your page and card. One-time — it can’t be undone.</div></div>' +
-    '<button type="button" class="btn ghost sm-btn" onclick="' + onclick + '">Verify</button></div>';
+  setTimeout(function () { _paintVerifyRow(kind, id); }, 0);
+  return '<div class="verify-row" id="verifyRow"><div class="form-note">Checking verification status…</div></div>';
 }
-function verifyClub(id) {
-  var c = _club(id); if (!c || !ownerOf(c) || c.verified) return;
-  openConfirm('Verify this club?', 'This adds a gold Verified seal to your club’s page and card. It’s one-time and can’t be undone.', verifiedSeal(22, '#e6b422', '#ffffff'), function () {
-    if ($('emTitle')) _applyClubBannerForm(c);   // keep any unsaved Page settings edits
-    c.verified = true; _clubSave(id, 'Club verified.');
-  }, 'Verify');
+function _paintVerifyRow(kind, id) {
+  sbRest('verification_requests?kind=eq.' + kind + '&entity_id=eq.' + encodeURIComponent(id) + '&select=status,created_at&order=created_at.desc&limit=1').then(function (rows) {
+    var el = $('verifyRow'); if (!el) return;
+    var r = rows && rows[0];
+    if (r && r.status === 'pending') {
+      el.innerHTML = '<div><div class="tr-title">Verification requested</div><div class="form-note">Sent ' + escHtml(_fmtAgrDate(String(r.created_at).slice(0, 10))) +
+        '. An admin will review it and add the gold seal once it’s confirmed.</div></div>';
+      return;
+    }
+    var note = (r && r.status === 'rejected') ? 'Your last request wasn’t approved. You can send a new one with more detail.'
+      : 'Ask for the gold Verified seal. An admin first checks that this is the official ' + kind + '.';
+    el.innerHTML = '<div style="flex:1"><div class="tr-title">Get verified</div><div class="form-note">' + note + '</div>' +
+      '<div id="vrForm" class="hidden" style="margin-top:8px"><textarea id="vrNote" maxlength="500" placeholder="How can we confirm it? e.g. your advisor’s name and school email, or your business website."></textarea>' +
+      '<button type="button" class="btn primary sm-btn" style="margin-top:6px" onclick="submitVerification(\'' + kind + '\',\'' + jsArg(id) + '\')">Send request</button></div></div>' +
+      '<button type="button" class="btn ghost sm-btn" onclick="$(\'vrForm\').classList.remove(\'hidden\');this.remove()">Request</button>';
+  }).catch(function () { var el = $('verifyRow'); if (el) el.innerHTML = '<div class="form-note">Couldn’t load verification status.</div>'; });
+}
+function submitVerification(kind, id) {
+  var note = _emVal('vrNote');
+  if (note.length < 10) return _emErr('Tell us a little about how to confirm it (a sentence is enough).');
+  var name = kind === 'club' ? (getClub(id) || {}).name : (_biz(id) || {}).name;
+  sbRest('verification_requests', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({
+    kind: kind, entity_id: id, entity_name: name || '', requester_id: currentUser.memberId, requester_email: currentUser.email.toLowerCase(), note: note }) })
+    .then(function () { toast('Verification requested. An admin will review it.'); _paintVerifyRow(kind, id); })
+    .catch(function (ex) { _emErr(ex.message); });
 }
 function emPaintClubBanner(id) {
   var c = getClub(id); var el = $('emBannerPrev'); if (!el) return;
@@ -283,19 +302,11 @@ function editBizBanner(id) {
       '<label class="uploader"><input type="file" accept="image/*" multiple hidden onchange="emBizPhotosUpload(\'' + id + '\',event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Add slideshow photos</label></div>' +
     _toggleRow('emPrivate', 'Private listing', 'Hidden from public Browse unless someone has your link.', !!b.is_private) +
     _toggleRow('emPartner', 'Open to partnerships', 'Shows an “Open to partnerships” badge on your banner.', !!b.partnership_open) +
-    _verifyRowHTML(b.verified, 'verifyBusiness(\'' + id + '\')', 'business') +
+    _verifyRowHTML(b.verified, 'business', id) +
     '<div class="danger-zone"><div class="tr-title">Remove listing</div>' +
       '<button type="button" class="btn danger" onclick="deleteBusiness(\'' + id + '\')">Delete business</button></div>';
   _emOpen('Page settings', body, 'saveBizBanner(\'' + id + '\')');
   emPaintBizBanner(id); emPaintBizPhotos(id);
-}
-function verifyBusiness(id) {
-  var b = _biz(id); if (!b || !isBizOwner(b) || b.verified) return;
-  openConfirm('Verify this business?', 'This adds a gold Verified seal to your business’s page and card. It’s one-time and can’t be undone.', verifiedSeal(22, '#e6b422', '#ffffff'), function () {
-    // Save whatever is in the open Page settings form too, so verifying never discards edits.
-    var patch = $('emTitle') ? _bizBannerPatch(id) : {}; patch.verified = true;
-    _bizSave(id, patch, 'Business verified.');
-  }, 'Verify');
 }
 /* Remove the listing for good (its reviews go with it; live partnerships end). */
 function deleteBusiness(id) {

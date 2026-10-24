@@ -130,9 +130,11 @@ function submitReachOutRequest() {
    ============================================================ */
 function sbUpsertProfile() {
   if (!currentUser || typeof sbRest !== 'function' || !currentUser.memberId) return Promise.resolve();
+  if (typeof sbHasSession === 'function' && !sbHasSession(currentUser.email)) return Promise.resolve();
+  // user_id ties this member ID to the server account — the database uses it to know who "me" is.
   return sbRest('profiles?on_conflict=member_id', {
     method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify({ member_id: currentUser.memberId, email: currentUser.email.toLowerCase(), name: currentUser.name, private: !!currentUser.private, updated_at: new Date().toISOString() })
+    body: JSON.stringify({ member_id: currentUser.memberId, user_id: sbSession.user.id, email: currentUser.email.toLowerCase(), name: currentUser.name, private: !!currentUser.private, updated_at: new Date().toISOString() })
   }).catch(function () {});
 }
 function sbFindProfileByEmail(email) {

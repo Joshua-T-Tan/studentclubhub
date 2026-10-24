@@ -439,3 +439,5 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 .biz-verified, .biz-verified .bv-label { color: #1a1a1a; text-shadow: none; }
 /* Owner gear sits beside "Back" (stacked below it, it covered the page title on phones). */
 .banner-gear { top: 14px; left: 96px; width: 33px; height: 33px; }
+/* Directory cards: icon-only visibility chip (full text lives on the business page) */
+.deal-vis.is-compact { padding: 2px 4px; gap: 0; vertical-align: middle; }

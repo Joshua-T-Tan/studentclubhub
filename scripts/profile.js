@@ -304,24 +304,26 @@ function settingsAccount() {
       '<button class="btn danger" onclick="deleteAccount()">' + t('set_delete') + '</button></div>';
 }
 function toggle2fa() {
-  currentUser.twofa = !currentUser.twofa; persistUser(); renderSettings();
-  toast(currentUser.twofa ? 'Two-factor authentication enabled.' : 'Two-factor authentication disabled.');
+  var nv = !currentUser.twofa;
+  sbUpdateUser({ data: { twofa: nv } }).then(function () {
+    currentUser.twofa = nv; persistUser(); renderSettings();
+    toast(nv ? 'Two-factor authentication enabled.' : 'Two-factor authentication disabled.');
+  }).catch(function (ex) { toast(ex.message); });
 }
 function doChangePassword() {
   var cur = $('pwCurrent').value, nw = $('pwNew').value, cf = $('pwConfirm').value;
   if (!cur) return toast('Enter your current password.');
-  if (cur !== currentUser.pass) return toast('Your current password is incorrect.');
   if (!validPassword(nw)) return toast('New password must be at least 8 characters and include a number or symbol.');
   if (nw === cur) return toast('Pick a new password that’s different from your current one.');
   if (nw !== cf) return toast('New passwords don’t match.');
-  currentUser.pass = nw;
-  var users = loadUsers(), key = currentUser.email.toLowerCase();
-  if (users[key]) { users[key].pass = nw; saveUsers(users); }
-  $('pwCurrent').value = ''; $('pwNew').value = ''; $('pwConfirm').value = '';
-  toast('Your password has been updated.');
+  // Re-check the current password with the server, then save the new one there.
+  sbPasswordLogin(currentUser.email, cur).then(function () { return sbUpdateUser({ password: nw }); }).then(function () {
+    $('pwCurrent').value = ''; $('pwNew').value = ''; $('pwConfirm').value = '';
+    toast('Your password has been updated.');
+  }).catch(function (ex) { toast(ex.status === 400 && /match/i.test(ex.message) ? 'Your current password is incorrect.' : ex.message); });
 }
-/* Forgot password: email a 6-digit code (same Supabase OTP as sign-up), then set a new password.
-   Accounts live in the browser where they were created, so the reset works on that device. */
+/* Forgot password: email a 6-digit code (same Supabase code as sign-up), then set a new password.
+   Works on any device, and signs you in afterwards. */
 var _fpEmail = null;
 function _fpHead(sub) {
   return '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h3 style="font-size:1.15rem;font-weight:800">Reset your password</h3>' +
@@ -341,7 +343,6 @@ function closeForgot() { closeOverlay('forgotOverlay'); }
 function submitForgot() {
   var e = ($('forgotEmail').value || '').trim().toLowerCase();
   if (!(typeof isValidEmail === 'function' ? isValidEmail(e) : /@/.test(e))) return _fpErr('Enter a valid email address.');
-  if (!loadUsers()[e]) return _fpErr('No account with that email is saved in this browser. Reset it on the device where you signed up.');
   _fpEmail = e; authBusy2('fpSend', true, 'Sending…');
   sbSendOtp(e).then(function () {
     $('forgotBody').innerHTML = _fpHead('We sent a code to <strong>' + escHtml(e) + '</strong>. Enter it and choose a new password.') +
@@ -358,13 +359,10 @@ function submitForgotReset() {
   if (!validPassword(nw)) return _fpErr('Password must be at least 8 characters and include a number or symbol.');
   if (nw !== cf) return _fpErr('Passwords don’t match.');
   authBusy2('fpReset', true, 'Checking code…');
-  sbVerifyOtp(_fpEmail, code).then(function () {
-    var users = loadUsers(); if (!users[_fpEmail]) throw new Error('Account not found.');
-    users[_fpEmail].pass = nw; saveUsers(users);
-    if (currentUser && currentUser.email.toLowerCase() === _fpEmail) currentUser.pass = nw;
-    closeForgot(); toast('Password reset. You can log in with your new password.');
-    if (!currentUser && typeof openAuth === 'function') openAuth('login');
-  }).catch(function (ex) { authBusy2('fpReset', false); _fpErr(ex.message || 'That code is incorrect or has expired.'); });
+  sbVerifyOtp(_fpEmail, code).then(function () { return sbUpdateUser({ password: nw }); })
+    .then(function () { return _afterServerLogin(_fpEmail); })
+    .then(function (r) { delete r._new; closeForgot(); toast('Password reset. You’re signed in.'); if (typeof refreshFavUI === 'function') refreshFavUI(); })
+    .catch(function (ex) { authBusy2('fpReset', false); _fpErr(ex.message || 'That code is incorrect or has expired.'); });
 }
 
 /* Update the avatar in place - never re-render the whole Settings panel (keeps unsaved text). */
@@ -429,30 +427,22 @@ function closeDeleteAccount() { closeOverlay('deleteAccountOverlay'); }
 function confirmDeleteAccount() {
   if (!currentUser) return;
   var typed = ($('delAcctPass') && $('delAcctPass').value) || '';
-  if (typed !== currentUser.pass) {
-    var e = $('delAcctErr'); if (e) e.style.display = '';
-    var p = $('delAcctPass'); if (p) { p.value = ''; p.focus(); }
-    return;
-  }
-  // A club must always have a President, and a business needs an owner — hand those off first.
-  var owned = CLUBS.filter(function (c) { return c.verifiedOwner === currentUser.memberId; });
-  if (owned.length) { closeDeleteAccount(); return toast('You’re President of ' + owned.map(function (c) { return c.name; }).join(', ') + '. Hand off the presidency or delete the club first.'); }
-  var me = currentUser, mid = me.memberId, del = { method: 'DELETE', headers: { Prefer: 'return=minimal' } };
-  sbRest('businesses?owner_email=eq.' + encodeURIComponent(me.email.toLowerCase()) + '&select=name').catch(function () { return []; }).then(function (biz) {
-    if (biz && biz.length) { closeDeleteAccount(); return toast('You still own ' + biz.map(function (b) { return b.name; }).join(', ') + '. Remove your business listing first.'); }
-    if (mid) {
-      sbRest('club_members?member_id=eq.' + encodeURIComponent(mid), del).catch(function () {});
-      sbRest('profiles?member_id=eq.' + encodeURIComponent(mid), del).catch(function () {});
-    }
-    CLUBS.forEach(function (c) { var i = (c.roster || []).findIndex(function (m) { return m.memberId === mid; }); if (i > -1) { c.roster.splice(i, 1); c.memberCount = c.roster.length; } });
-    var users = loadUsers(); delete users[me.email.toLowerCase()]; saveUsers(users);
-    try { localStorage.removeItem('sch_saved_biz:' + me.email.toLowerCase()); } catch (e) {}
-    currentUser = null; if (typeof clearSessionEmail === 'function') { clearSessionEmail(); } else { localStorage.removeItem(LS.session); }
-    applyLanguage('en'); applyTheme('light');   // guests always get the defaults
-    closeDeleteAccount();
-    renderAuthArea(); if (typeof refreshFavUI === 'function') refreshFavUI();
-    if (typeof applyFilters === 'function') applyFilters();
-    showView('main'); toast('Your account has been deleted.');
-  });
+  var showErr = function () { var e = $('delAcctErr'); if (e) e.style.display = ''; var p = $('delAcctPass'); if (p) { p.value = ''; p.focus(); } };
+  if (!typed) return showErr();
+  var me = currentUser;
+  // The server checks the password, then removes the account, its profile and memberships
+  // (and refuses while you still lead a club or own a business).
+  sbPasswordLogin(me.email, typed).then(function () { return sbRpc('delete_my_account'); }, function (ex) { if (ex.status === 400) { showErr(); return 'bad'; } throw ex; })
+    .then(function (res) {
+      if (res === 'bad') return;
+      CLUBS.forEach(function (c) { var i = (c.roster || []).findIndex(function (m) { return m.memberId === me.memberId; }); if (i > -1) { c.roster.splice(i, 1); c.memberCount = c.roster.length; } });
+      var users = loadUsers(); delete users[me.email.toLowerCase()]; saveUsers(users);
+      try { localStorage.removeItem('sch_saved_biz:' + me.email.toLowerCase()); } catch (e) {}
+      currentUser = null; sbSignOut(); clearSessionEmail();
+      applyLanguage('en'); applyTheme('light');   // guests always get the defaults
+      closeDeleteAccount(); renderAuthArea(); if (typeof refreshFavUI === 'function') refreshFavUI();
+      if (typeof applyFilters === 'function') applyFilters();
+      showView('main'); toast('Your account has been deleted.');
+    }).catch(function (ex) { closeDeleteAccount(); toast(ex.message); });
 }
 

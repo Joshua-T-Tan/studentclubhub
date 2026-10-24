@@ -344,6 +344,84 @@ var I18N_EXTRA7 = {
     create_p:'發布你的社團，讓學生發現並加入。' }
 };
 Object.keys(I18N_EXTRA7).forEach(function (lc) { var d = I18N[lc] || (I18N[lc] = {}); var s = I18N_EXTRA7[lc]; for (var k in s) d[k] = s[k]; });
+/* Completes es / fr / ja (and the newest keys for zh) so every language covers the full key set. */
+var CARET = ' <span class="caret">⌄</span>';
+var I18N_EXTRA8 = {
+  es: {
+    au_login:'Iniciar sesión', au_signup:'Registrarse', au_name:'Nombre completo', au_email:'Correo electrónico', au_password:'Contraseña', au_confirm:'Confirmar contraseña', au_create:'Crear cuenta',
+    au_pwhint:'Al menos 8 caracteres, con un número o símbolo.', au_verify_h:'Verifica tu correo', au_verify_p:'Escribe el código de verificación que enviamos a tu correo:', au_code:'Código de verificación', au_verify_btn:'Verificar', au_resend:'Reenviar código',
+    au_onboard_h:'Completa tu perfil', au_onboard_p:'Solo unos datos para personalizar tu experiencia.', au_hs:'Escuela secundaria', au_district:'Distrito escolar', au_zip:'Código postal', au_lang:'Idioma preferido', au_finish:'Terminar',
+    cc_name:'Nombre del club', cc_desc:'Descripción', cc_category:'Categoría', cc_school:'Escuela', cc_district:'Distrito escolar', cc_zip:'Código postal', cc_email:'Correo de contacto del líder', cc_meeting:'Horario de reuniones', cc_tags:'Etiquetas', cc_invite:'Código de invitación para líderes', cc_visibility:'Estado del club',
+    continue_mgmt:'Ir a la gestión del club', copy_link:'Copiar enlace directo', id_copied:'¡Enlace directo copiado!', link_copied:'¡Enlace copiado!', links_max:'Puedes añadir hasta 8 enlaces (4 por fila).',
+    empty_saved:'Aún no tienes clubes guardados. Explora el directorio y toca Guardar en los clubes que te gusten.', empty_lead:'Todavía no diriges ningún club. Crea uno para administrarlo aquí.', empty_joined:'Todavía no te has unido a ningún club.', empty_search:'Ningún club coincide con tu búsqueda.',
+    gallery_empty:'Todavía no hay fotos ni videos.', gallery_view_all:'Ver todo el contenido',
+    mod_remove_h:'¿Quitar miembro?', mod_remove_pre:'¿Seguro que quieres quitar a ', mod_remove_post:' del club? Nota: los miembros quitados pueden volver a unirse en el futuro.', mod_remove_btn:'Quitar miembro',
+    mod_ban_h:'¿Bloquear miembro?', mod_ban_pre:'¿Seguro que quieres BLOQUEAR a ', mod_ban_post:'? Atención: los miembros bloqueados no podrán volver a unirse a este club.', mod_ban_btn:'Bloquear miembro', mod_banned_h:'Usuarios bloqueados', mod_no_banned:'No hay usuarios bloqueados.',
+    nav_students:'Estudiantes' + CARET, nav_business:'Negocios locales' + CARET, nav_purpose:'Sobre nosotros' + CARET, nav_browse_shops:'Explorar negocios', nav_register_shop:'Registra tu negocio', nav_my_shop:'Mi negocio', nav_saved_shops:'Negocios guardados', nav_philosophy:'Nuestra filosofía', nav_howitworks:'Cómo funciona', nav_faq:'Preguntas frecuentes',
+    roster_search_ph:'Buscar miembros por nombre...', search_saved_ph:'Buscar por nombre del club, ID o código postal...',
+    rv_delete_h:'¿Eliminar reseña?', rv_delete_msg:'Esto elimina tu reseña de forma permanente.', rv_edit_h:'Editar tu reseña', rv_save:'Guardar cambios', rv_reply:'Responder', rv_reply_prompt:'Escribe una respuesta a esta reseña:', rv_reply_done:'Respuesta publicada.', rv_reply_del_h:'¿Eliminar respuesta?', rv_reply_del_msg:'Esta respuesta se eliminará para todos.',
+    sec_links:'Enlaces', share_direct:'Enlace directo', share_qr:'Código QR del club', share_instr:'Copia este enlace o escanea el código QR para invitar a amigos y futuros miembros directamente a tu club.',
+    set_privacy:'Privacidad', set_private_title:'Perfil privado', set_private_desc_full:'Si está activado, los demás solo ven tu nombre, tu ID de miembro y cuántos clubes diriges. Tu escuela, biografía, titular y listas de clubes quedan ocultos.',
+    set_2fa_title:'Activar verificación en dos pasos (2FA)', set_2fa_desc:'Pide un código por correo cada vez que inicias sesión para proteger tu cuenta.', set_lang_region:'Idioma y región', set_change_pw:'Cambiar contraseña', set_curpw:'Contraseña actual', set_newpw:'Nueva contraseña', set_confirmpw:'Confirmar nueva contraseña', set_forgot:'¿Olvidaste tu contraseña?', set_update_pw:'Actualizar contraseña',
+    set_email_notif_title:'Activar notificaciones por correo', set_email_notif_desc:'Recibe anuncios del club, cambios de rol e invitaciones a eventos en tu correo registrado.', set_logout:'Cerrar sesión', set_delete:'Eliminar cuenta', set_account:'Cuenta', set_view_public:'Ver perfil público', set_savechanges:'Guardar cambios', set_upload_photo:'Subir foto',
+    set_fullname:'Nombre completo', set_hs:'Escuela secundaria', set_grad:'Año de graduación', set_headline:'Titular', set_bio:'Biografía', set_email:'Correo electrónico', set_memberid:'ID de miembro', set_remove:'Quitar', set_notifications:'Notificaciones', set_security:'Seguridad', set_appearance:'Apariencia', set_dark_desc:'Cambia entre el tema claro y el oscuro.',
+    sort_joined:'Unido', sort_notjoined:'No unido', sort_public:'Público', sort_private:'Privado',
+    welcome_h:'¡Bienvenido a tu nuevo club!', welcome_p1:'El ID único de tu club es:', welcome_p2:'¡Comparte este ID o tu enlace directo para que los estudiantes encuentren tu club y se unan rápido!', bio_chars:'caracteres'
+  },
+  fr: {
+    au_login:'Se connecter', au_signup:'S’inscrire', au_name:'Nom complet', au_email:'E-mail', au_password:'Mot de passe', au_confirm:'Confirmer le mot de passe', au_create:'Créer un compte',
+    au_pwhint:'Au moins 8 caractères, dont un chiffre ou un symbole.', au_verify_h:'Vérifie ton e-mail', au_verify_p:'Saisis le code de vérification envoyé à ton adresse e-mail :', au_code:'Code de vérification', au_verify_btn:'Vérifier', au_resend:'Renvoyer le code',
+    au_onboard_h:'Complète ton profil', au_onboard_p:'Quelques infos pour personnaliser ton expérience.', au_hs:'Lycée', au_district:'District scolaire', au_zip:'Code postal', au_lang:'Langue préférée', au_finish:'Terminer',
+    cc_name:'Nom du club', cc_desc:'Description', cc_category:'Catégorie', cc_school:'Établissement', cc_district:'District scolaire', cc_zip:'Code postal', cc_email:'E-mail de contact du responsable', cc_meeting:'Horaires des réunions', cc_tags:'Mots-clés', cc_invite:'Code d’invitation responsable', cc_visibility:'Statut du club',
+    continue_mgmt:'Accéder à la gestion du club', copy_link:'Copier le lien direct', id_copied:'Lien direct copié !', link_copied:'Lien copié !', links_max:'Tu peux ajouter jusqu’à 8 liens (4 par ligne).',
+    empty_saved:'Aucun club enregistré pour l’instant. Parcours l’annuaire et touche Enregistrer sur les clubs qui te plaisent.', empty_lead:'Tu ne diriges encore aucun club. Crées-en un pour le gérer ici.', empty_joined:'Tu n’as encore rejoint aucun club.', empty_search:'Aucun club ne correspond à ta recherche.',
+    gallery_empty:'Aucune photo ni vidéo pour l’instant.', gallery_view_all:'Voir tous les médias',
+    mod_remove_h:'Retirer ce membre ?', mod_remove_pre:'Veux-tu vraiment retirer ', mod_remove_post:' du club ? Remarque : un membre retiré peut rejoindre le club plus tard.', mod_remove_btn:'Retirer le membre',
+    mod_ban_h:'Bannir ce membre ?', mod_ban_pre:'Veux-tu vraiment BANNIR ', mod_ban_post:' ? Attention : un membre banni ne pourra plus jamais rejoindre ce club.', mod_ban_btn:'Bannir le membre', mod_banned_h:'Utilisateurs bannis', mod_no_banned:'Aucun utilisateur banni.',
+    nav_students:'Élèves' + CARET, nav_business:'Commerces locaux' + CARET, nav_purpose:'À propos' + CARET, nav_browse_shops:'Parcourir les commerces', nav_register_shop:'Inscrire ton commerce', nav_my_shop:'Mon commerce', nav_saved_shops:'Commerces enregistrés', nav_philosophy:'Notre philosophie', nav_howitworks:'Comment ça marche', nav_faq:'FAQ',
+    roster_search_ph:'Rechercher un membre par nom...', search_saved_ph:'Rechercher par nom de club, ID ou code postal...',
+    rv_delete_h:'Supprimer l’avis ?', rv_delete_msg:'Ton avis sera supprimé définitivement.', rv_edit_h:'Modifier ton avis', rv_save:'Enregistrer', rv_reply:'Répondre', rv_reply_prompt:'Écris une réponse à cet avis :', rv_reply_done:'Réponse publiée.', rv_reply_del_h:'Supprimer la réponse ?', rv_reply_del_msg:'Cette réponse sera supprimée pour tout le monde.',
+    sec_links:'Liens', share_direct:'Lien direct', share_qr:'QR code du club', share_instr:'Copie ce lien ou scanne le QR code pour inviter tes amis et de futurs membres directement dans ton club.',
+    set_privacy:'Confidentialité', set_private_title:'Profil privé', set_private_desc_full:'Activé, les autres ne voient que ton nom, ton ID de membre et le nombre de clubs que tu diriges. Ton établissement, ta bio, ton titre et tes listes de clubs restent masqués.',
+    set_2fa_title:'Activer la double authentification (2FA)', set_2fa_desc:'Un code par e-mail est demandé à chaque connexion pour protéger ton compte.', set_lang_region:'Langue et région', set_change_pw:'Changer le mot de passe', set_curpw:'Mot de passe actuel', set_newpw:'Nouveau mot de passe', set_confirmpw:'Confirmer le nouveau mot de passe', set_forgot:'Mot de passe oublié ?', set_update_pw:'Mettre à jour',
+    set_email_notif_title:'Activer les notifications par e-mail', set_email_notif_desc:'Reçois les annonces du club, les changements de rôle et les invitations à des événements sur ton e-mail.', set_logout:'Se déconnecter', set_delete:'Supprimer le compte', set_account:'Compte', set_view_public:'Voir le profil public', set_savechanges:'Enregistrer', set_upload_photo:'Importer une photo',
+    set_fullname:'Nom complet', set_hs:'Lycée', set_grad:'Année de fin d’études', set_headline:'Titre', set_bio:'Bio', set_email:'E-mail', set_memberid:'ID de membre', set_remove:'Retirer', set_notifications:'Notifications', set_security:'Sécurité', set_appearance:'Apparence', set_dark_desc:'Passe du thème clair au thème sombre.',
+    sort_joined:'Rejoints', sort_notjoined:'Non rejoints', sort_public:'Public', sort_private:'Privé',
+    welcome_h:'Bienvenue dans ton nouveau club !', welcome_p1:'L’ID unique de ton club est :', welcome_p2:'Partage cet ID ou ton lien direct pour que les élèves trouvent et rejoignent ton club rapidement !', bio_chars:'caractères'
+  },
+  ja: {
+    au_login:'ログイン', au_signup:'新規登録', au_name:'氏名', au_email:'メールアドレス', au_password:'パスワード', au_confirm:'パスワード（確認）', au_create:'アカウントを作成',
+    au_pwhint:'8文字以上で、数字または記号を含めてください。', au_verify_h:'メールアドレスの確認', au_verify_p:'メールに送信された確認コードを入力してください：', au_code:'確認コード', au_verify_btn:'確認する', au_resend:'コードを再送信',
+    au_onboard_h:'プロフィールを完成させよう', au_onboard_p:'あなたに合わせた表示にするため、いくつか教えてください。', au_hs:'高校', au_district:'学区', au_zip:'郵便番号', au_lang:'使用言語', au_finish:'完了',
+    cc_name:'クラブ名', cc_desc:'説明', cc_category:'カテゴリー', cc_school:'学校', cc_district:'学区', cc_zip:'郵便番号', cc_email:'リーダーの連絡先メール', cc_meeting:'活動日時', cc_tags:'タグ', cc_invite:'リーダー招待コード', cc_visibility:'クラブの公開設定',
+    continue_mgmt:'クラブ管理へ進む', copy_link:'直接リンクをコピー', id_copied:'直接リンクをコピーしました！', link_copied:'リンクをコピーしました！', links_max:'リンクは最大8件（1行に4件）まで追加できます。',
+    empty_saved:'保存したクラブはまだありません。一覧から気になるクラブの「保存」をタップしましょう。', empty_lead:'まだリーダーを務めるクラブはありません。クラブを作るとここで管理できます。', empty_joined:'まだどのクラブにも参加していません。', empty_search:'検索に一致するクラブはありません。',
+    gallery_empty:'写真や動画はまだありません。', gallery_view_all:'すべてのメディアを見る',
+    mod_remove_h:'メンバーを外しますか？', mod_remove_pre:'', mod_remove_post:' さんをクラブから外しますか？ 外されたメンバーは後で再参加できます。', mod_remove_btn:'メンバーを外す',
+    mod_ban_h:'メンバーをブロックしますか？', mod_ban_pre:'', mod_ban_post:' さんをブロックしますか？ ブロックされたメンバーはこのクラブに二度と参加できません。', mod_ban_btn:'ブロックする', mod_banned_h:'ブロック中のユーザー', mod_no_banned:'ブロック中のユーザーはいません。',
+    nav_students:'学生' + CARET, nav_business:'地元のお店' + CARET, nav_purpose:'私たちについて' + CARET, nav_browse_shops:'お店を探す', nav_register_shop:'お店を登録', nav_my_shop:'マイショップ', nav_saved_shops:'保存したお店', nav_philosophy:'私たちの理念', nav_howitworks:'使い方', nav_faq:'よくある質問',
+    roster_search_ph:'名前でメンバーを検索...', search_saved_ph:'クラブ名・ID・郵便番号で検索...',
+    rv_delete_h:'レビューを削除しますか？', rv_delete_msg:'あなたのレビューは完全に削除されます。', rv_edit_h:'レビューを編集', rv_save:'変更を保存', rv_reply:'返信', rv_reply_prompt:'このレビューへの返信を入力してください：', rv_reply_done:'返信を投稿しました。', rv_reply_del_h:'返信を削除しますか？', rv_reply_del_msg:'この返信は全員の画面から削除されます。',
+    sec_links:'リンク', share_direct:'直接リンク', share_qr:'クラブのQRコード', share_instr:'このリンクをコピーするかQRコードを読み取って、友達や入部希望者をクラブに直接招待しましょう。',
+    set_privacy:'プライバシー', set_private_title:'非公開プロフィール', set_private_desc_full:'オンにすると、他の人に表示されるのは名前・メンバーID・リーダーを務めるクラブ数だけになります。学校、自己紹介、肩書き、クラブ一覧は非表示です。',
+    set_2fa_title:'二段階認証（2FA）を有効にする', set_2fa_desc:'ログインのたびにメールの確認コードを求めて、アカウントを守ります。', set_lang_region:'言語と地域', set_change_pw:'パスワードを変更', set_curpw:'現在のパスワード', set_newpw:'新しいパスワード', set_confirmpw:'新しいパスワード（確認）', set_forgot:'パスワードをお忘れですか？', set_update_pw:'パスワードを更新',
+    set_email_notif_title:'メール通知を有効にする', set_email_notif_desc:'クラブのお知らせ、役職の変更、イベントの招待を登録メールで受け取ります。', set_logout:'ログアウト', set_delete:'アカウントを削除', set_account:'アカウント', set_view_public:'公開プロフィールを見る', set_savechanges:'変更を保存', set_upload_photo:'写真をアップロード',
+    set_fullname:'氏名', set_hs:'高校', set_grad:'卒業年', set_headline:'肩書き', set_bio:'自己紹介', set_email:'メールアドレス', set_memberid:'メンバーID', set_remove:'削除', set_notifications:'通知', set_security:'セキュリティ', set_appearance:'表示', set_dark_desc:'ライトテーマとダークテーマを切り替えます。',
+    sort_joined:'参加中', sort_notjoined:'未参加', sort_public:'公開', sort_private:'非公開',
+    welcome_h:'新しいクラブへようこそ！', welcome_p1:'あなたのクラブIDは：', welcome_p2:'このIDか直接リンクを共有すれば、学生がすぐにクラブを見つけて参加できます！', bio_chars:'文字'
+  },
+  'zh-CN': {
+    nav_students:'学生' + CARET, nav_business:'本地商家' + CARET, nav_purpose:'关于我们' + CARET, nav_browse_shops:'浏览商家', nav_register_shop:'登记你的商家', nav_my_shop:'我的商家', nav_saved_shops:'已收藏的商家', nav_philosophy:'我们的理念', nav_howitworks:'使用方法', nav_faq:'常见问题',
+    sec_links:'链接', gallery_empty:'还没有照片或视频。', gallery_view_all:'查看全部媒体', links_max:'最多可添加 8 个链接（每行 4 个）。', id_copied:'直达链接已复制！',
+    rv_reply:'回复', rv_reply_prompt:'写下对这条评价的回复：', rv_reply_done:'回复已发布。', rv_reply_del_h:'删除回复？', rv_reply_del_msg:'这条回复将对所有人删除。'
+  },
+  'zh-TW': {
+    nav_students:'學生' + CARET, nav_business:'在地商家' + CARET, nav_purpose:'關於我們' + CARET, nav_browse_shops:'瀏覽商家', nav_register_shop:'登記你的商家', nav_my_shop:'我的商家', nav_saved_shops:'已收藏的商家', nav_philosophy:'我們的理念', nav_howitworks:'使用方式', nav_faq:'常見問題',
+    sec_links:'連結', gallery_empty:'還沒有照片或影片。', gallery_view_all:'查看全部媒體', links_max:'最多可新增 8 個連結（每列 4 個）。', id_copied:'直達連結已複製！',
+    rv_reply:'回覆', rv_reply_prompt:'寫下對這則評價的回覆：', rv_reply_done:'回覆已發布。', rv_reply_del_h:'刪除回覆？', rv_reply_del_msg:'這則回覆將對所有人刪除。'
+  }
+};
+Object.keys(I18N_EXTRA8).forEach(function (lc) { var d = I18N[lc] || (I18N[lc] = {}); var s = I18N_EXTRA8[lc]; for (var k in s) d[k] = s[k]; });
 var LANG = 'en';
 function getLang() { try { return localStorage.getItem(LS.lang) || 'en'; } catch (e) { return 'en'; } }
 /* t(key) - translated fixed-UI string for the active language (English fallback). */
@@ -386,7 +464,7 @@ function toast(msg) {
   window._toastT = setTimeout(function () { t.classList.remove('show'); }, 2600);
 }
 
-var VIEWS = ['main', 'browse', 'myclubs', 'saved', 'profile', 'settings', 'club', 'create', 'philosophy', 'shops', 'faq', 'howitworks', 'business', 'inbox', 'contact'];
+var VIEWS = ['main', 'browse', 'myclubs', 'saved', 'profile', 'settings', 'club', 'create', 'philosophy', 'shops', 'faq', 'howitworks', 'business', 'inbox', 'contact', 'admin'];
 function showView(name) {
   VIEWS.forEach(function (v) {
     var el = $('view-' + v); if (el) el.classList.toggle('hidden', v !== name);
@@ -399,6 +477,7 @@ function showView(name) {
   if (name === 'settings' && typeof renderSettings === 'function') renderSettings();
   if (name === 'inbox' && typeof renderInbox === 'function') renderInbox();
   if (name === 'contact' && typeof renderContactPage === 'function') renderContactPage();
+  if (name === 'admin' && typeof renderAdmin === 'function') renderAdmin();
   if (typeof updateInboxFab === 'function') updateInboxFab(name);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -517,7 +596,10 @@ function initAuth() {
   var email = readSessionEmail();
   if (email) {
     var rec = loadUsers()[email.toLowerCase()];
-    if (rec) setSession(rec);
+    // A local account is only restored together with its server session; accounts from before
+    // server logins existed log in once more (that one login moves them onto the server).
+    if (rec && sbHasSession(email)) setSession(rec);
+    else { clearSessionEmail(); if (rec) setTimeout(function () { toast('We upgraded account security. Please log in once more.'); openAuth('login'); }, 600); }
   }
   renderAuthArea();
   // Restored session applies the account's own theme/language (in setSession);
@@ -537,7 +619,7 @@ function initAuth() {
 
 function setSession(rec) {
   currentUser = {
-    name: rec.name, email: rec.email, pass: rec.pass, memberId: rec.memberId,
+    name: rec.name, email: rec.email, memberId: rec.memberId,
     favorites: (rec.favorites || []).slice(), joined: (rec.joined || []).slice(),
     avatar: rec.avatar || null,
     school: rec.school || '', grad: rec.grad || '', headline: rec.headline || '',
@@ -551,8 +633,10 @@ function setSession(rec) {
   applyLanguage(currentUser.lang);
   applyTheme(currentUser.theme);
   // Sync this account's memberships + current name up to the server (self-heals stale names / legacy joins).
-  if (typeof reconcileMyMemberships === 'function') reconcileMyMemberships();
-  if (typeof sbUpsertProfile === 'function') sbUpsertProfile();       // register in the member directory (so others can message me by ID)
+  // Register in the member directory FIRST (it links this member ID to the server account, which the
+  // database needs before it accepts my writes), then sync my memberships.
+  var prof = (typeof sbUpsertProfile === 'function') ? sbUpsertProfile() : Promise.resolve();
+  prof.then(function () { if (typeof reconcileMyMemberships === 'function') reconcileMyMemberships(); });
 }
 /* Read a preference from the account record (nested user.preferences first, then flat legacy) */
 function prefsGet(rec, key) { return (rec && rec.preferences && rec.preferences[key]) || (rec && rec[key]) || ''; }
@@ -569,7 +653,7 @@ function persistUser() {
   rec.name = currentUser.name;
   rec.school = currentUser.school || ''; rec.grad = currentUser.grad || '';
   rec.headline = currentUser.headline || ''; rec.bio = currentUser.bio || '';
-  rec.private = !!currentUser.private;
+  rec.private = !!currentUser.private; delete rec.pass;
   rec.district = currentUser.district || ''; rec.zip = currentUser.zip || ''; rec.twofa = !!currentUser.twofa;
   rec.emailNotif = currentUser.emailNotif !== false;
   rec.lang = currentUser.lang || 'en'; rec.theme = currentUser.theme || 'light';
@@ -673,17 +757,28 @@ function submitLogin() {
   authErrMsg = '';
   var email = ($('alEmail').value || '').trim().toLowerCase(), pass = $('alPass').value;
   if (!email || !pass) return authErr('Email and password are required.');
-  var rec = loadUsers()[email];
-  if (!rec || rec.pass !== pass) return authErr('That email and password don’t match an account.');
-  if (rec.twofa) {                              // 2FA: email a real OTP before granting access
-    otpMode = 'login'; otpLoginRec = rec; verifyEmail = email;
-    authBusy('btnLogin', true, 'Sending code…');
-    sbSendOtp(email).then(function () {
-      authStage = 'verify'; renderAuth(); startResendCooldown(60);
-    }).catch(function (e2) { authBusy('btnLogin', false); authErr(e2.message); });
-    return;
-  }
-  setSession(rec); finishAuth('Welcome back, ' + rec.name.split(' ')[0] + '!');
+  authBusy('btnLogin', true, 'Logging in…');
+  sbPasswordLogin(email, pass).then(function (s) {
+    var rec = loadUsers()[email];
+    if ((s.user.meta && s.user.meta.twofa) || (rec && rec.twofa)) {   // 2FA: also prove the inbox with a code
+      sbSignOut(); otpMode = 'login2fa'; verifyEmail = email;
+      return sbSendOtp(email).then(function () { authStage = 'verify'; renderAuth(); startResendCooldown(60); });
+    }
+    return _afterServerLogin(email).then(function (r) { finishAuth('Welcome back, ' + r.name.split(' ')[0] + '!'); });
+  }).catch(function (e) {
+    var rec = loadUsers()[email];
+    // Accounts made before server logins existed have their password only in this browser:
+    // confirm the email once with a code, then that password is saved on the server.
+    if (rec && rec.pass && rec.pass === pass && e.status === 400) {
+      otpMode = 'upgrade'; verifyEmail = email; pendingReg = { email: email, pass: pass };
+      return sbSendOtp(email).then(function () {
+        authIntroMsg = 'One-time security upgrade: we emailed you a code to confirm it’s you.';
+        authStage = 'verify'; renderAuth(); startResendCooldown(60);
+      }).catch(function (e2) { authBusy('btnLogin', false); authErr(e2.message); });
+    }
+    authBusy('btnLogin', false);
+    authErr(e.status === 400 ? 'That email and password don’t match an account. (New device? Use “Forgot Password?” once to set your password.)' : e.message);
+  });
 }
 function submitSignup() {
   authErrMsg = '';
@@ -692,7 +787,6 @@ function submitSignup() {
   if (!name) return authErr('Please enter your name.');
   if (!email) return authErr('Please enter your email.');
   if (!isValidEmail(email)) return authErr('Please enter a valid email address (e.g. you@school.edu).');
-  if (loadUsers()[email]) return authErr('There’s already an account with that email. Try logging in.');
   if (!validPassword(pass)) return authErr('Password must be at least 8 characters and include a number or symbol.');
   if (pass !== confirm) return authErr('Passwords don’t match.');
   pendingReg = { name: name, email: email, pass: pass };
@@ -716,20 +810,50 @@ function submitVerify() {
   if (!code) return authErr('Enter the code from your email.');
   authBusy('btnVerify', true, 'Verifying…');
   sbVerifyOtp(verifyEmail, code).then(function () {
-    if (otpMode === 'login') { setSession(otpLoginRec); finishAuth('Welcome back, ' + otpLoginRec.name.split(' ')[0] + '!'); return; }
-    // signup verified → create the local account, then continue to onboarding
-    return genMemberIdUnique().then(function (memberId) {
-      var users = loadUsers();
-      var rec = { name: pendingReg.name, email: pendingReg.email, pass: pendingReg.pass, memberId: memberId,
-        favorites: [], joined: [], avatar: null, emailNotif: true, twofa: false };
-      users[pendingReg.email] = rec; saveUsers(users);
-      setSession(rec); renderAuthArea();
-      if (typeof sbUpsertProfile === 'function') sbUpsertProfile();
+    if (otpMode === 'login2fa') return _afterServerLogin(verifyEmail).then(function (r) { finishAuth('Welcome back, ' + r.name.split(' ')[0] + '!'); });
+    if (otpMode === 'upgrade') {
+      return sbUpdateUser({ password: pendingReg.pass }).catch(function () {}).then(function () { return _afterServerLogin(verifyEmail); })
+        .then(function (r) { pendingReg = null; finishAuth('You’re all set, ' + r.name.split(' ')[0] + '. Your account is now secured on the server.'); });
+    }
+    // sign-up: save the password on the server, then reuse this email's member ID if it already had one
+    return sbUpdateUser({ password: pendingReg.pass }).catch(function () {}).then(function () {
+      return _afterServerLogin(pendingReg.email, pendingReg.name);
+    }).then(function (r) {
+      var fresh = r._new; delete r._new; pendingReg = null;
+      if (!fresh) return finishAuth('Welcome back, ' + r.name.split(' ')[0] + '! That email already had an account, so you’re signed in to it.');
       authStage = 'onboard'; renderAuth();
     });
   }).catch(function (e2) {
     authBusy('btnVerify', false);
     authErr(e2.message || 'That code is incorrect or has expired.');
+  });
+}
+/* After a server login: the server profile (by user id, then email) is who you are, so the
+   same person always gets the same Member ID on every device. Builds/refreshes the local record. */
+function _afterServerLogin(email, newName) {
+  email = String(email).toLowerCase();
+  var uid = sbSession && sbSession.user.id;
+  var byUser = sbRest('profiles?user_id=eq.' + encodeURIComponent(uid) + '&select=member_id,name,private,email').catch(function () { return []; });
+  return byUser.then(function (rows) {
+    if (rows && rows[0]) return rows[0];
+    return sbRest('profiles?email=eq.' + encodeURIComponent(email) + '&select=member_id,name,private,email').then(function (r2) { return r2 && r2[0]; }, function () { return null; });
+  }).then(function (p) {
+    var users = loadUsers(), rec = users[email], isNew = !p && !(rec && rec.memberId);
+    var idP = p ? Promise.resolve(p.member_id) : (rec && rec.memberId ? Promise.resolve(rec.memberId) : genMemberIdUnique());
+    return idP.then(function (memberId) {
+      rec = rec || { favorites: [], joined: [], avatar: null, emailNotif: true, twofa: false };
+      if (rec.memberId && rec.memberId !== memberId) rec.joined = [];      // a stray second ID → the server's memberships win
+      rec.memberId = memberId; rec.email = email;
+      rec.name = rec.name || (p && p.name) || newName || email.split('@')[0];
+      if (p) rec.private = !!p.private;
+      if (sbSession && sbSession.user.meta) rec.twofa = !!sbSession.user.meta.twofa || !!rec.twofa;
+      delete rec.pass;                                                     // passwords live on the server now
+      users[email] = rec; saveUsers(users);
+      setSession(rec); renderAuthArea();
+      if (typeof refreshAdminFlag === 'function') refreshAdminFlag();
+      if (isNew) rec._new = true;
+      return rec;
+    });
   });
 }
 function submitOnboard() {
@@ -758,6 +882,8 @@ function logout() {
 function doLogout() {
   persistUser();
   currentUser = null;
+  if (typeof sbSignOut === 'function') sbSignOut();
+  if (typeof isAdminUser !== 'undefined') isAdminUser = false;
   clearSessionEmail();
   // Reset guest UI to the Light + English defaults
   applyTheme('light'); applyLanguage('en');
@@ -793,6 +919,7 @@ function renderAuthArea() {
       avatarHTML(currentUser.name, 'sm') +
       '<span class="name">' + escHtml(currentUser.name.split(' ')[0]) + '</span>' +
     '</button>' +
+    (typeof isAdminUser !== 'undefined' && isAdminUser ? '<button class="logout-btn" title="Admin" onclick="openAdmin()">' + svgIcon('lock', 16) + '<span>Admin</span></button>' : '') +
     '<button id="logoutBtn" class="logout-btn" title="' + escAttr(t('set_logout')) + '" onclick="logout()">' + ICON_LOGOUT + '<span>' + t('set_logout') + '</span></button>';
 }
 

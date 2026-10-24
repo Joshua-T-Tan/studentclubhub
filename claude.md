@@ -17,8 +17,11 @@ monetary features have been intentionally removed and must not be reintroduced.
   Fonts stylesheet (Space Grotesk + Inter, MP31) — both degrade gracefully to
   system fonts / an error toast if offline, so the rest of the app still runs
   from `file://` or any static host.
-- **Persistence: Supabase REST + `localStorage`.** Accounts, sessions, saves and
-  preferences live in `localStorage`. Shared data lives in Supabase (project
+- **Persistence: Supabase REST + `localStorage`.** Every account is a **Supabase
+  Auth user** (email + password; email proven by a 6-digit code). The session's
+  access token (`sbSession`, supabase.js) is sent on every `sbRest` call, and
+  **row-level security decides who may write what**. The browser keeps only a
+  profile cache + saves/preferences in `localStorage` — never passwords. Shared data lives in Supabase (project
   `xadmwmwagxeiidmeqspa`) via plain `fetch` (`sbRest()` in business.js, no SDK):
   `clubs` (one JSONB blob per club), `club_members` (**the source of truth for
   rosters/roles/counts** — never trust a blob's `roster`), `club_chat`,
@@ -63,6 +66,7 @@ monetary features have been intentionally removed and must not be reintroduced.
 | `scripts/messages.js` | "Reach Out" popup (public contact email + partnership request form), profiles table sync, Partnership Requests inbox + FAB badge. |
 | `scripts/partnerships.js` | Partnership lifecycle (pending → launched/declined/deleted, launched → ended; every transition is status-guarded), the "Partnership" tag and deal boxes. Requests are addressed to the club/business id, not a person. |
 | `scripts/editors.js` | Per-section owner editors (gear/pencil popups) for clubs and businesses, incl. the President-only danger zone (hand off & leave, delete club) and Delete business. |
+| `scripts/admin.js` | Admin page (emails in the server's `admins` table): approve/reject Verified-seal requests, remove seals, manage private invite codes. Loaded last. |
 | `scripts/hero-motion.js` | Canvas animation behind the homepage hero (10-second seamless loop). Loaded after pages.js. |
 
 - **Maximum 1,000 lines per file module.** If a module approaches the limit,
@@ -155,31 +159,28 @@ feeds, Stripe/payout/bank fields, shoutouts, or any money movement or pricing.
 - One responsibility per function; name functions for what they render/do.
 - Keep `localStorage` keys namespaced with the `sch_` prefix.
 
-## 6. Security Posture (MVP) — known limitations
+## 6. Security Posture
 
-This is a prototype. Its data model is **not** access-controlled, by design of
-the current architecture. Understand these before shipping to real users:
+Schema + policies: `supabase/security_2026_10.sql` (and later `supabase/*.sql`).
 
-- **No real authentication → no real authorization.** Accounts and sessions
-  live in `localStorage`; every Supabase request uses the **public publishable
-  key** with no per-user JWT. RLS policies therefore have no `auth.uid()` to key
-  on, so every table backed by REST is effectively **world-readable and
-  world-writable** by anyone with the (public) key. All role/ownership checks
-  (`ownerOf`, `canEditClub`, `isBizOwner`, officer gates) are **client-side only
-  and trivially bypassable**. *Fix path:* adopt real Supabase Auth sessions, then
-  rewrite RLS to `auth.uid()`-scoped policies and move authorization server-side.
-- **Listings go live immediately and the gold "Verified" seal is self-assigned.**
-  `submitBusiness()` writes `status:'verified'` (a `// TEMP:` auto-approve), and
-  the club/business `verified` flag is a one-time owner toggle. Neither is a
-  trust signal yet. *Fix path:* an admin approval step for listings + seals.
-- **Club saves are whole-blob, last-writer-wins.** Two officers editing different
-  fields of one club at the same moment can overwrite each other.
-- **Invite codes** (`VALID_INVITE_CODES` in directory.js) are visible to anyone
-  who reads the JS.
-- **No message storage (intentional).** In-app DMs were removed; the platform is
-  an initial connector. "Reach Out" opens the visitor's email client via
-  `mailto:` to the listing's **public** contact address only (never a private
-  login email). Only structured partnership requests are stored.
-- **Hardening in place:** user strings are escaped (`escHtml`/`escAttr`), query
-  params are `encodeURIComponent`-ed, and contact/creation emails are
-  format-validated. The publishable key is public by design (not a leak).
+- **Real accounts + row-level security.** Reads are public (it's a directory);
+  writes need a signed-in user and are checked in the database, not the browser:
+  Presidents manage their club (roles, bans, hand-off, delete via `delete_club`),
+  officers edit club content, owners edit their business, authors edit their own
+  reviews/chat, only business owners write owner replies. `my_member_id()` maps
+  the session to a member ID through `profiles.user_id`.
+- **Club saves are field-level** (`save_club` RPC merges only the top-level keys
+  an editor changed — `sbSaveClub` diffs against `_clubBase`), so simultaneous
+  edits to different parts of a page don't overwrite each other. Two people
+  editing the *same* field is still last-writer-wins.
+- **Verified seal is admin-granted.** Owners send a request
+  (`verification_requests`); an admin approves it on the Admin page. Triggers
+  ignore any other attempt to set `verified`.
+- **Invite codes are private** (`invite_codes` table, admin-only); the site can
+  only ask `check_invite_code`. Never put codes in the JS.
+- **Rollout switch:** `app_settings.legacy_writes` = `'on'` lets old anonymous
+  writes through (transition only). It must be `'off'` in production.
+- **Known limits:** 2FA (email code at login) is enforced by the site, not the
+  server. Listings still go live immediately (`status:'verified'` TEMP).
+  Accounts made before server logins upgrade on their next login via an emailed
+  code, so working auth email (SMTP) is required.

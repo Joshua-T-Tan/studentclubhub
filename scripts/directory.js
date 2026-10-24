@@ -38,8 +38,16 @@ function recruitBadge(status) {
 }
 
 /* ---------- Invite codes (temporary club-owner credentials) ---------- */
-var VALID_INVITE_CODES = ['PVPHS2026', 'WEST2026', 'DEMO2026', 'REDONDO2026', 'MIRACOSTA2026'];
-function isValidInvite(code) { return VALID_INVITE_CODES.indexOf((code || '').trim().toUpperCase()) !== -1; }
+/* Codes live in a private server table (admins manage them on the Admin page); the browser can
+   only ask "is this one valid?" — the list itself is never sent to the site. */
+var _inviteCheck = { code: null, ok: false };
+function checkInviteCode(code) {
+  code = (code || '').trim().toUpperCase();
+  if (!code) return Promise.resolve(false);
+  if (_inviteCheck.code === code) return Promise.resolve(_inviteCheck.ok);
+  return sbRpc('check_invite_code', { p_code: code }).then(function (ok) { _inviteCheck = { code: code, ok: !!ok }; return !!ok; }, function () { return false; });
+}
+function isValidInvite(code) { return _inviteCheck.code === (code || '').trim().toUpperCase() && _inviteCheck.ok; }
 
 /* ---------- Seed directory ---------- */
 var SEED_CLUBS = [
@@ -154,9 +162,8 @@ function deriveClubId(seed) {
   var id = ''; for (var j = 0; j < 6; j++) { id += chars.charAt(h % chars.length); h = Math.floor(h / chars.length) + (j + 1) * 7 + seed.length; }
   return id;
 }
-/* Local cache (best-effort) + authoritative per-club upsert to Supabase so edits
-   sync across accounts/devices. Pass the club that changed; otherwise the open
-   club (currentClubId) is used. */
+/* Local cache (best-effort) + a field-level server save. Pass the club that changed; otherwise the
+   open club (currentClubId) is used. */
 function saveUserClubs(club) {
   var seedIds = SEED_CLUBS.map(function (c) { return c.id; });
   var userClubs = CLUBS.filter(function (c) { return seedIds.indexOf(c.id) === -1; });
@@ -166,32 +173,43 @@ function saveUserClubs(club) {
   if (c) sbSaveClub(c);
   return true;
 }
-/* Clubs whose last save didn't reach the server (retried on next load). */
-var LS_UNSYNCED = 'sch_unsynced_clubs';
-function _unsynced(id, on) {
-  var l = []; try { l = JSON.parse(localStorage.getItem(LS_UNSYNCED)) || []; } catch (e) {}
-  if (id === undefined) return l;
-  var i = l.indexOf(id); if (on && i < 0) l.push(id); if (!on && i > -1) l.splice(i, 1);
-  try { localStorage.setItem(LS_UNSYNCED, JSON.stringify(l)); } catch (e) {}
-  return l;
+/* ---------- Supabase club sync ----------
+   _clubBase holds the server copy each club was loaded from. A save sends ONLY the top-level
+   fields that differ from it (save_club merges them in on the server), so two officers editing
+   different parts of a page at the same time no longer overwrite each other. Rosters and member
+   counts come from club_members, so they are never written into the club blob. */
+var _clubBase = {};
+var CLUB_LOCAL_KEYS = ['roster', 'memberCount'];
+function _rememberClubBase(d) { if (d && d.id) _clubBase[d.id] = JSON.parse(JSON.stringify(d)); }
+function _clubDiff(club) {
+  var base = _clubBase[club.id] || {}, patch = {}, remove = [], n = 0;
+  Object.keys(club).forEach(function (k) {
+    if (CLUB_LOCAL_KEYS.indexOf(k) > -1 || club[k] === undefined) return;
+    if (JSON.stringify(club[k]) !== JSON.stringify(base[k])) { patch[k] = club[k]; n++; }
+  });
+  Object.keys(base).forEach(function (k) { if (CLUB_LOCAL_KEYS.indexOf(k) === -1 && !(k in club)) { remove.push(k); n++; } });
+  return n ? { patch: patch, remove: remove } : null;
 }
-/* ---------- Supabase club sync ---------- */
+function _clubSaveError(ex) {
+  toast(/too large|413|payload/i.test(ex.message || '') ? 'Couldn’t save — the club’s media is too large. Remove a photo or video and try again.' : 'Couldn’t save: ' + ex.message);
+}
 function sbSaveClub(club) {
   if (typeof sbRest !== 'function' || !club || !club.id) return Promise.resolve();
-  return sbRest('clubs?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify({ id: club.id, data: club, updated_at: new Date().toISOString() }) })
-    .then(function () { _unsynced(club.id, false); })
-    .catch(function (ex) {
-      _unsynced(club.id, true);
-      toast(/too large|413|payload/i.test(ex.message || '') ? 'Couldn’t save — the club’s media is too large. Remove a photo or video and try again.' : 'Couldn’t save your changes to the server. Check your connection; they’ll retry next time you open the site.');
-    });
+  if (!_clubBase[club.id]) {   // brand-new club → create it
+    var data = JSON.parse(JSON.stringify(club)); CLUB_LOCAL_KEYS.forEach(function (k) { delete data[k]; });
+    return sbRest('clubs', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ id: club.id, data: data, updated_at: new Date().toISOString() }) })
+      .then(function (rows) { var d = rows && rows[0] && rows[0].data; _rememberClubBase(d || data); delete club.inviteCode; return d; })
+      .catch(function (ex) { _clubSaveError(ex); throw ex; });
+  }
+  var diff = _clubDiff(club); if (!diff) return Promise.resolve(null);
+  return sbRpc('save_club', { p_id: club.id, p_patch: diff.patch, p_remove: diff.remove })
+    .then(function (d) {
+      _rememberClubBase(d);
+      if (d && d.verified !== club.verified) club.verified = d.verified;   // the server owns the seal
+      return d;
+    }).catch(function (ex) { _clubSaveError(ex); });
 }
-function sbDeleteClub(id) {
-  if (typeof sbRest !== 'function') return Promise.resolve();
-  return sbRest('clubs?id=eq.' + encodeURIComponent(id), { method: 'DELETE', headers: { Prefer: 'return=minimal' } }).catch(function () {});
-}
-/* Fetch all clubs from the server (authoritative), seeding any missing seed clubs
-   and migrating this browser's local-only clubs up on first load. */
+/* Fetch all clubs from the server (authoritative). */
 var _clubsServerLoaded = false;
 function loadClubs(cb) {
   if (typeof sbRest !== 'function') { if (typeof cb === 'function') cb(); return; }
@@ -199,21 +217,12 @@ function loadClubs(cb) {
     rows = rows || [];
     var byId = {};
     rows.forEach(function (r) { if (r && r.data && r.id) byId[r.id] = r.data; });
-    var toUpsert = [];
-    SEED_CLUBS.forEach(function (s) { if (!byId[s.id]) { var c = cloneClub(s); byId[s.id] = c; toUpsert.push(c); } });
-    // Only push up MY clubs whose last save failed — never resurrect clubs that were deleted on the server.
-    var localStored = []; try { localStored = JSON.parse(localStorage.getItem(LS.clubs)) || []; } catch (e) {}
-    var pending = _unsynced();
-    localStored.forEach(function (lc) {
-      if (!lc || !lc.id || pending.indexOf(lc.id) === -1) return;
-      if (currentUser && lc.verifiedOwner === currentUser.memberId) { byId[lc.id] = lc; toUpsert.push(lc); }
-      else _unsynced(lc.id, false);
-    });
+    rows.forEach(function (r) { if (r && r.data && r.id) _rememberClubBase(r.data); });
+    SEED_CLUBS.forEach(function (s) { if (!byId[s.id]) byId[s.id] = cloneClub(s); });   // display only; the server copy wins
     CLUBS = Object.keys(byId).map(function (k) { return byId[k]; });
     CLUBS.forEach(function (c, i) { normalizeClub(c, i); });
     _clubsServerLoaded = true;
     try { var seedIds = SEED_CLUBS.map(function (s) { return s.id; }); localStorage.setItem(LS.clubs, JSON.stringify(CLUBS.filter(function (c) { return seedIds.indexOf(c.id) === -1; }))); } catch (e) {}
-    toUpsert.forEach(function (c) { sbSaveClub(c); });
     _loadAllMembers();            // every club's roster + member count from club_members (the source of truth)
     reconcileMyMemberships();     // pull my joined-club list from the server (memberships made on any device)
     buildSchoolFilter(); renderStats(); renderTopClubs();
@@ -266,18 +275,24 @@ function _loadAllMembers() {
     renderStats(); renderTopClubs(); if (typeof applyFilters === 'function') applyFilters();
   }).catch(function () {});
 }
-function sbAddMember(clubId, m) {
+/* Roster writes report a refusal (row-level security answers "0 rows changed", not an error). */
+function _memberWrite(path, opts, failMsg) {
   if (typeof sbRest !== 'function') return Promise.resolve();
-  return sbRest('club_members?on_conflict=club_id,member_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify({ club_id: clubId, member_id: m.memberId, email: (m.email || '').toLowerCase() || null, name: m.name, role: m.role || 'Member' }) }).catch(function () {});
+  opts.headers = { Prefer: (opts.headers && opts.headers.Prefer ? opts.headers.Prefer.replace('return=minimal', '') + ',' : '') + 'return=representation' };
+  return sbRest(path, opts).then(function (rows) {
+    if (Array.isArray(rows) && !rows.length) throw new Error(failMsg);
+    return rows;
+  }).catch(function (ex) { toast(ex.message || failMsg); });
+}
+function sbAddMember(clubId, m) {
+  return _memberWrite('club_members?on_conflict=club_id,member_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' },
+    body: JSON.stringify({ club_id: clubId, member_id: m.memberId, email: (m.email || '').toLowerCase() || null, name: m.name, role: m.role || 'Member' }) }, 'Couldn’t join this club.');
 }
 function sbSetMemberRole(clubId, memberId, role) {
-  if (typeof sbRest !== 'function') return Promise.resolve();
-  return sbRest('club_members?club_id=eq.' + encodeURIComponent(clubId) + '&member_id=eq.' + encodeURIComponent(memberId), { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ role: role }) }).catch(function () {});
+  return _memberWrite('club_members?club_id=eq.' + encodeURIComponent(clubId) + '&member_id=eq.' + encodeURIComponent(memberId), { method: 'PATCH', body: JSON.stringify({ role: role }) }, 'Only the President can change roles.');
 }
 function sbRemoveMember(clubId, memberId) {
-  if (typeof sbRest !== 'function') return Promise.resolve();
-  return sbRest('club_members?club_id=eq.' + encodeURIComponent(clubId) + '&member_id=eq.' + encodeURIComponent(memberId), { method: 'DELETE', headers: { Prefer: 'return=minimal' } }).catch(function () {});
+  return _memberWrite('club_members?club_id=eq.' + encodeURIComponent(clubId) + '&member_id=eq.' + encodeURIComponent(memberId), { method: 'DELETE' }, 'You don’t have permission to remove that member.');
 }
 function sbRenameMember(memberId, newName) {
   if (typeof sbRest !== 'function' || !memberId) return Promise.resolve();
@@ -312,7 +327,7 @@ function refetchClub(id, cb) {
   if (typeof sbRest !== 'function') { if (typeof cb === 'function') cb(); return; }
   sbRest('clubs?id=eq.' + encodeURIComponent(id) + '&select=data').then(function (rows) {
     var d = rows && rows[0] && rows[0].data;
-    if (d) { normalizeClub(d, 0); var i = CLUBS.findIndex(function (c) { return c.id === id; }); if (i > -1) CLUBS[i] = d; else CLUBS.push(d); }
+    if (d) { _rememberClubBase(d); normalizeClub(d, 0); var i = CLUBS.findIndex(function (c) { return c.id === id; }); if (i > -1) CLUBS[i] = d; else CLUBS.push(d); }
     if (typeof cb === 'function') cb();
   }).catch(function () { if (typeof cb === 'function') cb(); });
 }
@@ -576,17 +591,18 @@ function removeGalleryItem(i) { wizardGallery.splice(i, 1); paintGalleryPreview(
 
 function validateCreate() {
   var invite = $('ccInvite').value.trim(), msg = $('ccInviteMsg');
-  if (invite) {
+  var paint = function () {
     var ok = isValidInvite(invite);
-    msg.className = 'form-note ' + (ok ? 'ok' : 'bad');
-    msg.innerHTML = ok ? '✓ Verified. You can edit this listing.' : '✗ That invite code isn’t recognized.';
-  } else {
-    msg.className = 'form-note';
-    msg.innerHTML = 'Enter your school-issued invite code to verify you can author this listing. <em>Demo codes: PVPHS2026, WEST2026, DEMO2026.</em>';
-  }
-  var ready = $('ccName').value.trim() && createCategoryValue() && $('ccSchool').value.trim() &&
-    $('ccDistrict').value.trim() && $('ccZip').value.trim() && $('ccEmail').value.trim() && isValidInvite(invite);
-  $('ccPublish').disabled = !ready;
+    if (invite) { msg.className = 'form-note ' + (ok ? 'ok' : 'bad'); msg.innerHTML = ok ? '✓ Verified. You can publish this club.' : '✗ That invite code isn’t recognized.'; }
+    else { msg.className = 'form-note'; msg.innerHTML = 'Enter the club leader invite code from your school or from Student Club Hub.'; }
+    var ready = $('ccName').value.trim() && createCategoryValue() && $('ccSchool').value.trim() &&
+      $('ccDistrict').value.trim() && $('ccZip').value.trim() && $('ccEmail').value.trim() && ok;
+    $('ccPublish').disabled = !ready;
+  };
+  paint();
+  // ask the server (debounced) whether the typed code is valid, then repaint
+  clearTimeout(validateCreate._t);
+  if (invite && _inviteCheck.code !== invite.toUpperCase()) validateCreate._t = setTimeout(function () { checkInviteCode(invite).then(function () { if ($('ccInvite').value.trim() === invite) paint(); }); }, 350);
 }
 /* When a school is picked, auto-fill its district (unless "Other"). */
 function onSchoolPick(schoolId, districtId) {
@@ -620,16 +636,22 @@ function publishClub() {
     roster: [{ name: currentUser.name, role: 'President', memberId: currentUser.memberId }],
     verifiedOwner: currentUser.memberId, inviteCode: $('ccInvite').value.trim().toUpperCase()
   };
-  CLUBS.push(club);
-  saveUserClubs(club);
-  if (typeof sbAddMember === 'function') sbAddMember(club.id, { memberId: currentUser.memberId, email: currentUser.email, name: currentUser.name, role: 'President' });
-  if (currentUser.joined.indexOf(club.id) === -1) { currentUser.joined.push(club.id); persistUser(); }
-  if (editingDraftId) { deleteDraft(editingDraftId, true); editingDraftId = null; }
-
-  buildSchoolFilter(); renderStats(); renderTopClubs();
-  resetCreateForm();
-  showView('browse'); applyFilters();
-  openWelcome(club);                                  // Club-ID welcome / onboarding modal
+  // Create it on the server first (the server checks the invite code), THEN add the President's
+  // roster row — in that order, so the server already knows they lead the club.
+  authBusy2('ccPublish', true, 'Publishing…');
+  sbSaveClub(club).then(function () {
+    CLUBS.push(club); _rememberClubBase(club);
+    try { var seedIds = SEED_CLUBS.map(function (s) { return s.id; }); localStorage.setItem(LS.clubs, JSON.stringify(CLUBS.filter(function (c) { return seedIds.indexOf(c.id) === -1; }))); } catch (e) {}
+    return sbAddMember(club.id, { memberId: currentUser.memberId, email: currentUser.email, name: currentUser.name, role: 'President' });
+  }).then(function () {
+    authBusy2('ccPublish', false);
+    if (currentUser.joined.indexOf(club.id) === -1) { currentUser.joined.push(club.id); persistUser(); }
+    if (editingDraftId) { deleteDraft(editingDraftId, true); editingDraftId = null; }
+    buildSchoolFilter(); renderStats(); renderTopClubs();
+    resetCreateForm();
+    showView('browse'); applyFilters();
+    openWelcome(club);                                  // Club-ID welcome / onboarding modal
+  }).catch(function () { authBusy2('ccPublish', false); });   // sbSaveClub already explained the error
 }
 
 /* ---------- Post-publish welcome modal (Club ID + direct link) ---------- */
