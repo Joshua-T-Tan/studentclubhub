@@ -12,7 +12,7 @@ monetary features have been intentionally removed and must not be reintroduced.
 - **Pure Vanilla only.** HTML5, CSS3, and JavaScript (ES6+). No frameworks, no
   build step, no bundler, no transpiler.
 - **No external dependencies / no CDNs.** No Tailwind, no Bootstrap, no Font
-  Awesome, no jQuery. Icons are Unicode/emoji or inline SVG. Two deliberate
+  Awesome, no jQuery. **No emoji in the UI** — icons are inline SVG from `scripts/icons.js` (`svgIcon(name, size)`). Two deliberate
   exceptions (see next bullet): the Supabase Auth OTP `fetch` and the Google
   Fonts stylesheet (Space Grotesk + Inter, MP31) — both degrade gracefully to
   system fonts / an error toast if offline, so the rest of the app still runs
@@ -48,6 +48,7 @@ monetary features have been intentionally removed and must not be reintroduced.
 | `scripts/qr.js` | Self-contained offline QR-code generator (byte mode, EC level L, v1–5) for the Share Club modal. Loaded first. |
 | `scripts/supabase.js` | Minimal Supabase Auth email-OTP client (`sbSendOtp`/`sbVerifyOtp`) via plain `fetch`. Holds the public project URL + publishable key. Loaded before auth.js. |
 | `styles/theme.css` | The active "Paper" theme (red/yellow, graph paper, ink borders, hard shadows, Roboto). Loaded LAST; token-only re-skin. Remove its `<link>` to revert. |
+| `scripts/icons.js` | The drawn icon set (`svgIcon(name, size)`, line icons in one ink style) + school doodles (`doodleLayer('banner'|'page')`) for blank banners and About Us page banners. Loaded before auth.js. |
 | `scripts/hero-motion.js` | Canvas animation behind the homepage hero (10-second seamless loop). Loaded after pages.js. |
 
 - **Maximum 1,000 lines per file module.** If a module approaches the limit,
@@ -87,6 +88,8 @@ Borders use `--edge` (`1.5px solid var(--line)`).
 
 Typography: **Roboto** (400/500/700/900) for both headings and body, loaded from
 Google Fonts with a system-font fallback stack (`--font-head` / `--font-body`).
+
+**Blank banners:** a club/business with no uploaded images gets a white "sheet of paper" banner (`.is-paper`) with yellow tape and school doodles, set off from the page by a heavy ink rule. About Us page banners use the same paper + doodles.
 
 **Homepage hero:** an animated canvas (`scripts/hero-motion.js`, `#heroMotion`) —
 a seamless 10-second loop of local businesses and school clubs wired together

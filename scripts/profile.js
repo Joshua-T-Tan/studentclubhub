@@ -46,7 +46,7 @@ function renderProfile(name) {
   if (priv) {
     // Private: only Name, Member ID, and number of clubs led
     identity = '<p>' + (memberId ? 'Member ' + escHtml(memberId) + ' · ' : '') + ledLine + '</p>' +
-      '<p class="form-note" style="margin-top:6px">🔒 This profile is private.</p>';
+      '<p class="form-note" style="margin-top:6px">' + svgIcon('lock', 14) + ' This profile is private.</p>';
   } else {
     identity = (data.headline ? '<p style="color:var(--ink)">' + escHtml(data.headline) + '</p>' : '') +
       '<p>' + (memberId ? 'Member ' + escHtml(memberId) : '') + (metaBits.length ? ' · ' + metaBits.join(' · ') : '') + '</p>' +
@@ -57,7 +57,7 @@ function renderProfile(name) {
     '<div style="padding-top:16px"><button class="btn ghost" onclick="backFromProfile()">← Back</button></div>' +
     '<div class="profile-head">' + avatarHTML(name, 'lg') +
       '<div class="meta"><div class="name-row"><h1>' + escHtml(name) + '</h1>' +
-        (isSelf ? '' : '<button class="name-ico flag" title="Report this user" onclick="openReport(\'user\',\'' + escAttr(memberId || name) + '\',\'' + escAttr(name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '🚩') + '</button>') + '</div>' + identity +
+        (isSelf ? '' : '<button class="name-ico flag" title="Report this user" onclick="openReport(\'user\',\'' + escAttr(memberId || name) + '\',\'' + escAttr(name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>') + '</div>' + identity +
         (isSelf ? '<div class="profile-edit"><button class="btn ghost sm-btn" onclick="openSettings()">Edit Profile &amp; Settings</button></div>' : '') +
       '</div></div>' +
     '<div id="profileLists"></div>';
@@ -140,7 +140,7 @@ function renderMyClubs() {
   if (myClubsView === 'drafts') {
     var drafts = loadDrafts();
     grid.innerHTML = drafts.length ? drafts.map(draftCard).join('')
-      : '<div class="empty" style="grid-column:1/-1"><div class="big">📝</div><p>No drafts yet.</p>' +
+      : '<div class="empty" style="grid-column:1/-1"><div class="big">' + svgIcon('draft', 40) + '</div><p>No drafts yet.</p>' +
         '<p class="form-note">Register a club and choose “Save as Draft” to keep it here.</p>' +
         '<div style="margin-top:14px"><button class="btn primary" onclick="showView(\'create\')">Register a Club</button></div></div>';
     return;
@@ -153,12 +153,12 @@ function renderMyClubs() {
   var joined = currentUser.joined.map(getClub).filter(Boolean).filter(function (c) { return !ownerOf(c) && !isBanned(c); });
   var list = (myClubsView === 'joined' ? joined : led).filter(function (c) { return clubMatchesQuery(c, q); });
   if (!list.length) {
-    if (q) { grid.innerHTML = emptyBlock('🔍', t('empty_search')); return; }
+    if (q) { grid.innerHTML = emptyBlock(svgIcon('search', 40), t('empty_search')); return; }
     var msg = myClubsView === 'joined' ? t('empty_joined') : t('empty_lead');
     var cta = myClubsView === 'joined'
       ? '<button class="btn primary" onclick="showView(\'browse\')">' + t('nav_browse') + '</button>'
       : '<button class="btn primary" onclick="showView(\'create\')">' + t('nav_create') + '</button>';
-    grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="big">📋</div><p>' + escHtml(msg) + '</p>' +
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="big">' + svgIcon('clipboard', 40) + '</div><p>' + escHtml(msg) + '</p>' +
       '<div style="margin-top:14px">' + cta + '</div></div>';
     return;
   }
@@ -173,7 +173,7 @@ function emptyBlock(icon, msg) {
   return '<div class="empty" style="grid-column:1/-1"><div class="big">' + icon + '</div><p>' + escHtml(msg) + '</p></div>';
 }
 function draftCard(d) {
-  return '<article class="card draft-card"><div class="card-cover draft-cover">📝 Draft</div><div class="card-body">' +
+  return '<article class="card draft-card"><div class="card-cover draft-cover">' + svgIcon('draft', 18) + ' Draft</div><div class="card-body">' +
     '<div class="card-title"><h3>' + escHtml(d.name || 'Untitled draft') + '</h3></div>' +
     '<div class="card-meta">Saved ' + escHtml(timeAgo(d.saved)) + (d.school ? ' · ' + escHtml(d.school) : '') + '</div>' +
     '<p class="card-desc">' + escHtml(d.desc || 'No description yet.') + '</p>' +
@@ -181,7 +181,7 @@ function draftCard(d) {
     '<button class="btn danger" onclick="askDeleteDraft(\'' + d.id + '\')">' + t('draft_delete') + '</button></div></div></article>';
 }
 function askDeleteDraft(id) {
-  openConfirm('Delete this draft?', 'This permanently removes the saved draft.', '🗑️', function () { deleteDraft(id); });
+  openConfirm('Delete this draft?', 'This permanently removes the saved draft.', svgIcon('trash', 26), function () { deleteDraft(id); });
 }
 
 /* ============================================================
@@ -197,7 +197,7 @@ function renderSaved() {
   var q = ($('savedSearch') && $('savedSearch').value || '').trim();
   var saved = currentUser.favorites.map(getClub).filter(Boolean).filter(function (c) { return clubMatchesQuery(c, q); });
   grid.innerHTML = saved.length ? saved.map(renderCard).join('')
-    : (q ? emptyBlock('🔍', t('empty_search'))
+    : (q ? emptyBlock(svgIcon('search', 40), t('empty_search'))
         : '<div class="empty" style="grid-column:1/-1"><div class="big">☆</div><p>' + escHtml(t('empty_saved')) + '</p>' +
           '<div style="margin-top:14px"><button class="btn primary" onclick="showView(\'browse\')">' + t('nav_browse') + '</button></div></div>');
 }

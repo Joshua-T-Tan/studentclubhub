@@ -57,7 +57,7 @@ function editClubBanner(id) {
     '<div class="field"><label>Club name</label><input id="emTitle" type="text" value="' + escAttr(c.name) + '"></div>' +
     '<div class="field"><label>Club type</label><select id="emCat" class="select block-select">' + _clubCatOpts(c.category) + '</select></div>' +
     '<div class="field"><label>Banner image</label><div id="emBannerPrev"></div>' +
-      '<label class="uploader"><input type="file" accept="image/*" hidden onchange="emClubBannerUpload(\'' + id + '\',event)"><span class="up-ico">⬆</span> Upload banner image</label></div>' +
+      '<label class="uploader"><input type="file" accept="image/*" hidden onchange="emClubBannerUpload(\'' + id + '\',event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Upload banner image</label></div>' +
     _toggleRow('emPrivate', 'Private club', 'Hidden from public Browse unless someone has your link.', c.recruitment === 'Private') +
     _toggleRow('emPartner', 'Open to partnerships', 'Shows a blue “Open to partnerships” badge on your banner.', !!c.partnershipOpen) +
     _verifyRowHTML(c.verified, 'verifyClub(\'' + id + '\')', 'club');
@@ -174,7 +174,7 @@ function editClubGallery(id) {
     return '<div class="thumb">' + m + '<button class="mini-x" onclick="emClubGalleryRemove(\'' + id + '\',' + i + ')">✕</button></div>';
   }).join('') : '<p class="form-note" style="grid-column:1/-1">No photos or videos yet.</p>';
   var body = '<div class="gallery" style="margin-bottom:12px">' + cells + '</div>' +
-    '<label class="uploader"><input type="file" accept="image/*,video/mp4,video/webm,video/ogg" multiple hidden onchange="emClubGalleryUpload(\'' + id + '\',event)"><span class="up-ico">⬆</span> Add photos &amp; videos</label>';
+    '<label class="uploader"><input type="file" accept="image/*,video/mp4,video/webm,video/ogg" multiple hidden onchange="emClubGalleryUpload(\'' + id + '\',event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Add photos &amp; videos</label>';
   _emOpen('Edit Gallery', body, '');
 }
 function emClubGalleryUpload(id, e) {
@@ -248,9 +248,9 @@ function editBizBanner(id) {
     '<div class="field"><label>Business name</label><input id="emTitle" type="text" value="' + escAttr(b.name) + '"></div>' +
     '<div class="field"><label>Category / type</label><select id="emCat" class="select block-select">' + catOpts + '</select></div>' +
     '<div class="field"><label>Card banner <span class="form-note">(Browse thumbnail)</span></label><div id="emBizBannerPrev"></div>' +
-      '<label class="uploader"><input type="file" accept="image/*" hidden onchange="emBizBannerUpload(\'' + id + '\',event)"><span class="up-ico">⬆</span> Upload banner</label></div>' +
+      '<label class="uploader"><input type="file" accept="image/*" hidden onchange="emBizBannerUpload(\'' + id + '\',event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Upload banner</label></div>' +
     '<div class="field"><label>Slideshow photos <span class="form-note">(top of your profile — up to 10)</span></label><div id="emBizPhotos" class="biz-photostrip"></div>' +
-      '<label class="uploader"><input type="file" accept="image/*" multiple hidden onchange="emBizPhotosUpload(\'' + id + '\',event)"><span class="up-ico">⬆</span> Add slideshow photos</label></div>' +
+      '<label class="uploader"><input type="file" accept="image/*" multiple hidden onchange="emBizPhotosUpload(\'' + id + '\',event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Add slideshow photos</label></div>' +
     _toggleRow('emPrivate', 'Private listing', 'Hidden from public Browse unless someone has your link.', !!b.is_private) +
     _toggleRow('emPartner', 'Open to partnerships', 'Shows a blue “Open to partnerships” badge on your banner.', !!b.partnership_open) +
     _verifyRowHTML(b.verified, 'verifyBusiness(\'' + id + '\')', 'business');
@@ -347,7 +347,7 @@ function saveBizContact(id) {
 /* Delete the whole deal (with confirm) */
 function deleteBizPerk(id) {
   var b = _biz(id); if (!b) return;
-  openConfirm('Delete this deal?', 'The student perk / offer will be removed from your page.', '🗑', function () {
+  openConfirm('Delete this deal?', 'The student perk / offer will be removed from your page.', svgIcon('trash', 26), function () {
     _bizSave(id, { perk_description: '', redemption_instructions: '', perk_start: null, perk_end: null, deal_hidden: false }, 'Deal deleted.');
   });
 }
@@ -401,7 +401,7 @@ function editBizGallery(id) {
     return '<div class="biz-photo" style="' + (vid ? 'background:#0a222d' : 'background-image:url(' + escAttr(src) + ')') + '">' + (vid ? '<span>▶</span>' : '') + '<button class="mini-x" onclick="emBizGalleryRemove(\'' + id + '\',' + i + ')">✕</button></div>';
   }).join('') : '<p class="form-note" style="grid-column:1/-1">No gallery media yet.</p>';
   _emOpen('Edit Gallery', '<div class="biz-photostrip" style="margin-bottom:12px">' + cells + '</div>' +
-    '<label class="uploader"><input type="file" accept="image/*,video/mp4,video/webm" multiple hidden onchange="emBizGalleryUpload(\'' + id + '\',event)"><span class="up-ico">⬆</span> Add photos &amp; videos</label>', '');
+    '<label class="uploader"><input type="file" accept="image/*,video/mp4,video/webm" multiple hidden onchange="emBizGalleryUpload(\'' + id + '\',event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Add photos &amp; videos</label>', '');
 }
 function emBizGalleryUpload(id, e) {
   var b = _biz(id); if (!b) return;

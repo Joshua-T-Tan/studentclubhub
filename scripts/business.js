@@ -14,16 +14,16 @@
 
 var BIZ_CATEGORIES = ['Food & Dining', 'Apparel & Merch', 'Event Spaces', 'Tutoring & Test Prep', 'Printing & Supplies', 'Entertainment'];
 var BIZ_CAT_META = {
-  'Food & Dining':        { icon: '🍔', grad: 'linear-gradient(140deg,#0f8ca0,#0a4f66)' },
-  'Apparel & Merch':      { icon: '👕', grad: 'linear-gradient(140deg,#2596be,#0a4f66)' },
-  'Event Spaces':         { icon: '🎪', grad: 'linear-gradient(140deg,#2a6f97,#013a5c)' },
-  'Tutoring & Test Prep': { icon: '📚', grad: 'linear-gradient(140deg,#12a594,#0a5f66)' },
-  'Printing & Supplies':  { icon: '🖨️', grad: 'linear-gradient(140deg,#4fb3c9,#007ea7)' },
-  'Entertainment':        { icon: '🎳', grad: 'linear-gradient(140deg,#1ba3d1,#005f7d)' }
+  'Food & Dining':        { icon: svgIcon('utensils', 22), grad: 'linear-gradient(140deg,#0f8ca0,#0a4f66)' },
+  'Apparel & Merch':      { icon: svgIcon('shirt', 22), grad: 'linear-gradient(140deg,#2596be,#0a4f66)' },
+  'Event Spaces':         { icon: svgIcon('ticket', 22), grad: 'linear-gradient(140deg,#2a6f97,#013a5c)' },
+  'Tutoring & Test Prep': { icon: svgIcon('book', 22), grad: 'linear-gradient(140deg,#12a594,#0a5f66)' },
+  'Printing & Supplies':  { icon: svgIcon('printer', 22), grad: 'linear-gradient(140deg,#4fb3c9,#007ea7)' },
+  'Entertainment':        { icon: svgIcon('music', 22), grad: 'linear-gradient(140deg,#1ba3d1,#005f7d)' }
 };
 var PERK_TYPES = { discount: 'Student Discount', addon: 'Free Add-On', sponsorship: 'Club Sponsorship' };
 var PERK_FILTER_LABELS = { discount: 'Student discounts (% off)', addon: 'Free add-ons & freebies', sponsorship: 'Club sponsorships & grants' };
-function bizCatMeta(c) { return BIZ_CAT_META[c] || { icon: '🏪', grad: 'linear-gradient(140deg,#0a6f96,#003249)' }; }
+function bizCatMeta(c) { return BIZ_CAT_META[c] || { icon: svgIcon('store', 22), grad: 'linear-gradient(140deg,#0a6f96,#003249)' }; }
 
 var _bizCache = null, _bizError = null;
 var bizState = { cat: 'All', perk: 'All', sort: 'az', q: '' };
@@ -123,7 +123,7 @@ function paintBusinessGrid(savedOnly) {
     });
   }
   if (!list.length) {
-    g.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="big">🏪</div><p>' +
+    g.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="big">' + svgIcon('store', 40) + '</div><p>' +
       (savedOnly ? 'No saved businesses yet. Tap ☆ Save on any shop and it’ll show up here.'
                  : 'No partners match your filters yet.') + '</p></div>';
     return;
@@ -136,15 +136,15 @@ function businessCard(b) {
   return '<article class="card biz-card">' +
     '<div class="card-cover" style="' + coverBg + '" onclick="openBusiness(\'' + b.id + '\')">' +
       (b.banner ? '' : '<span class="cover-mark">' + m.icon + '</span>') +
-      '<button class="card-share" title="Share" onclick="event.stopPropagation(); shareBusiness(\'' + b.id + '\')">' + (typeof ICON_SHARE !== 'undefined' ? ICON_SHARE : '🔗') + '</button>' +
-      '<button class="card-flag" title="Report this business" onclick="event.stopPropagation(); openReport(\'business\',\'' + b.id + '\',\'' + escAttr(b.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '🚩') + '</button>' +
+      '<button class="card-share" title="Share" onclick="event.stopPropagation(); shareBusiness(\'' + b.id + '\')">' + (typeof ICON_SHARE !== 'undefined' ? ICON_SHARE : '') + '</button>' +
+      '<button class="card-flag" title="Report this business" onclick="event.stopPropagation(); openReport(\'business\',\'' + b.id + '\',\'' + escAttr(b.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>' +
       '<span class="cover-cat">' + escHtml(b.category) + '</span></div>' +
     '<div class="card-body">' +
       '<div class="card-title" onclick="openBusiness(\'' + b.id + '\')"><h3>' + escHtml(b.name) + '</h3>' +
         (b.verified ? '<span class="name-verified-ico" title="Verified">' + verifiedSeal(17, '#e6b422', '#ffffff') + '</span>' : '') +
         (b.partnership_open ? '<span class="name-openp-ico" title="Open to partnerships">' + ICON_PARTNER + '</span>' : '') +
       '</div>' +
-      '<div class="card-meta">📍 ' + escHtml(b.city) + ', CA ' + escHtml(b.zip) + '</div>' +
+      '<div class="card-meta">' + svgIcon('pin', 14) + ' ' + escHtml(b.city) + ', CA ' + escHtml(b.zip) + '</div>' +
       (b.public_id ? '<div class="card-idline"><span class="club-id-chip">#' + escHtml(b.public_id) + '</span></div>' : '') +
       ((b.perk_description && b.perk_description.trim())
         ? '<div class="perk-box perk-2row"><span class="perk-tag">' + escHtml(PERK_TYPES[b.perk_type] || 'Perk') + '</span><p>' + escHtml(b.perk_description) + '</p></div>'
@@ -178,12 +178,10 @@ function backFromBusiness() { if (_bizSlideTimer) clearInterval(_bizSlideTimer);
 
 /* Slides: real photos if present, else branded promo panels (a place to advertise) */
 function bizSlides(b) {
-  var m = bizCatMeta(b.category);
-  if (b.photos && b.photos.length) return b.photos.map(function (u) { return { img: u }; });
-  var promos = [b.perk_description, (b.cuisines || []).join(' · ') || b.category, 'Proud Student Club Hub partner'];
-  return promos.map(function (txt, i) {
-    return { grad: 'linear-gradient(' + (120 + i * 30) + 'deg,' + (i % 2 ? '#005f7d,#003249' : '#0a94ba,#00617f') + ')', icon: m.icon, txt: txt };
-  });
+  var g = (b.photos || []).filter(Boolean);
+  if (!g.length && b.banner) g = [b.banner];
+  if (g.length) return g.map(function (u) { return { img: u }; });
+  return [{ paper: true }];   // nothing uploaded → a blank sheet of paper with school doodles
 }
 function _fmtPerkDate(s) { try { return new Date(s + 'T00:00:00').toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return s; } }
 function renderBusinessPage(b) {
@@ -194,8 +192,9 @@ function renderBusinessPage(b) {
       '<span class="biz-rev-count">(' + b.review_count + ' review' + (b.review_count === 1 ? '' : 's') + ')</span>'
     : '';
   var hero =
-    '<div class="biz-slideshow" id="bizSlideshow">' +
+    '<div class="biz-slideshow' + (slides[0] && slides[0].paper ? ' is-paper' : '') + '" id="bizSlideshow">' +
       slides.map(function (s, i) {
+        if (s.paper) return '<div class="biz-slide active paper-slide">' + doodleLayer('banner') + '</div>';
         return '<div class="biz-slide' + (i === 0 ? ' active' : '') + '" style="' +
           (s.img ? 'background-image:url(' + escAttr(s.img) + ')' : 'background:' + s.grad) + '">' +
           (s.img ? '' : '<span class="biz-slide-ico">' + s.icon + '</span><span class="biz-slide-txt">' + escHtml(s.txt || '') + '</span>') + '</div>';
@@ -210,7 +209,7 @@ function renderBusinessPage(b) {
       '<div class="biz-hero-info container">' +
         '<div class="name-row"><h1>' + escHtml(b.name) + '</h1>' +
           '<button class="name-ico share" title="Share" onclick="shareBusiness(\'' + b.id + '\')">' + ICON_SHARE + '</button>' +
-          (owner ? '' : '<button class="name-ico flag" title="Report this business" onclick="openReport(\'business\',\'' + b.id + '\',\'' + escAttr(b.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '🚩') + '</button>') + '</div>' +
+          (owner ? '' : '<button class="name-ico flag" title="Report this business" onclick="openReport(\'business\',\'' + b.id + '\',\'' + escAttr(b.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>') + '</div>' +
         (ratingLine ? '<div class="biz-rating">' + ratingLine + '</div>' : '') +
         '<div class="biz-tagline">' +
           '<span class="biz-cuisines">' + escHtml(cuisines) + '</span>' +
@@ -243,7 +242,7 @@ function renderBusinessPage(b) {
     var dl = [];
     if (b.perk_start) dl.push('from ' + _fmtPerkDate(b.perk_start));
     if (b.perk_end) dl.push('through ' + _fmtPerkDate(b.perk_end));
-    var dateLine = dl.length ? '<p class="form-note" style="margin-top:4px">🗓 Valid ' + dl.join(' ') + '</p>' : '';
+    var dateLine = dl.length ? '<p class="form-note" style="margin-top:4px">' + svgIcon('calendar', 14) + ' Valid ' + dl.join(' ') + '</p>' : '';
     perk = '<div class="perk-box big">' +
       (owner ? '<div class="deal-ctrls">' + dealPen +
         '<button class="deal-eye" title="Hide this deal from visitors" onclick="toggleDealHidden(\'' + b.id + '\')">' + ICON_EYE + '</button>' +
@@ -303,8 +302,8 @@ function renderBusinessPage(b) {
       (b.phone ? infoLine('Phone', b.phone) : '') +
       infoLine('Business Email', b.contact_email || '—') +
       (b.website ? '<div class="info-line"><span class="k">Website</span><a class="link" href="' + escAttr(b.website) + '" target="_blank" rel="noopener">' + escHtml((b.website || '').replace(/^https?:\/\//, '')) + '</a></div>' : '') +
-      '<a class="btn ghost block" style="margin-top:10px" href="https://maps.google.com/?q=' + encodeURIComponent((b.address || '') + ' ' + b.city + ' ' + b.zip) + '" target="_blank" rel="noopener">🧭 Get Directions</a>' +
-      (b.phone ? '<a class="btn ghost block" style="margin-top:8px" href="tel:' + escAttr((b.phone || '').replace(/[^0-9+]/g, '')) + '">📞 Call</a>' : '') +
+      '<a class="btn ghost block" style="margin-top:10px" href="https://maps.google.com/?q=' + encodeURIComponent((b.address || '') + ' ' + b.city + ' ' + b.zip) + '" target="_blank" rel="noopener">' + svgIcon('directions', 16) + ' Get Directions</a>' +
+      (b.phone ? '<a class="btn ghost block" style="margin-top:8px" href="tel:' + escAttr((b.phone || '').replace(/[^0-9+]/g, '')) + '">' + svgIcon('phone', 16) + ' Call</a>' : '') +
     '</div>' +
     '<div class="sidebar-card"><div class="section-title" style="margin-top:0">Partner with this business</div>' +
       '<p class="form-note" style="margin-bottom:10px">Club officers can reach out about sponsorships, discounts or events. You’ll see their email and can send a partnership request.</p>' +
@@ -335,7 +334,7 @@ function bizLinksHTML(b) {
     var url = (typeof normalizeUrl === 'function') ? normalizeUrl(u) : u;
     var label = (typeof hostLabel === 'function') ? hostLabel(u) : u;
     return '<a class="social-pill" href="' + escAttr(url) + '" target="_blank" rel="noopener" title="' + escAttr(url) + '">' +
-      '<span class="sp-ico">🔗</span><span class="sp-label">' + escHtml(label) + '</span></a>';
+      '<span class="sp-ico">' + svgIcon('link', 16) + '</span><span class="sp-label">' + escHtml(label) + '</span></a>';
   }).join('');
   var pen = owner ? '<button class="sec-edit" title="Edit links" onclick="editBizLinks(\'' + b.id + '\')">' + ICON_PEN + '</button>' : '';
   return '<div class="section-title has-edit"><span>Links</span>' + pen + '</div>' +
@@ -443,7 +442,7 @@ function paintBizReviews() {
           '</div><p class="rr-text">' + escHtml(r.owner_reply) + '</p></div>'
       : '';
     var replyBtn = (owner && !r.owner_reply) ? '<button class="review-reply-btn" onclick="openBizReply(\'' + r.id + '\')">↩ Reply</button>' :
-      (owner && r.owner_reply ? '<button class="review-reply-btn" onclick="openBizReply(\'' + r.id + '\')">✏ Edit reply</button>' : '');
+      (owner && r.owner_reply ? '<button class="review-reply-btn" onclick="openBizReply(\'' + r.id + '\')">' + svgIcon('pen', 14) + ' Edit reply</button>' : '');
     return '<div class="review"><div class="review-top">' + avatarHTML(r.author, 'sm') +
       '<div class="review-who"><div class="n">' + escHtml(r.author) + '</div>' + starRow(r.rating, 'sm') + '</div>' +
       (r.created_at ? '<span class="review-time">' + escHtml(timeAgo(new Date(r.created_at).getTime())) + '</span>' : '') + '</div>' +
@@ -468,7 +467,7 @@ function submitBizReply(reviewId) {
     .then(function () { closeReach(); toast('Reply posted.'); loadBizReviews(currentBiz.id); }).catch(function (ex) { authBusy2('emSave', false); var e = $('emErr'); if (e) { e.textContent = ex.message; e.classList.remove('hidden'); } });
 }
 function deleteBizReply(reviewId) {
-  openConfirm('Delete your reply?', 'Your public reply will be removed from this review.', '🗑', function () {
+  openConfirm('Delete your reply?', 'Your public reply will be removed from this review.', svgIcon('trash', 26), function () {
     sbRest('biz_reviews?id=eq.' + reviewId, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_reply: null, owner_reply_at: null }) })
       .then(function () { toast('Reply removed.'); loadBizReviews(currentBiz.id); }).catch(function (ex) { toast(ex.message); });
   });
@@ -557,7 +556,7 @@ function renderBusinessRegister(el) {
       field2('bizAddr', 'Street address', 'text', '123 Main St') +
       '<div class="two-col">' + field2('bizCity', 'City *', 'text', 'Palos Verdes') + field2('bizZip', 'Zip code *', 'text', '90274') + '</div>' +
       '<div class="two-col">' + field2('bizPhone', 'Phone number *', 'tel', '(310) 555-0123') + field2('bizEmail', 'Business contact email *', 'email', 'owner@business.com') + '</div>' +
-      '<p class="form-note" style="margin:2px 0 14px">Everything else — your student perk, hours, photos, links, and partnership settings — you add afterward using the ⚙ settings and pencil icons on your business page.</p>' +
+      '<p class="form-note" style="margin:2px 0 14px">Everything else — your student perk, hours, photos, links, and partnership settings — you add afterward using the gear and pencil icons on your business page.</p>' +
       '<button id="bizSubmit" class="btn primary block lg" onclick="submitBusiness()">Submit for review</button>' +
     '</div>';
 }
@@ -586,7 +585,7 @@ function submitBusiness() {
   sbRegisterBusiness(payload).then(function () {
     _bizCache = null;   // force a refetch so the new listing shows immediately
     $('shopsBody').innerHTML =
-      '<div class="soon-card" style="margin-top:40px"><div class="soon-ico">✅</div>' +
+      '<div class="soon-card" style="margin-top:40px"><div class="soon-ico">' + svgIcon('check', 34) + '</div>' +
         '<h2>Your business is live!</h2>' +
         '<p><strong>' + escHtml(name) + '</strong> is now in the directory. (For now, new listings go live right away. Owner sign-in and verification are coming later.)</p>' +
         '<div class="soon-actions"><button class="btn primary" onclick="navShop(\'browse\')">See it in Browse Businesses</button>' +
@@ -673,7 +672,7 @@ function ebRemoveGallery(i) { _ebGallery.splice(i, 1); ebPaintMedia(); }
 function renderMyBusiness(el) {
   if (!currentUser) {
     el.innerHTML = '<div class="page-head centered"><h1>My Business</h1><p>Sign in to manage your storefront.</p></div>' +
-      '<div class="soon-card"><div class="soon-ico">🔒</div><h2>Sign in required</h2>' +
+      '<div class="soon-card"><div class="soon-ico">' + svgIcon('lock', 34) + '</div><h2>Sign in required</h2>' +
       '<p>Log in with the email you used to list your business, then you can edit your storefront here.</p>' +
       '<div class="soon-actions"><button class="btn primary" onclick="openAuth(\'login\')">Log In</button>' +
         '<button class="btn blue" onclick="navShop(\'register\')">Register a Business</button></div></div>';
@@ -685,7 +684,7 @@ function renderMyBusiness(el) {
     .then(function (rows) {
       var g = $('myBizList'); if (!g) return;
       if (!rows || !rows.length) {
-        g.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="big">🏪</div>' +
+        g.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="big">' + svgIcon('store', 40) + '</div>' +
           '<p>You haven’t listed a business yet. Once you do, you can manage it here.</p>' +
           '<button class="btn primary" style="margin-top:12px" onclick="navShop(\'register\')">Register Your Business</button></div>';
         return;
@@ -705,7 +704,7 @@ function openBizEditor(id) {
 function renderBizEditor(b) {
   var el = $('shopsBody'); if (!el) return;
   if (!isBizOwner(b)) {
-    el.innerHTML = '<div class="soon-card" style="margin-top:40px"><div class="soon-ico">🔒</div><h2>Not your listing</h2>' +
+    el.innerHTML = '<div class="soon-card" style="margin-top:40px"><div class="soon-ico">' + svgIcon('lock', 34) + '</div><h2>Not your listing</h2>' +
       '<p>You can only edit a business you listed. Sign in with the contact email you used.</p>' +
       '<div class="soon-actions"><button class="btn primary" onclick="navShop(\'browse\')">Browse Businesses</button></div></div>';
     return;
@@ -735,19 +734,19 @@ function renderBizEditor(b) {
     '<div class="field"><label>Hours</label><div class="hours-editor">' + hoursRows + '</div></div>' +
     '<label class="toggle-row" style="cursor:pointer;margin:6px 0 10px"><div><div class="tr-title">Open to club partnerships</div><div class="form-note">Shows a green “Open to partnerships” badge on your listing.</div></div><input type="checkbox" id="ebPartner"' + (b.partnership_open ? ' checked' : '') + ' style="width:20px;height:20px"></label>' +
     '<label class="toggle-row" style="cursor:pointer;margin:6px 0 10px"><div><div class="tr-title">Private listing</div><div class="form-note">On: hidden from the public Browse directory (only you can see it via your direct link).</div></div><input type="checkbox" id="ebPrivate"' + (b.is_private ? ' checked' : '') + ' style="width:20px;height:20px"></label>' +
-    '<label class="toggle-row" style="cursor:pointer;margin-bottom:14px"><div><div class="tr-title">🛡️ Require the “Reach Out” form</div><div class="form-note">On: people send via a short form. (Direct-message mode arrives with the Inbox.)</div></div><input type="checkbox" id="ebGate"' + (b.gate_messages !== false ? ' checked' : '') + ' style="width:20px;height:20px"></label>' +
+    '<label class="toggle-row" style="cursor:pointer;margin-bottom:14px"><div><div class="tr-title">' + svgIcon('shield', 15) + ' Require the “Reach Out” form</div><div class="form-note">On: people send via a short form. (Direct-message mode arrives with the Inbox.)</div></div><input type="checkbox" id="ebGate"' + (b.gate_messages !== false ? ' checked' : '') + ' style="width:20px;height:20px"></label>' +
     '<div class="modal-actions"><button class="btn ghost" onclick="navShop(\'my\')">Cancel</button>' +
     '<button id="ebSave" class="btn primary" onclick="submitBizEdit(\'' + b.id + '\')">Save changes</button></div></div>' +
     '<div class="form-card" style="margin:0 auto 40px" id="ebMedia">' +
       '<div class="section-title" style="margin-top:0">Card banner <span class="form-note">(the image on your Browse thumbnail)</span></div>' +
       '<div id="ebBannerPrev"></div>' +
-      '<label class="uploader"><input type="file" accept="image/*" hidden onchange="ebUploadBanner(event)"><span class="up-ico">⬆</span> Upload banner image</label>' +
+      '<label class="uploader"><input type="file" accept="image/*" hidden onchange="ebUploadBanner(event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Upload banner image</label>' +
       '<div class="section-title">Slideshow images <span class="form-note">(top of your profile, up to 10)</span></div>' +
       '<div id="ebPhotosPrev" class="biz-photostrip"></div>' +
-      '<label class="uploader"><input type="file" accept="image/*" multiple hidden onchange="ebUploadPhotos(event)"><span class="up-ico">⬆</span> Add slideshow images</label>' +
+      '<label class="uploader"><input type="file" accept="image/*" multiple hidden onchange="ebUploadPhotos(event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Add slideshow images</label>' +
       '<div class="section-title">Gallery <span class="form-note">(photos &amp; videos)</span></div>' +
       '<div id="ebGalleryPrev" class="biz-photostrip"></div>' +
-      '<label class="uploader"><input type="file" accept="image/*,video/mp4,video/webm" multiple hidden onchange="ebUploadGallery(event)"><span class="up-ico">⬆</span> Add gallery photos &amp; videos</label>' +
+      '<label class="uploader"><input type="file" accept="image/*,video/mp4,video/webm" multiple hidden onchange="ebUploadGallery(event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Add gallery photos &amp; videos</label>' +
       '<p class="form-note" style="margin-top:10px">Changes to media save when you press <strong>Save changes</strong> above.</p>' +
     '</div>';
   ebPaintMedia(); ebPaintLinks();

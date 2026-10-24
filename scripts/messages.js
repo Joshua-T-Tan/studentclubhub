@@ -55,7 +55,7 @@ function _renderReachOut() {
   var emailOK = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.publicEmail || '');
   var contactBlock = '<div class="reach-contact"><div class="form-note" style="margin-bottom:6px">Contact ' + escHtml(c.name) + ' directly by email:</div>' +
     (emailOK
-      ? '<a class="btn ghost block" href="mailto:' + escAttr(c.publicEmail) + '?subject=' + encodeURIComponent('Reaching out via Student Club Hub — ' + c.name) + '">✉ ' + escHtml(c.publicEmail) + '</a>'
+      ? '<a class="btn ghost block" href="mailto:' + escAttr(c.publicEmail) + '?subject=' + encodeURIComponent('Reaching out via Student Club Hub — ' + c.name) + '">' + svgIcon('mail', 16) + ' ' + escHtml(c.publicEmail) + '</a>'
       : '<p class="form-note">No public contact email is listed yet.</p>') + '</div>';
   var form;
   if (c.isMine) {
@@ -192,7 +192,7 @@ function renderInbox() {
   var el = $('inboxBody'); if (!el) return;
   if (!currentUser) {
     el.innerHTML = '<div class="page-head centered"><h1>Partnership Requests</h1><p>Sign in to see your partnership requests.</p></div>' +
-      '<div class="soon-card"><div class="soon-ico">🔒</div><h2>Sign in required</h2><div class="soon-actions"><button class="btn primary" onclick="openAuth(\'login\')">Log In</button></div></div>';
+      '<div class="soon-card"><div class="soon-ico">' + svgIcon('lock', 34) + '</div><h2>Sign in required</h2><div class="soon-actions"><button class="btn primary" onclick="openAuth(\'login\')">Log In</button></div></div>';
     return;
   }
   el.innerHTML = '<div class="page-head"><h1>Partnership Requests</h1>' +
@@ -242,7 +242,7 @@ function renderPendingAgreements() {
       if (incoming.length) html += '<div class="pr-section-h">Requests to approve</div>' + incoming.map(function (a) {
         var dates = _agrDateRange(a);
         return '<div class="pr-card"><div class="pr-body">' + ICON_PARTNER + '<div><strong>' + escHtml(a.a_name) + '</strong> wants to partner with <strong>' + escHtml(a.b_name) + '</strong>' +
-          '<div class="form-note">' + escHtml(a.a_deal || 'Partnership') + (dates ? ' · 🗓 ' + escHtml(dates) : '') + '</div></div></div>' +
+          '<div class="form-note">' + escHtml(a.a_deal || 'Partnership') + (dates ? ' · ' + svgIcon('calendar', 13) + ' ' + escHtml(dates) : '') + '</div></div></div>' +
           '<div class="pr-actions"><button class="btn ghost sm-btn" onclick="rejectPartnerRequest(\'' + a.id + '\')">Reject</button>' +
           '<button class="btn primary sm-btn" onclick="approvePartnerRequest(\'' + a.id + '\')">Approve</button></div></div>';
       }).join('');
@@ -254,7 +254,7 @@ function renderPendingAgreements() {
       if (active.length) html += '<div class="pr-section-h">Active partnerships</div>' + active.map(function (a) {
         var dates = _agrDateRange(a);
         return '<div class="pr-card"><div class="pr-body">' + ICON_PARTNER + '<div><strong>' + escHtml(a.a_name) + '</strong> × <strong>' + escHtml(a.b_name) + '</strong>' +
-          (dates ? '<div class="form-note">🗓 ' + escHtml(dates) + ' · the tag auto-removes when the duration ends</div>' : '<div class="form-note">Active partnership</div>') + '</div></div>' +
+          (dates ? '<div class="form-note">' + svgIcon('calendar', 13) + ' ' + escHtml(dates) + ' · the tag auto-removes when the duration ends</div>' : '<div class="form-note">Active partnership</div>') + '</div></div>' +
           '<div class="pr-actions"><button class="btn danger sm-btn" onclick="endPartnership(\'' + a.id + '\')">End</button></div></div>';
       }).join('');
       el.innerHTML = html;

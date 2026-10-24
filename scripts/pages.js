@@ -149,7 +149,7 @@ function openContactUs() {
   $('contactUsBody').innerHTML =
     '<div class="modal-pad contact-card">' +
       '<button class="icon-btn contact-x" onclick="closeContactUs()">✕</button>' +
-      '<div class="contact-ico">✉</div>' +
+      '<div class="contact-ico">' + svgIcon('mail', 26) + '</div>' +
       '<h3 class="contact-h">Contact Us</h3>' +
       '<p class="contact-sub">Found a website bug, or have feedback or an idea? Send us a quick message.</p>' +
       (li
@@ -158,7 +158,7 @@ function openContactUs() {
             '<button id="cuSend" class="btn primary block lg" onclick="submitContactMessage()">Send message</button>' +
             '<div class="contact-divider"><span>or email us directly</span></div></div>'
         : '<div class="contact-divider"><span>email us directly</span></div>') +
-      '<a class="btn ghost block" href="mailto:' + CONTACT_EMAIL + '">✉ ' + CONTACT_EMAIL + '</a>' +
+      '<a class="btn ghost block" href="mailto:' + CONTACT_EMAIL + '">' + svgIcon('mail', 16) + ' ' + CONTACT_EMAIL + '</a>' +
       (li ? '' : '<p class="form-note" style="text-align:center;margin-top:10px">Log in to send a message right here.</p>') +
       '<p class="form-note" style="text-align:center;margin-top:10px">Want to report a user, club, or business, or need more help? <a class="link" href="#" onclick="closeContactUs();navContact();return false">Visit the Contact page →</a></p>' +
     '</div>';
@@ -199,7 +199,7 @@ function renderContactPage() {
       '<h2 style="margin-top:34px">Reporting a user, club, or business</h2>' +
       '<p>If someone is misusing the platform, impersonating a group, or you have a concern about a club or business, you can report them. <strong>This page isn’t where you file the report</strong> — here’s how to do it:</p>' +
       '<ul class="contact-steps">' +
-        '<li><strong>Find the 🚩 flag icon.</strong> It’s on every club and business — in the top-right of their card in the directory, and up on their page banner when you open them. On a person, it’s next to their name on their public profile.</li>' +
+        '<li><strong>Find the <span class="inline-ico">' + ICON_FLAG + '</span> flag icon.</strong> It’s on every club and business — in the top-right of their card in the directory, and up on their page banner when you open them. On a person, it’s next to their name on their public profile.</li>' +
         '<li><strong>Tap it</strong> to open the report form (titled “Report Club”, “Report Business”, or “Report User”).</li>' +
         '<li><strong>Pick a reason</strong> from the dropdown and describe what happened in the box.</li>' +
         '<li><strong>Submit.</strong> The report goes to our team to review — the other party isn’t told who reported them.</li>' +
@@ -261,7 +261,7 @@ function submitReport() {
    OUR PURPOSE / PHILOSOPHY page
    ============================================================ */
 function pageBanner(crumb, title) {
-  return '<div class="page-banner"><div class="container">' +
+  return '<div class="page-banner">' + (typeof doodleLayer === 'function' ? doodleLayer('page') : '') + '<div class="container">' +
     '<div class="pb-crumb">' + escHtml(crumb) + '</div>' +
     '<h1 class="pb-title">' + escHtml(title) + '</h1></div></div>';
 }
@@ -377,10 +377,10 @@ function toggleFaq(i) { faqOpen = (faqOpen === i) ? -1 : i; renderFaq(); }
    LOCAL BUSINESS shop scaffolds (nav routes here for now)
    ============================================================ */
 var SHOP_SECTIONS = {
-  browse: { ico: '🏪', title: 'Browse Businesses' },
-  register: { ico: '📝', title: 'Register Your Business' },
-  my: { ico: '📊', title: 'My Business' },
-  saved: { ico: '💙', title: 'Saved Businesses' }
+  browse: { ico: svgIcon('store', 22), title: 'Browse Businesses' },
+  register: { ico: svgIcon('draft', 22), title: 'Register Your Business' },
+  my: { ico: svgIcon('chart', 22), title: 'My Business' },
+  saved: { ico: svgIcon('heart', 22), title: 'Saved Businesses' }
 };
 var currentShopKind = 'browse';
 function openShops(kind) {

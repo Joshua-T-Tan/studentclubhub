@@ -8,15 +8,15 @@
 /* Cohesive cool covers - every category is a distinct shade within the
    Deep-Space-Blue → Cerulean → Frosted-Blue family (no rainbow clash). */
 var CATEGORIES = [
-  { name: 'STEM & Tech',                 grad: 'linear-gradient(140deg,#0a6f96 0%,#003249 100%)', icon: '🔬' },
-  { name: 'Business & Entrepreneurship', grad: 'linear-gradient(140deg,#0f8ca0 0%,#0a4f66 100%)', icon: '📈' },
-  { name: 'Arts, Media & Design',        grad: 'linear-gradient(140deg,#4fb3c9 0%,#007ea7 100%)', icon: '🎨' },
-  { name: 'Culture & Language',          grad: 'linear-gradient(140deg,#12a594 0%,#0a5f66 100%)', icon: '🌐' },
-  { name: 'Community Service',           grad: 'linear-gradient(140deg,#2596be 0%,#0a4f66 100%)', icon: '🤝' },
-  { name: 'Humanities & Debate',         grad: 'linear-gradient(140deg,#2a6f97 0%,#013a5c 100%)', icon: '🎙️' },
-  { name: 'Health & Medicine',           grad: 'linear-gradient(140deg,#0e9aa7 0%,#036b82 100%)', icon: '⚕️' },
-  { name: 'Athletics & Recreation',      grad: 'linear-gradient(140deg,#1ba3d1 0%,#005f7d 100%)', icon: '⚽' },
-  { name: 'Hobbies & Niche Interests',   grad: 'linear-gradient(140deg,#5a8a99 0%,#2a4d5c 100%)', icon: '🎲' }
+  { name: 'STEM & Tech',                 grad: 'linear-gradient(140deg,#0a6f96 0%,#003249 100%)', icon: svgIcon('flask', 22) },
+  { name: 'Business & Entrepreneurship', grad: 'linear-gradient(140deg,#0f8ca0 0%,#0a4f66 100%)', icon: svgIcon('growth', 22) },
+  { name: 'Arts, Media & Design',        grad: 'linear-gradient(140deg,#4fb3c9 0%,#007ea7 100%)', icon: svgIcon('palette', 22) },
+  { name: 'Culture & Language',          grad: 'linear-gradient(140deg,#12a594 0%,#0a5f66 100%)', icon: svgIcon('globe', 22) },
+  { name: 'Community Service',           grad: 'linear-gradient(140deg,#2596be 0%,#0a4f66 100%)', icon: svgIcon('heart', 22) },
+  { name: 'Humanities & Debate',         grad: 'linear-gradient(140deg,#2a6f97 0%,#013a5c 100%)', icon: svgIcon('mic', 22) },
+  { name: 'Health & Medicine',           grad: 'linear-gradient(140deg,#0e9aa7 0%,#036b82 100%)', icon: svgIcon('stethoscope', 22) },
+  { name: 'Athletics & Recreation',      grad: 'linear-gradient(140deg,#1ba3d1 0%,#005f7d 100%)', icon: svgIcon('ball', 22) },
+  { name: 'Hobbies & Niche Interests',   grad: 'linear-gradient(140deg,#5a8a99 0%,#2a4d5c 100%)', icon: svgIcon('dice', 22) }
 ];
 function styleForCategory(cat) {
   return CATEGORIES.find(function (c) { return c.name === cat; }) ||
@@ -461,7 +461,7 @@ function applyFilters() {
 function renderDirectory(list) {
   var grid = $('clubGrid'); if (!grid) return;
   grid.innerHTML = list.length ? list.map(renderCard).join('')
-    : '<div class="empty" style="grid-column:1/-1"><div class="big">🔍</div><p>No clubs match your search yet.</p>' +
+    : '<div class="empty" style="grid-column:1/-1"><div class="big">' + svgIcon('search', 40) + '</div><p>No clubs match your search yet.</p>' +
       '<p class="form-note">Try a different zip code, school, or focus area.</p></div>';
 }
 
@@ -476,8 +476,8 @@ function renderCard(club) {
     '<article class="card">' +
       '<div class="card-cover" style="' + coverStyle(club) + '" onclick="openClub(\'' + club.id + '\')">' +
         (club.banner ? '' : '<span class="cover-mark">' + styleForCategory(club.category).icon + '</span>') +
-        '<button class="card-share" title="' + escAttr(t('share_club')) + '" onclick="event.stopPropagation(); openShare(\'' + club.id + '\')">' + (typeof ICON_SHARE !== 'undefined' ? ICON_SHARE : '🔗') + '</button>' +
-        '<button class="card-flag" title="Report this club" onclick="event.stopPropagation(); openReport(\'club\',\'' + club.id + '\',\'' + escAttr(club.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '🚩') + '</button>' +
+        '<button class="card-share" title="' + escAttr(t('share_club')) + '" onclick="event.stopPropagation(); openShare(\'' + club.id + '\')">' + (typeof ICON_SHARE !== 'undefined' ? ICON_SHARE : '') + '</button>' +
+        '<button class="card-flag" title="Report this club" onclick="event.stopPropagation(); openReport(\'club\',\'' + club.id + '\',\'' + escAttr(club.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>' +
         '<span class="cover-cat">' + escHtml(club.category) + '</span></div>' +
       '<div class="card-body">' +
         (typeof partnershipBadge === 'function' ? partnershipBadge('club', club.id) : '') +

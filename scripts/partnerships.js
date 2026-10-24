@@ -63,7 +63,7 @@ function partnershipDealBox(kind, obj, owner) {
     if (a.hidden && owner) {
       return '<div class="pdeal-box hidden-deal">' + eye + '<span class="form-note">Your partnership deal with <strong>' + escHtml(a.partnerName) + '</strong> is hidden from visitors. The “Partnered with” badge still shows.</span></div>';
     }
-    var dates = (a.start || a.end) ? '<div class="form-note" style="margin-top:4px">🗓 ' + (a.start ? _fmtAgrDate(a.start) : '') + (a.end ? ' – ' + _fmtAgrDate(a.end) : '') + '</div>' : '';
+    var dates = (a.start || a.end) ? '<div class="form-note" style="margin-top:4px">' + svgIcon('calendar', 13) + ' ' + (a.start ? _fmtAgrDate(a.start) : '') + (a.end ? ' – ' + _fmtAgrDate(a.end) : '') + '</div>' : '';
     return '<div class="pdeal-box">' + eye + '<div class="pdeal-tag">' + ICON_PARTNER + ' Partnership with ' + escHtml(a.partnerName) + '</div>' +
       '<p>' + escHtml(a.deal || '') + '</p>' + dates + '</div>';
   }).join('');
@@ -143,12 +143,12 @@ function proposePartnershipStart(type, id) {
     // Your side isn't open (or you don't lead/own anything) → tell YOU to fix yours.
     if (!openMine.length) {
       toast(mine.length
-        ? '⛔ Your club or business isn’t set to “Open to partnerships.” Turn it on in your page settings first.'
-        : '⛔ You need to lead a club or own a business (set to Open to partnerships) to propose one.');
+        ? 'Your club or business isn’t set to “Open to partnerships.” Turn it on in your page settings first.'
+        : 'You need to lead a club or own a business (set to Open to partnerships) to propose one.');
       return;
     }
     // Their side isn't open → tell you THEY aren't open.
-    if (!targetOpen) { toast('⛔ ' + toName + ' isn’t open to partnerships right now.'); return; }
+    if (!targetOpen) { toast(toName + ' isn’t open to partnerships right now.'); return; }
     _proposeCtx = { type: type, id: String(id), toName: toName, toOwner: toOwner, toRealId: toRealId, openMine: openMine };
     _showProposeModal();
   });
@@ -203,7 +203,7 @@ function submitProposePartnership() {
 /* openAgreementForm() + the full collaborative form live in scripts/agreement.js (Stage 2). */
 /* Delete the agreement (marks it deleted for BOTH parties). */
 function deleteAgreement(agreementId) {
-  openConfirm('Delete this partnership form?', 'It will be removed for both you and the other party. This can’t be undone.', '🗑', function () {
+  openConfirm('Delete this partnership form?', 'It will be removed for both you and the other party. This can’t be undone.', svgIcon('trash', 26), function () {
     sbRest('partner_agreements?id=eq.' + agreementId, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'deleted' }) })
       .then(function () { toast('Form deleted.'); if (typeof renderInbox === 'function' && $('inboxBody')) renderInbox(); }).catch(function (ex) { toast(ex.message); });
   });
@@ -266,7 +266,7 @@ function renderPartnerRequests() {
 }
 function confirmPartnerLink(id) {
   sbRest('partner_links?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'active', confirmed_at: new Date().toISOString() }) })
-    .then(function () { toast('Partnership confirmed! 🤝'); loadPartnerLinks(); renderPartnerRequests(); }).catch(function (ex) { toast(ex.message); });
+    .then(function () { toast('Partnership confirmed!'); loadPartnerLinks(); renderPartnerRequests(); }).catch(function (ex) { toast(ex.message); });
 }
 function declinePartnerLink(id) {
   sbRest('partner_links?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'declined' }) })
@@ -285,22 +285,22 @@ function _agrRefreshUI() {
 function approvePartnerRequest(id) {
   sbRest('partner_agreements?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
     body: JSON.stringify({ status: 'launched', launched_at: new Date().toISOString(), a_confirmed: true, b_confirmed: true, a_launched: true, b_launched: true }) })
-    .then(function () { toast('Partnership approved! 🤝'); _agrRefreshUI(); }).catch(function (ex) { toast(ex.message); });
+    .then(function () { toast('Partnership approved!'); _agrRefreshUI(); }).catch(function (ex) { toast(ex.message); });
 }
 function rejectPartnerRequest(id) {
-  openConfirm('Reject this partnership request?', 'The other side will see it was declined. This can’t be undone.', '🚫', function () {
+  openConfirm('Reject this partnership request?', 'The other side will see it was declined. This can’t be undone.', svgIcon('ban', 26), function () {
     sbRest('partner_agreements?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'declined' }) })
       .then(function () { toast('Request rejected.'); _agrRefreshUI(); }).catch(function (ex) { toast(ex.message); });
   }, 'Reject');
 }
 function cancelPartnerRequest(id) {
-  openConfirm('Cancel this request?', 'It will be withdrawn before the other side responds.', '🗑', function () {
+  openConfirm('Cancel this request?', 'It will be withdrawn before the other side responds.', svgIcon('trash', 26), function () {
     sbRest('partner_agreements?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'deleted' }) })
       .then(function () { toast('Request canceled.'); _agrRefreshUI(); }).catch(function (ex) { toast(ex.message); });
   }, 'Cancel request');
 }
 function endPartnership(id) {
-  openConfirm('End this partnership?', 'The “Partnership” tag will be removed from both pages right away. This can’t be undone.', '🤝', function () {
+  openConfirm('End this partnership?', 'The “Partnership” tag will be removed from both pages right away. This can’t be undone.', ICON_PARTNER, function () {
     sbRest('partner_agreements?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'ended' }) })
       .then(function () { toast('Partnership ended.'); _agrRefreshUI(); }).catch(function (ex) { toast(ex.message); });
   }, 'End partnership');

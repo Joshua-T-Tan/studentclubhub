@@ -14,7 +14,7 @@ var ICON_MAIL = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" str
 var ICON_STAR = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2l3 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.9 21l1.2-6.8-5-4.9 6.9-1z"/></svg>';
 var OFFICER_ROLES = ['President', 'Vice President', 'Treasurer', 'Secretary', 'Member'];
 var ROLE_RANK = { 'President': 0, 'Vice President': 1, 'Treasurer': 2, 'Secretary': 3, 'Member': 4 };
-var ICON_ROLE = '🔁';
+var ICON_ROLE = svgIcon('swap', 26);
 
 /* ---------- Shared inline icons (hand-drawn SVG, no emoji) ---------- */
 /* Partnership = a puzzle piece (pieces "fitting together"); filled, tinted white
@@ -209,9 +209,7 @@ function clubSlides(club) {
   var g = (club.gallery || []).filter(Boolean);
   if (club.banner) g = [club.banner].concat(g);
   if (g.length) return g.map(function (u) { return { img: u }; });
-  var m = styleForCategory(club.category);
-  return [club.category, ((club.tags || []).map(function (tag) { return '#' + tag; }).join('  ')) || club.school, 'Meets at ' + club.school]
-    .map(function (txt, i) { return { grad: 'linear-gradient(' + (120 + i * 30) + 'deg,' + (i % 2 ? '#005f7d,#003249' : '#0a94ba,#00617f') + ')', icon: m.icon, txt: txt }; });
+  return [{ paper: true }];   // nothing uploaded → a blank sheet of paper with school doodles
 }
 function clubHeroSlideshow(club, relBadge, slides) {
   slides = slides || clubSlides(club);
@@ -223,8 +221,10 @@ function clubHeroSlideshow(club, relBadge, slides) {
   var meta = '<span class="biz-cuisines">' + escHtml(club.category) + '  •  ' + escHtml(club.school) + (club.zip ? '  •  ' + escHtml(club.zip) : '') + '</span>' +
     openP + (club.clubId ? '<span class="biz-idchip">#' + escHtml(club.clubId) + '</span>' : '') + partneredWithBadge('club', club.id);
   var galleryN = (club.gallery || []).filter(Boolean).length;
-  return '<div class="biz-slideshow" id="clubSlideshow">' +
+  var paper = !!(slides[0] && slides[0].paper);
+  return '<div class="biz-slideshow' + (paper ? ' is-paper' : '') + '" id="clubSlideshow">' +
     slides.map(function (s, i) {
+      if (s.paper) return '<div class="biz-slide active paper-slide">' + doodleLayer('banner') + '</div>';
       return '<div class="biz-slide' + (i === 0 ? ' active' : '') + '" style="' + (s.img ? 'background-image:url(' + escAttr(s.img) + ')' : 'background:' + s.grad) + '">' +
         (s.img ? '' : '<span class="biz-slide-ico">' + s.icon + '</span><span class="biz-slide-txt">' + escHtml(s.txt || '') + '</span>') + '</div>';
     }).join('') +
@@ -236,7 +236,7 @@ function clubHeroSlideshow(club, relBadge, slides) {
     '<div class="biz-hero-info container"><div class="name-row"><h1>' + escHtml(club.name) + '</h1>' +
       (club.verified ? '<span class="name-verified-ico" title="Verified">' + verifiedSeal(20, '#ffffff', '#b8860b') + '</span>' : '') +
       '<button class="name-ico share" title="' + escAttr(t('share_club')) + '" onclick="openShare(\'' + club.id + '\')">' + ICON_SHARE + '</button>' +
-      (ownerOf(club) ? '' : '<button class="name-ico flag" title="Report this club" onclick="openReport(\'club\',\'' + club.id + '\',\'' + escAttr(club.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '🚩') + '</button>') + '</div>' +
+      (ownerOf(club) ? '' : '<button class="name-ico flag" title="Report this club" onclick="openReport(\'club\',\'' + club.id + '\',\'' + escAttr(club.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>') + '</div>' +
       '<div class="biz-tagline">' + chips + '</div>' +
       '<div class="biz-tagline biz-meta-row" style="margin-top:6px">' + meta + '</div></div></div>';
 }
@@ -254,7 +254,7 @@ function clubHeroHTML(club) {
   var saved = isFavorite(club.id);
   return '<div class="club-hero" style="' + coverStyle(club) + '">' +
     '<button class="banner-star ' + (saved ? 'on' : '') + '" title="' + escAttr(saved ? t('card_saved') : t('save_club')) + '" onclick="toggleFavorite(\'' + club.id + '\')">' + bookmarkSvg(saved) + '</button>' +
-    '<button class="share-pill" title="' + escAttr(t('share_club')) + '" onclick="openShare(\'' + club.id + '\')">🔗 ' + t('share_club') + '</button>' +
+    '<button class="share-pill" title="' + escAttr(t('share_club')) + '" onclick="openShare(\'' + club.id + '\')">' + ICON_SHARE + ' ' + t('share_club') + '</button>' +
     '</div>';
 }
 function clubHeadHTML(club, relBadge) {
@@ -379,7 +379,7 @@ function rosterHTML(club) {
   var title = secTitle(t('sec_members') + ' (' + list.length + ')', ownerOf(club) ? 'editClubRoster(\'' + club.id + '\')' : '', 'gear');
   // Non-members can't see the roster
   if (!isClubMember(club)) {
-    return title + '<p class="chat-locked form-note">🔒 ' + t('roster_gated') + '</p>';
+    return title + '<p class="chat-locked form-note">' + svgIcon('lock', 14) + ' ' + t('roster_gated') + '</p>';
   }
   // Members: officers ranked (President, VP, Treasurer, Secretary) then members alphabetically.
   // The list shows ~6 rows at a time and scrolls; the search filters the whole roster.
@@ -408,7 +408,7 @@ function socialsPublicHTML(club) {
   if (!links.length) return '';
   var pills = links.map(function (u) {
     return '<a class="social-pill" href="' + escAttr(normalizeUrl(u)) + '" target="_blank" rel="noopener" title="' + escAttr(normalizeUrl(u)) + '">' +
-      '<span class="sp-ico">🔗</span><span class="sp-label">' + escHtml(hostLabel(u)) + '</span></a>';
+      '<span class="sp-ico">' + svgIcon('link', 16) + '</span><span class="sp-label">' + escHtml(hostLabel(u)) + '</span></a>';
   }).join('');
   return '<div class="socials socials-grid">' + pills + '</div>';
 }
@@ -470,14 +470,14 @@ function chatHTML(club) {
   var all = _clubChat[club.id] || [];
   var member = isClubMember(club);
   var feed = all.length ? all.map(function (m) {
-    if (m.system) return '<div class="chat-system">🤖 <strong>System Notification</strong>: ' + escHtml(m.text) + '</div>';
+    if (m.system) return '<div class="chat-system">' + svgIcon('bell', 14) + ' <strong>System Notification</strong>: ' + escHtml(m.text) + '</div>';
     if (m.deleted) return '<div class="chat-msg"><div class="avatar sm">·</div><div class="cm-body deleted"><em>This message was deleted</em></div></div>';
     var own = currentUser && ((m.memberId && m.memberId === currentUser.memberId) || m.who === currentUser.name);
     var ctrls = own ? '<span class="cm-ctrls"><button onclick="editChat(\'' + club.id + '\',\'' + m.id + '\')">Edit</button>' +
       '<button onclick="deleteChat(\'' + club.id + '\',\'' + m.id + '\')">Delete</button></span>' : '';
     return '<div class="chat-msg ' + (m.announce ? 'announce' : '') + '">' + avatarHTML(m.who, 'sm') +
       '<div class="cm-body"><div class="cm-top"><span class="cm-who">' + escHtml(m.who) + '</span>' +
-      (m.announce ? '<span class="badge">📣 Announcement</span>' : '') +
+      (m.announce ? '<span class="badge">' + svgIcon('megaphone', 13) + ' Announcement</span>' : '') +
       '<span class="cm-time">' + fmtTime(m.ts) + (m.edited ? ' · (edited)' : '') + '</span></div>' +
       '<div class="cm-text">' + escHtml(m.text) + '</div>' + ctrls + '</div></div>';
   }).join('') : '<p class="form-note" style="text-align:center;padding:14px">No messages yet.</p>';
@@ -487,10 +487,10 @@ function chatHTML(club) {
     var canAnnounce = ownerOf(club) || isOfficerRole(roleInClub(club));
     compose = '<div class="chat-compose">' +
       '<input id="chatInput" type="text" placeholder="Message the club..." onkeydown="if(event.key===\'Enter\')postChat(\'' + club.id + '\')">' +
-      (canAnnounce ? '<label class="chat-ann" title="Post as announcement"><input type="checkbox" id="chatAnnounce"> 📣</label>' : '') +
+      (canAnnounce ? '<label class="chat-ann" title="Post as announcement"><input type="checkbox" id="chatAnnounce"> ' + svgIcon('megaphone', 15) + '</label>' : '') +
       '<button class="btn primary" onclick="postChat(\'' + club.id + '\')">Send</button></div>';
   } else if (member) {
-    compose = '<p class="form-note chat-locked">🔒 Only officers can post in this chat.</p>';
+    compose = '<p class="form-note chat-locked">' + svgIcon('lock', 14) + ' Only officers can post in this chat.</p>';
   } else {
     compose = '<p class="form-note chat-locked">Join this club to see and post messages.</p>';
   }
@@ -532,7 +532,7 @@ function editChat(clubId, id) {
 function deleteChat(clubId, id) {
   var m = _findChatMsg(clubId, id); if (!m) return;
   var own = currentUser && ((m.memberId && m.memberId === currentUser.memberId) || m.who === currentUser.name); if (!own) return;
-  openConfirm('Delete message?', 'This message will be removed for everyone.', '🗑️', function () {
+  openConfirm('Delete message?', 'This message will be removed for everyone.', svgIcon('trash', 26), function () {
     sbRest('club_chat?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ deleted: true, text: '' }) })
       .then(function () { loadClubChat(clubId, renderClub); }).catch(function (ex) { toast(ex.message); });
   });
@@ -574,7 +574,7 @@ function renderManageTab(club) {
   var bannerBlock = (club.banner
     ? '<div class="banner-preview has-img"><img src="' + club.banner + '" alt="banner"><button class="mini-x" title="' + escAttr(t('mg_remove_banner')) + '" onclick="mgRemoveBanner(\'' + club.id + '\')">✕</button></div>'
     : '') +
-    '<label class="uploader"><input type="file" accept="image/*" hidden onchange="mgBannerUpload(\'' + club.id + '\',event)"><span class="up-ico">⬆</span> ' + escHtml(t('mg_banner_drop')) + '</label>';
+    '<label class="uploader"><input type="file" accept="image/*" hidden onchange="mgBannerUpload(\'' + club.id + '\',event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> ' + escHtml(t('mg_banner_drop')) + '</label>';
   var linkRows = ((club.socials && club.socials.length) ? club.socials : ['']).map(linkInputRow).join('');
 
   return (
@@ -750,7 +750,7 @@ function postSystemChat(clubId, text) {
 function removeMember(clubId, i) {
   var c = getClub(clubId); if (!c || !c.roster[i]) return;
   var name = c.roster[i].name, rmId = c.roster[i].memberId;
-  openConfirm(t('mod_remove_h'), t('mod_remove_pre') + name + t('mod_remove_post'), '🚫', function () {
+  openConfirm(t('mod_remove_h'), t('mod_remove_pre') + name + t('mod_remove_post'), svgIcon('ban', 26), function () {
     c.roster.splice(i, 1); c.memberCount = Math.max(0, (c.memberCount || 1) - 1);
     saveUserClubs(c); if (typeof sbRemoveMember === 'function' && rmId) sbRemoveMember(clubId, rmId);
     renderClub(); _reopenRoster(); toast(name + ' removed.');
@@ -760,7 +760,7 @@ function removeMember(clubId, i) {
 function banMember(clubId, i) {
   var c = getClub(clubId); if (!c || !c.roster[i]) return;
   var m = c.roster[i], name = m.name;
-  openConfirm(t('mod_ban_h'), t('mod_ban_pre') + name + t('mod_ban_post'), '🚫', function () {
+  openConfirm(t('mod_ban_h'), t('mod_ban_pre') + name + t('mod_ban_post'), svgIcon('ban', 26), function () {
     c.banned_members = c.banned_members || [];
     var key = (m.memberId || emailForMember(c, m) || name);
     if (c.banned_members.indexOf(key) === -1) c.banned_members.push(key);
@@ -843,7 +843,7 @@ function confirmTransfer(clubId) {
   var picked = document.querySelector('input[name="xfer"]:checked'); if (!picked) return;
   var name = picked.value;
   closeTransfer();
-  openConfirm('Transfer to ' + name + '?', 'They become President and you’ll leave the club. This can’t be undone here.', '👑', function () {
+  openConfirm('Transfer to ' + name + '?', 'They become President and you’ll leave the club. This can’t be undone here.', svgIcon('crown', 26), function () {
     var club = getClub(clubId); if (!club) return;
     var newOwner = club.roster.find(function (m) { return m.name === name; }); if (!newOwner) return;
     newOwner.role = 'President'; club.verifiedOwner = newOwner.memberId || null;
@@ -860,7 +860,7 @@ function confirmTransfer(clubId) {
 }
 function deleteClub(clubId) {
   var club = getClub(clubId); if (!club || !ownerOf(club)) return;
-  openConfirm('Delete “' + club.name + '”?', 'This permanently removes the club and its listing. This cannot be undone.', '⚠️', function () {
+  openConfirm('Delete “' + club.name + '”?', 'This permanently removes the club and its listing. This cannot be undone.', svgIcon('warning', 26), function () {
     var i = CLUBS.indexOf(club); if (i > -1) CLUBS.splice(i, 1);
     var j = currentUser.joined.indexOf(clubId); if (j > -1) currentUser.joined.splice(j, 1);
     persistUser(); saveUserClubs(); if (typeof sbDeleteClub === 'function') sbDeleteClub(clubId); buildSchoolFilter(); renderStats(); renderTopClubs();
@@ -885,9 +885,9 @@ function toggleJoin(clubId) {
     persistUser(); saveUserClubs(club);
     if (typeof sbAddMember === 'function') sbAddMember(clubId, { memberId: currentUser.memberId, email: currentUser.email, name: currentUser.name, role: 'Member' }).then(function () { if (typeof loadClubMembers === 'function') loadClubMembers(clubId, afterMembershipChange); });
     afterMembershipChange();
-    toast('You joined ' + club.name + '! 🎉');
+    toast('You joined ' + club.name + '!');
   } else {
-    openConfirm('Leave ' + club.name + '?', 'You’ll lose your member status and roster spot. You can rejoin anytime.', '🚪', function () {
+    openConfirm('Leave ' + club.name + '?', 'You’ll lose your member status and roster spot. You can rejoin anytime.', svgIcon('exit', 26), function () {
       currentUser.joined.splice(currentUser.joined.indexOf(clubId), 1);
       var e = myRosterEntry(club); if (e) club.roster.splice(club.roster.indexOf(e), 1);
       club.memberCount = Math.max(0, (club.memberCount || 1) - 1);
@@ -1069,7 +1069,7 @@ function deleteReviewReply(clubId, reviewId, j) {
   var r = _findReview(clubId, reviewId); if (!r || !r.replies || !r.replies[j]) return;
   var rep = r.replies[j];
   if (!currentUser || (rep.name !== currentUser.name && !ownerOf(club))) return;   // reply author or owner only
-  openConfirm(t('rv_reply_del_h'), t('rv_reply_del_msg'), '🗑️', function () {
+  openConfirm(t('rv_reply_del_h'), t('rv_reply_del_msg'), svgIcon('trash', 26), function () {
     var replies = r.replies.slice(); replies.splice(j, 1);
     _saveReviewReplies(clubId, reviewId, replies).then(refreshClubModalState).catch(function (ex) { toast(ex.message); });
   }, t('rv_delete'));
@@ -1135,7 +1135,7 @@ function submitReview() {
   toast(reviewEditIndex != null ? 'Your review has been updated.' : 'Thanks! Your review has been posted.');
 }
 function deleteReview(target, ref) {
-  openConfirm(t('rv_delete_h'), t('rv_delete_msg'), '🗑️', function () {
+  openConfirm(t('rv_delete_h'), t('rv_delete_msg'), svgIcon('trash', 26), function () {
     if (target === 'site') { var s = loadSiteReviews() || []; if (s[ref]) s.splice(ref, 1); saveSiteReviews(s); renderSiteReviews(); toast('Review deleted.'); }
     else sbRest('club_reviews?id=eq.' + ref, { method: 'DELETE', headers: { Prefer: 'return=minimal' } }).then(function () { loadClubReviews(target, refreshClubModalState); toast('Review deleted.'); }).catch(function (ex) { toast(ex.message); });
   }, t('rv_delete'));

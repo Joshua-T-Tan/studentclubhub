@@ -111,7 +111,7 @@ function renderAgreementForm() {
 }
 function _agrHeadHTML(a, mode) {
   return '<div class="agr-head' + (mode ? ' ' + mode : '') + '"><button class="agr-x icon-btn" title="Close (the form stays in your chat)" onclick="closeAgreementForm()">✕</button>' +
-    '<div class="agr-title"><span class="agr-doc-ico">📄</span><h2>Partnership Agreement</h2>' +
+    '<div class="agr-title"><span class="agr-doc-ico">' + svgIcon('doc', 20) + '</span><h2>Partnership Agreement</h2>' +
     (mode === 'launched' ? '<span class="agr-live">✓ LIVE</span>' : (mode === 'ended' ? '<span class="agr-live ended">ENDED</span>' : '')) + '</div>' +
     '<p class="form-note">' + escHtml(a.a_name) + ' &amp; ' + escHtml(a.b_name) + '</p></div>';
 }
@@ -130,7 +130,7 @@ function _agrHalfHTML(a, side, mySide) {
     (a[p + 'hidden'] ? ICON_EYE_OFF : ICON_EYE) + '<span>' + (a[p + 'hidden'] ? 'Deal hidden on your page — the “Partnered with” badge still shows' : 'Deal shown on your page') + '</span></button>';
   var agree = '<label class="agr-agree' + (editable ? '' : ' ro') + '"><input type="checkbox"' + (a[p + 'agreed'] ? ' checked' : '') + (editable ? ' onchange="agrField(\'' + side + '\',\'agreed\',this.checked)"' : ' disabled') + '><span>' + escHtml(AGR_CLAUSE) + '</span></label>';
   return '<div class="agr-half' + (mine ? ' mine' : '') + (confirmed ? ' confirmed' : '') + '">' +
-    '<div class="agr-half-head"><strong>' + escHtml(a[p + 'name']) + '</strong><span class="agr-side-tag">' + (mine ? 'You' : 'Them') + ' · ' + escHtml(a[p + 'type']) + '</span>' + (confirmed ? '<span class="agr-lock">🔒 Confirmed</span>' : '') + '</div>' +
+    '<div class="agr-half-head"><strong>' + escHtml(a[p + 'name']) + '</strong><span class="agr-side-tag">' + (mine ? 'You' : 'Them') + ' · ' + escHtml(a[p + 'type']) + '</span>' + (confirmed ? '<span class="agr-lock">' + svgIcon('lock', 13) + ' Confirmed</span>' : '') + '</div>' +
     '<div class="two-col">' + fld('Starts', 'start', 'date') + fld('Ends', 'end', 'date') + '</div>' +
     '<div class="two-col">' + fld('Your ID', 'my_id', 'text') + fld('Partner’s ID', 'partner_id', 'text') + '</div>' +
     deal + eye + agree + '</div>';
@@ -151,14 +151,14 @@ function _agrFooterHTML(a, mySide, checks, launched) {
   var iLaunched = a[mySide + '_launched'];
   var status = !otherConfirmed ? '<p class="form-note" style="text-align:center;margin-bottom:8px">Your half is locked. Waiting for the other side to confirm…</p>'
     : (iLaunched ? '<p class="form-note" style="text-align:center;margin-bottom:8px">You’ve launched — waiting for the other side to launch too.</p>' : '');
-  var launchBtn = '<button class="btn primary" ' + ((otherConfirmed && checks.ok && !iLaunched) ? 'onclick="agrLaunch(\'' + mySide + '\')"' : 'disabled') + '>🚀 Launch</button>';
+  var launchBtn = '<button class="btn primary" ' + ((otherConfirmed && checks.ok && !iLaunched) ? 'onclick="agrLaunch(\'' + mySide + '\')"' : 'disabled') + '>Launch</button>';
   return status + '<div class="row"><button class="btn ghost" onclick="agrGoBack(\'' + mySide + '\')">‹ Go back (unlock &amp; edit)</button>' + launchBtn + '</div>';
 }
 
 /* ---- Confirm (password), go-back, launch, stop ---- */
 function agrConfirm(side) {
   var a = _agr; if (!a || side !== _agrMySide(a)) return;
-  var err = _agrValidateMine(a, side); if (err) { toast('⛔ ' + err); return; }
+  var err = _agrValidateMine(a, side); if (err) { toast(err); return; }
   var zone = $('agrFooter'); if (!zone) return;
   zone.innerHTML = '<div class="agr-pw"><p class="form-note">Type your account password to <strong>confirm and lock</strong> your half. After this you can’t edit it (you can still “Go back” before launch). You’ll then review and Launch.</p>' +
     '<div id="agrPwErr" class="auth-error hidden"></div>' +
@@ -183,19 +183,19 @@ function agrGoBack(side) {
 function agrLaunch(side) {
   var a = _agr; if (!a || side !== _agrMySide(a)) return;
   if (!(a.a_confirmed && a.b_confirmed)) { toast('Both sides must confirm first.'); return; }
-  var checks = _agrChecks(a); if (!checks.ok) { toast('⛔ ' + checks.firstError); return; }
+  var checks = _agrChecks(a); if (!checks.ok) { toast(checks.firstError); return; }
   var patch = {}; patch[side + '_launched'] = true;
   var bothLaunched = (side === 'a' ? true : a.a_launched) && (side === 'b' ? true : a.b_launched);
   if (bothLaunched) { patch.status = 'launched'; patch.launched_at = new Date().toISOString(); }
   _up(a.id, patch).then(function () {
     a[side + '_launched'] = true;
-    if (patch.status === 'launched') { a.status = 'launched'; toast('Partnership launched! 🎉'); if (typeof loadPartnerAgreements === 'function') loadPartnerAgreements(); }
+    if (patch.status === 'launched') { a.status = 'launched'; toast('Partnership launched!'); if (typeof loadPartnerAgreements === 'function') loadPartnerAgreements(); }
     else toast('Launched on your side — waiting for the other party.');
     renderAgreementForm();
   }).catch(function (ex) { toast(ex.message); });
 }
 function agrStop(id) {
-  openConfirm('End this partnership?', 'It will no longer show as active on either page. This can’t be undone.', '🤝', function () {
+  openConfirm('End this partnership?', 'It will no longer show as active on either page. This can’t be undone.', ICON_PARTNER, function () {
     _up(id, { status: 'ended' }).then(function () { _agr.status = 'ended'; toast('Partnership ended.'); if (typeof loadPartnerAgreements === 'function') loadPartnerAgreements(); renderAgreementForm(); }).catch(function (ex) { toast(ex.message); });
   });
 }

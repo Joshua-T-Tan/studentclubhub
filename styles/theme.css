@@ -329,3 +329,75 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 .contact-ico { background: var(--brand); border: var(--edge); border-radius: var(--r); box-shadow: var(--shadow-sm); }
 .contact-box { border: var(--edge); border-radius: var(--r); background: var(--input-bg, #fff); }
 .contact-box:focus { box-shadow: var(--shadow-sm); border-color: var(--line); }
+
+/* ---- Drawn icons (scripts/icons.js) — replace emoji everywhere ---- */
+.ico { display: inline-block; vertical-align: -0.15em; flex-shrink: 0; }
+.inline-ico svg { width: 15px; height: 15px; vertical-align: -2px; }
+.spot-ico { display: inline-grid; place-items: center; width: 30px; height: 30px; margin-right: 8px; vertical-align: middle;
+  background: var(--note); color: var(--ink); border: var(--edge); border-radius: var(--r-sm); }
+.empty .big { color: var(--ink); line-height: 1; }
+.soon-ico .ico, .empty .big .ico { vertical-align: middle; }
+.confirm .c-ico { color: var(--ink); background: var(--note) !important; border: var(--edge); border-radius: var(--r); }
+.up-ico { display: inline-grid; place-items: center; }
+
+/* ---- School doodles (blank banners + About Us page banners) ---- */
+.doodles { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.dd { position: absolute; display: block; line-height: 0; opacity: .92; }
+.dd svg { display: block; width: 100%; height: auto; overflow: visible; }
+.dd-ink { stroke: var(--ink); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.dd-note { fill: var(--note); }
+.dd-red { fill: var(--brand); }
+.dd-paper { fill: var(--card); }
+.dd-wood { fill: #f1d9a8; }
+.dd-solid { fill: var(--ink); }
+.dd-dash { stroke-dasharray: 6 7; }
+.dd-redline { stroke: var(--brand); stroke-width: 2.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.dd-aplus { font: 900 30px var(--font-head); fill: var(--brand); }
+.dd-tape { position: absolute; top: -7px; width: 108px; height: 28px; z-index: 1; background: rgba(255, 216, 77, .8);
+  clip-path: polygon(0 6%, 5% 0, 50% 4%, 95% 0, 100% 8%, 97% 50%, 100% 94%, 94% 100%, 50% 96%, 5% 100%, 0 92%, 3% 50%); }
+.dd-tape-l { left: 112px; transform: rotate(-5deg); }   /* clear of the Back button */
+.dd-tape-r { right: 76px; transform: rotate(4deg); }     /* clear of the Save button */
+@media (max-width: 760px) { .dd-sm-hide { display: none; } .dd { scale: .75; } }
+
+/* ---- Blank club/business banner = a clean sheet of paper, set apart from the page by a heavy rule ---- */
+.biz-slideshow.is-paper { background: var(--card); border-bottom: 3px solid var(--box-ink); }
+.biz-slideshow.is-paper .paper-slide { background: var(--card); opacity: 1; }
+.biz-slideshow.is-paper .biz-slide-scrim { display: none; }
+.biz-slideshow.is-paper .biz-hero-info, .biz-slideshow.is-paper .biz-hero-info h1 { color: var(--ink); text-shadow: none; }
+.biz-slideshow.is-paper .biz-cuisines, .biz-slideshow.is-paper .biz-rev-count { color: var(--muted); opacity: 1; }
+.biz-slideshow.is-paper .biz-idchip { background: var(--note); color: var(--ink); border: var(--edge); border-radius: var(--r-sm); }
+.biz-slideshow.is-paper .banner-back, .biz-slideshow.is-paper .banner-ico,
+.biz-slideshow.is-paper .banner-gear, .biz-slideshow.is-paper .name-ico {
+  background: var(--card); color: var(--ink); border: var(--edge); border-radius: var(--r); box-shadow: var(--shadow-sm);
+  backdrop-filter: none; -webkit-backdrop-filter: none; }
+.biz-slideshow.is-paper .banner-back:hover, .biz-slideshow.is-paper .banner-ico:hover,
+.biz-slideshow.is-paper .name-ico:hover { background: var(--note); color: var(--ink); }
+.biz-slideshow.is-paper .name-ico.flag:hover { background: var(--brand); color: #fff; }
+.biz-slideshow.is-paper .banner-ico.on { color: var(--brand); }
+/* Photo banners keep a white, shadowed title so it reads over any image */
+.biz-slideshow:not(.is-paper) .biz-hero-info h1 { color: #fff; text-shadow: 0 2px 14px rgba(0,0,0,.55); }
+
+/* ---- Hero chips: no leftover blue/teal ---- */
+.open-partner-chip { background: var(--note); color: var(--ink); border: var(--edge); border-radius: var(--r-sm); box-shadow: none; }
+.partnered-badge { background: var(--brand); color: #fff; border: var(--edge); border-radius: var(--r-sm); }
+
+/* ---- About Us page banners: white paper + doodles instead of the old navy band ---- */
+.page-banner { background: var(--card); color: var(--ink); border-bottom: 3px solid var(--box-ink); }
+.page-banner::after { display: none; }
+.page-banner .container { position: relative; z-index: 1; }
+.pb-crumb { color: var(--brand); }
+.pb-title { color: var(--ink); }
+
+/* ---- Directory cards: share + flag as paper buttons; category tag starts after the share button ---- */
+.card-share { background: var(--card); color: var(--ink); border: var(--edge); border-radius: var(--r); box-shadow: none;
+  backdrop-filter: none; -webkit-backdrop-filter: none; }
+.card-share:hover { background: var(--note); transform: none; }
+.card-cover:has(.cover-mark) .card-share, .card-cover:has(.cover-mark) .card-flag { top: 12px; }
+.card-cover .cover-cat, .card-cover:has(.cover-mark) .cover-cat {
+  left: 52px; max-width: calc(100% - 104px); white-space: normal; line-height: 1.25; }   /* long names wrap to 2 lines */
+/* Phones: the paper banner grows to fit the (wrapping) name instead of overlapping it; doodles step aside */
+@media (max-width: 760px) {
+  .biz-slideshow.is-paper { height: auto; min-height: 220px; }
+  .biz-slideshow.is-paper .biz-hero-info { position: relative; bottom: auto; padding-top: 66px; padding-bottom: 16px; }
+  .biz-slideshow.is-paper .dd { display: none; }
+}
