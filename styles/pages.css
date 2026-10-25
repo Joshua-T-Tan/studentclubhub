@@ -202,7 +202,6 @@
 .perk-box p { font-size: 0.9rem; color: var(--ink); line-height: 1.45; }
 /* Card perk box: always exactly two rows tall so cards line up, clamp longer text */
 .perk-box.perk-2row p { min-height: 2.6em; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0; }
-.perk-box.perk-empty { display: flex; align-items: center; }
 .perk-box.big { padding: 14px 16px; margin: 8px 0 4px; }
 .perk-box.big p { font-size: 1rem; }
 .biz-card .card-cover { height: 118px; }

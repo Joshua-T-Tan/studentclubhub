@@ -191,7 +191,7 @@ function businessCard(b) {
       (dealVisibleTo(b)
         ? '<div class="perk-box perk-2row' + (dealVisibleToPublic(b) ? '' : ' is-private') + '"><span class="perk-tag">' + escHtml(PERK_TYPES[b.perk_type] || 'Perk') + '</span>' +
             (dealVisibleToPublic(b) ? '' : ' ' + dealStatusChip(b, true)) + '<p>' + escHtml(b.perk_description) + '</p></div>'
-        : '<div class="perk-box perk-2row perk-empty"><p class="form-note">Perks coming soon — tap to view.</p></div>') +
+        : '') +   // no deal, or a hidden/expired one: no box at all (the card keeps its height; the buttons stay on the bottom edge)
       '<div class="card-foot">' +
         '<button class="fav-btn ' + (saved ? 'on' : '') + '" onclick="toggleBizSave(\'' + b.id + '\')">' + bookmarkSvg(saved) + (saved ? 'Saved' : 'Save Business') + '</button>' +
         '<button class="btn primary" onclick="openBusiness(\'' + b.id + '\')">View Details</button>' +
