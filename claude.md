@@ -18,7 +18,9 @@ monetary features have been intentionally removed and must not be reintroduced.
   system fonts / an error toast if offline, so the rest of the app still runs
   from `file://` or any static host.
 - **Persistence: Supabase REST + `localStorage`.** Every account is a **Supabase
-  Auth user** (email + password; email proven by a 6-digit code). The session's
+  Auth user** — either "Continue with Google" (OAuth + PKCE: `sbSignInWithGoogle` /
+  `sbFinishOAuthRedirect`; a Gmail that already has an account is linked to it) or
+  email + password (email proven by a 6-digit code). The session's
   access token (`sbSession`, supabase.js) is sent on every `sbRest` call, and
   **row-level security decides who may write what**. The browser keeps only a
   profile cache + saves/preferences in `localStorage` — never passwords. Shared data lives in Supabase (project

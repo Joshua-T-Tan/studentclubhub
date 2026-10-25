@@ -523,7 +523,7 @@ function avatarForName(name) {
 }
 function avatarHTML(name, size) {
   var src = avatarForName(name);
-  var inner = src ? '<img src="' + src + '" alt="">' : escHtml(initialsOf(name));
+  var inner = src ? '<img src="' + escAttr(src) + '" alt="" referrerpolicy="no-referrer">' : escHtml(initialsOf(name));
   return '<div class="avatar ' + (size || 'sm') + '">' + inner + '</div>';
 }
 /* Save star icon: golden outline when un-saved, solid gold when saved. */
@@ -602,6 +602,7 @@ function initAuth() {
     else { clearSessionEmail(); if (rec) setTimeout(function () { toast('We upgraded account security. Please log in once more.'); openAuth('login'); }, 600); }
   }
   renderAuthArea();
+  finishGoogleSignIn();
   // Restored session applies the account's own theme/language (in setSession);
   // a guest always gets the Light + English defaults (no global leakage).
   if (!currentUser) { applyLanguage('en'); applyTheme('light'); }
@@ -712,13 +713,13 @@ function renderAuth() {
   var err = '<div id="authError" class="auth-error hidden"></div>';
   var intro = authIntroMsg ? '<div class="form-note" style="margin-bottom:12px">' + escHtml(authIntroMsg) + '</div>' : '';
   if (authStage === 'login') {
-    b.innerHTML = authTabs() + intro + err +
+    b.innerHTML = authTabs() + intro + err + googleButtonHTML() +
       field('alEmail', t('au_email'), 'email', 'you@school.edu') +
       field('alPass', t('au_password'), 'password', '••••••••') +
       '<p style="margin:-6px 0 12px;text-align:right"><a href="#" class="link" onclick="openForgot();return false;">' + t('set_forgot') + '</a></p>' +
       '<button id="btnLogin" class="btn primary block lg" onclick="submitLogin()">' + t('au_login') + '</button>';
   } else if (authStage === 'signup') {
-    b.innerHTML = authTabs() + intro + err +
+    b.innerHTML = authTabs() + intro + err + googleButtonHTML() +
       field('asName', t('au_name'), 'text', 'Jordan Lee') +
       field('asEmail', t('au_email'), 'email', 'you@school.edu') +
       field('asPass', t('au_password'), 'password', '••••••••') +
@@ -744,6 +745,27 @@ function renderAuth() {
       '<button class="btn primary block lg" onclick="submitOnboard()">' + t('au_finish') + '</button>';
   }
   var e = $('authError'); if (e && authErrMsg && (authStage === 'login' || authStage === 'signup')) { e.textContent = authErrMsg; e.classList.remove('hidden'); }
+}
+/* "Continue with Google" + an "or" divider above the email form (same button for log in and sign up). */
+function googleButtonHTML() {
+  return '<button type="button" id="btnGoogle" class="btn google-btn block lg" onclick="startGoogleSignIn()">' + ICON_GOOGLE + '<span>Continue with Google</span></button>' +
+    '<div class="auth-or"><span>or use email</span></div>';
+}
+function startGoogleSignIn() {
+  authBusy('btnGoogle', true, 'Opening Google…');
+  sbSignInWithGoogle().catch(function (e) { authBusy('btnGoogle', false); authErr(e.message); });
+}
+/* Back from Google: sign in, and new accounts continue to "Complete your profile". */
+function finishGoogleSignIn() {
+  sbFinishOAuthRedirect().then(function (s) {
+    if (!s) return;
+    var m = s.user.meta || {};
+    return _afterServerLogin(s.user.email, m.full_name || m.name).then(function (r) {
+      if (!r.avatar && m.avatar_url) { r.avatar = m.avatar_url; currentUser.avatar = m.avatar_url; persistUser(); renderAuthArea(); }
+      if (r._new) { delete r._new; authStage = 'onboard'; renderAuth(); openOverlay('authOverlay'); return; }
+      finishAuth('Welcome back, ' + r.name.split(' ')[0] + '!');
+    });
+  }).catch(function (e) { toast(e.message); });
 }
 function authTabs() {
   return '<div class="tab-row"><button id="tabLogin" class="' + (authStage === 'login' ? 'active' : '') + '" onclick="setAuthTab(\'login\')">' + t('au_login') + '</button>' +

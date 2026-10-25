@@ -49,7 +49,8 @@ function _sbStore(s) {
     sbSession = {
       access_token: s.access_token, refresh_token: s.refresh_token,
       expires_at: s.expires_at || (Math.floor(Date.now() / 1000) + (s.expires_in || 3600)),
-      user: { id: u.id, email: String(u.email || '').toLowerCase(), meta: u.user_metadata || {} }
+      user: { id: u.id, email: String(u.email || '').toLowerCase(), meta: u.user_metadata || {},
+              providers: (u.app_metadata && u.app_metadata.providers) || (u.providers) || [] }
     };
   } else sbSession = null;
   try { if (sbSession) localStorage.setItem(LS_SB_SESSION, JSON.stringify(sbSession)); else localStorage.removeItem(LS_SB_SESSION); } catch (e) {}
@@ -81,7 +82,7 @@ function sbUpdateUser(patch) {
   return sbAccessToken().then(function (tok) {
     if (!tok) throw new Error('Please log in again.');
     return sbFetch('/auth/v1/user', patch, 'PUT', tok).then(function (u) {
-      if (sbSession && u && u.id) { sbSession.user.meta = u.user_metadata || {}; _sbStore({ access_token: sbSession.access_token, refresh_token: sbSession.refresh_token, expires_at: sbSession.expires_at, user: { id: u.id, email: u.email, user_metadata: u.user_metadata } }); }
+      if (sbSession && u && u.id) _sbStore({ access_token: sbSession.access_token, refresh_token: sbSession.refresh_token, expires_at: sbSession.expires_at, user: u });
       return u;
     });
   });
@@ -89,4 +90,44 @@ function sbUpdateUser(patch) {
 function sbSignOut() {
   var tok = sbSession && sbSession.access_token; _sbStore(null);
   if (tok) sbFetch('/auth/v1/logout', {}, 'POST', tok).catch(function () {});
+}
+
+/* ---- "Continue with Google" (OAuth with PKCE) ----
+   We send the browser to Supabase, which sends it to Google; Google sends it back here with a
+   one-time ?code= that only this browser can exchange (it holds the secret "verifier").
+   If a Student Club Hub account already uses that Gmail address, Supabase links the two. */
+var LS_PKCE = 'sch_pkce_verifier';
+function _b64url(buf) {
+  var s = '', b = new Uint8Array(buf); for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function sbSignInWithGoogle() {
+  if (!window.crypto || !crypto.subtle) return Promise.reject(new Error('Google sign-in needs a secure (https) page.'));
+  var rnd = new Uint8Array(48); crypto.getRandomValues(rnd);
+  var verifier = _b64url(rnd);
+  try { localStorage.setItem(LS_PKCE, verifier); } catch (e) {}
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)).then(function (hash) {
+    var back = location.origin + location.pathname;   // land back on this page (keeps http://localhost working in dev)
+    location.href = SUPABASE_URL + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(back) +
+      '&code_challenge=' + _b64url(hash) + '&code_challenge_method=s256';
+  });
+}
+/* On page load: if Google just sent us back, trade the code for a session. Resolves with the
+   session, null if this wasn't a sign-in return, or rejects with a readable error. */
+function sbFinishOAuthRedirect() {
+  var q = new URLSearchParams(location.search);
+  var code = q.get('code'), err = q.get('error_description') || q.get('error');
+  if (!code && !err) return Promise.resolve(null);
+  ['code', 'error', 'error_code', 'error_description', 'state'].forEach(function (k) { q.delete(k); });
+  var rest = q.toString();
+  history.replaceState(null, '', location.pathname + (rest ? '?' + rest : '') + location.hash);   // tidy the address bar
+  if (err) return Promise.reject(new Error('Google sign-in didn’t finish: ' + err.replace(/\+/g, ' ')));
+  var verifier = null; try { verifier = localStorage.getItem(LS_PKCE); localStorage.removeItem(LS_PKCE); } catch (e) {}
+  if (!verifier) return Promise.reject(new Error('Google sign-in expired. Please try again.'));
+  return sbFetch('/auth/v1/token?grant_type=pkce', { auth_code: code, code_verifier: verifier }).then(_sbStore);
+}
+/* Signed in only through Google (no Student Club Hub password)? */
+function sbIsGoogleOnly() {
+  var p = (sbSession && sbSession.user.providers) || [];
+  return p.indexOf('google') > -1 && p.indexOf('email') === -1;
 }

@@ -282,15 +282,18 @@ function settingsAccount() {
     '<div class="toggle-row"><div><div class="tr-title">' + t('set_email_notif_title') + '</div>' +
       '<div class="form-note">' + t('set_email_notif_desc') + '</div></div>' +
       '<button class="switch ' + (u.emailNotif !== false ? 'on' : '') + '" onclick="toggleEmailNotif()"><span></span></button></div>' +
+    (sbIsGoogleOnly() ? '' :   // Google accounts use Google's own 2-step verification
     '<div class="section-title">' + t('set_security') + '</div>' +
     '<div class="toggle-row"><div><div class="tr-title">' + t('set_2fa_title') + '</div>' +
       '<div class="form-note">' + t('set_2fa_desc') + '</div></div>' +
-      '<button class="switch ' + (u.twofa ? 'on' : '') + '" onclick="toggle2fa()"><span></span></button></div>' +
+      '<button class="switch ' + (u.twofa ? 'on' : '') + '" onclick="toggle2fa()"><span></span></button></div>') +
     '<div class="section-title">' + t('set_appearance') + '</div>' +
     '<div class="toggle-row"><div><div class="tr-title">' + t('set_dark_title') + '</div>' +
       '<div class="form-note">' + t('set_dark_desc') + '</div></div>' +
       '<button class="switch ' + (getTheme() === 'dark' ? 'on' : '') + '" onclick="toggleTheme()"><span></span></button></div>' +
-    '<div class="section-title">' + t('set_change_pw') + '</div>' +
+    (sbIsGoogleOnly()
+      ? '<div class="section-title">' + t('set_change_pw') + '</div><p class="form-note" style="margin-bottom:6px">' + ICON_GOOGLE + ' You sign in with Google, so your password and 2-step verification are managed in your Google account.</p>'
+      : '<div class="section-title">' + t('set_change_pw') + '</div>' +
     '<div class="field"><label>' + t('set_curpw') + ' *</label><input id="pwCurrent" type="password"></div>' +
     '<div class="two-col">' +
       '<div class="field"><label>' + t('set_newpw') + '</label><input id="pwNew" type="password"></div>' +
@@ -298,7 +301,7 @@ function settingsAccount() {
     '</div>' +
     '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px">' +
       '<a href="#" class="link" onclick="openForgot();return false;">' + t('set_forgot') + '</a>' +
-      '<button class="btn primary" onclick="doChangePassword()">' + t('set_update_pw') + '</button></div>' +
+      '<button class="btn primary" onclick="doChangePassword()">' + t('set_update_pw') + '</button></div>') +
     '<div class="section-title">' + t('set_account') + '</div>' +
     '<div class="modal-actions"><button class="btn ghost" onclick="logout()">' + t('set_logout') + '</button>' +
       '<button class="btn danger" onclick="deleteAccount()">' + t('set_delete') + '</button></div>';
@@ -420,6 +423,11 @@ function openDeleteAccount() {
   if (!currentUser) return;
   var e = $('delAcctErr'); if (e) e.style.display = 'none';
   var p = $('delAcctPass'); if (p) p.value = '';
+  // Google-only accounts have no site password: they confirm by typing their email instead.
+  var g = sbIsGoogleOnly(), lbl = p && p.closest('.field') && p.closest('.field').querySelector('label');
+  if (p) { p.type = g ? 'email' : 'password'; p.placeholder = g ? currentUser.email : 'Your account password'; }
+  if (lbl) lbl.textContent = g ? 'Type your email to confirm' : 'Password';
+  if (e) e.textContent = g ? 'That doesn’t match your email.' : 'Incorrect password. Please try again.';
   openOverlay('deleteAccountOverlay');
   setTimeout(function () { if ($('delAcctPass')) $('delAcctPass').focus(); }, 60);
 }
@@ -432,7 +440,10 @@ function confirmDeleteAccount() {
   var me = currentUser;
   // The server checks the password, then removes the account, its profile and memberships
   // (and refuses while you still lead a club or own a business).
-  sbPasswordLogin(me.email, typed).then(function () { return sbRpc('delete_my_account'); }, function (ex) { if (ex.status === 400) { showErr(); return 'bad'; } throw ex; })
+  var check = sbIsGoogleOnly()
+    ? (typed.trim().toLowerCase() === me.email.toLowerCase() ? Promise.resolve() : Promise.reject({ status: 400 }))
+    : sbPasswordLogin(me.email, typed);
+  check.then(function () { return sbRpc('delete_my_account'); }, function (ex) { if (ex.status === 400) { showErr(); return 'bad'; } throw ex; })
     .then(function (res) {
       if (res === 'bad') return;
       CLUBS.forEach(function (c) { var i = (c.roster || []).findIndex(function (m) { return m.memberId === me.memberId; }); if (i > -1) { c.roster.splice(i, 1); c.memberCount = c.roster.length; } });
