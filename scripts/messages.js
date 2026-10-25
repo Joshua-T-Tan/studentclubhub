@@ -209,7 +209,7 @@ function renderPendingAgreements() {
       var dates = _agrDateRange(a), upcoming = _agrNotStarted(a);
       return '<div class="pr-card"><div class="pr-body">' + ICON_PARTNER + '<div><strong>' + escHtml(a.a_name) + '</strong> × <strong>' + escHtml(a.b_name) + '</strong>' +
         '<div class="form-note">' + (dates ? svgIcon('calendar', 13) + ' ' + escHtml(dates) + ' · ' : '') +
-          (upcoming ? 'approved — the tag appears on the start date' : 'the tag auto-removes when the duration ends') + '</div></div></div>' +
+          '<span>' + (upcoming ? 'Approved. The tag appears on the start date.' : 'The tag is removed automatically when it ends.') + '</span></div></div></div>' +
         '<div class="pr-actions"><button class="btn danger sm-btn" onclick="endPartnership(\'' + a.id + '\')">End</button></div></div>';
     }).join('');
     el.innerHTML = html;

@@ -531,3 +531,7 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 .pt-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; font-size: .74rem; font-weight: 800; border: var(--edge); border-radius: var(--r-pill); background: var(--note); color: #1a1a1a; }
 .pt-badge.pt-business { background: var(--brand); color: #fff; }
 .pt-badge.pt-community { background: var(--card); color: var(--ink); }
+/* Header buttons keep their label on one line in every language */
+.logout-btn span { white-space: nowrap; }
+/* Card buttons: fixed height so every language (CJK fonts are taller) keeps cards the same size */
+.card-foot .btn, .card-foot .fav-btn { height: 40px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }

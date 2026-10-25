@@ -204,7 +204,7 @@ function clubHeroSlideshow(club, relBadge, slides) {
   var bannerTR = '<div class="banner-tr">' +
     '<button class="banner-ico ' + (saved ? 'on' : '') + '" title="' + escAttr(saved ? t('card_saved') : t('save_club')) + '" onclick="toggleFavorite(\'' + club.id + '\')">' + bookmarkSvg(saved) + '</button></div>';
   var openP = club.partnershipOpen ? '<span class="open-partner-chip">' + ICON_PARTNER + ' Open to partnerships</span>' : '';
-  var chips = recruitBadge(club.recruitment) + renderBadge((club.memberCount || 0) + ' members', 'gray') + (relBadge || '');
+  var chips = recruitBadge(club.recruitment) + renderBadge(membersLabel(club.memberCount), 'gray') + (relBadge || '');
   var meta = '<span class="biz-cuisines">' + escHtml(club.category) + '  •  ' + escHtml(club.school) + (club.zip ? '  •  ' + escHtml(club.zip) : '') + '</span>' +
     openP + (club.clubId ? '<span class="biz-idchip">#' + escHtml(club.clubId) + '</span>' : '') + partneredWithBadge('club', club.id);
   var galleryN = (club.gallery || []).filter(Boolean).length;
@@ -249,7 +249,7 @@ function clubHeadHTML(club, relBadge) {
   return '<div class="club-head"><h2>' + escHtml(club.name) + '</h2>' +
     '<div class="sub">' + escHtml(club.category) + ' · ' + escHtml(club.school) + (club.zip ? ' · ' + escHtml(club.zip) : '') +
       (club.clubId ? ' · <span class="club-id-chip">#' + escHtml(club.clubId) + '</span>' : '') + '</div>' +
-    '<div class="chips">' + recruitBadge(club.recruitment) + renderBadge((club.memberCount || 0) + ' members', 'gray') + relBadge + '</div>' +
+    '<div class="chips">' + recruitBadge(club.recruitment) + renderBadge(membersLabel(club.memberCount), 'gray') + relBadge + '</div>' +
     tags + '</div>';
 }
 /* Action buttons (Join/Leave · Contact · Save · Share) - live in the LEFT main column now */
@@ -529,7 +529,7 @@ function deleteChat(clubId, id) {
       .then(function () { loadClubChat(clubId, renderClub); }).catch(function (ex) { toast(ex.message); });
   });
 }
-function fmtTime(ts) { try { return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } }
+function fmtTime(ts) { try { return new Date(ts).toLocaleTimeString(siteLocale(), { hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } }
 
 /* ============================================================
    MANAGE TAB (owner)

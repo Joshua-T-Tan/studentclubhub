@@ -260,7 +260,7 @@ function bizSlides(b) {
   if (g.length) return g.map(function (u) { return { img: u }; });
   return [{ paper: true }];   // nothing uploaded → a blank sheet of paper with school doodles
 }
-function _fmtPerkDate(s) { try { return new Date(s + 'T00:00:00').toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return s; } }
+function _fmtPerkDate(s) { try { return new Date(s + 'T00:00:00').toLocaleDateString(siteLocale(), { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return s; } }
 function renderBusinessPage(b) {
   var slides = bizSlides(b), saved = isBizSaved(b.id), owner = isBizOwner(b);
   var cuisines = (b.cuisines || []).length ? (b.cuisines || []).join('  •  ') : b.category;

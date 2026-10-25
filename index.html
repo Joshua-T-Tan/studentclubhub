@@ -220,8 +220,8 @@
           <p class="form-note" style="margin:2px 0 10px">Charter your club now. Meeting times, tags, a banner, photos, and links are added afterward from your club page using the gear and pencil icons.</p>
           <div class="field invite-field">
             <label><span data-i18n="cc_invite">Club leader invite code</span> *</label>
-            <input id="ccInvite" type="text" placeholder="e.g. PVPHS2026" oninput="validateCreate()" />
-            <p id="ccInviteMsg" class="form-note">Enter your school-issued invite code to verify you can author this listing. <em>Demo codes: PVPHS2026, WEST2026, DEMO2026.</em></p>
+            <input id="ccInvite" type="text" placeholder="e.g. SCH-AB12CD" oninput="validateCreate()" />
+            <p id="ccInviteMsg" class="form-note">Enter the club leader invite code from your school or from Student Club Hub.</p>
           </div>
           <div class="modal-actions three">
             <button class="btn ghost" data-i18n="cc_cancel" onclick="showView('main')">Cancel</button>
@@ -343,6 +343,7 @@
   <script src="scripts/supabase.js"></script>
   <script src="scripts/icons.js"></script>
   <script src="scripts/auth.js"></script>
+  <script src="scripts/i18n-dom.js"></script>
   <script src="scripts/directory.js"></script>
   <script src="scripts/modal.js"></script>
   <script src="scripts/reviews.js"></script>

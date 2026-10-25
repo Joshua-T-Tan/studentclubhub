@@ -153,6 +153,7 @@ function isListedFor(c) {
   return typeof isClubMember === 'function' && !!isClubMember(c);
 }
 function listedClubs() { return CLUBS.filter(isListedFor); }
+function membersLabel(n) { n = n || 0; return n + (n === 1 ? ' member' : ' members'); }
 function getClub(id) { return CLUBS.find(function (c) { return c.id === id; }) || null; }
 function getClubByClubId(cid) { cid = (cid || '').toUpperCase(); return CLUBS.find(function (c) { return c.clubId === cid; }) || null; }
 /* Deterministic 6-char alpha-numeric ID from a club's internal id, so seed IDs stay stable across reloads. */
@@ -389,7 +390,7 @@ function renderTopClubs() {
   var slides = _tcTop.map(function (c, i) {
     return '<div class="tc-slide' + (i === 0 ? ' active' : '') + '" style="' + coverStyle(c) + '">' +
       '<div class="tc-scrim"></div><div class="tc-body">' +
-        '<div class="chips">' + recruitBadge(c.recruitment) + renderBadge((c.memberCount || 0) + ' members', 'gray') + '</div>' +
+        '<div class="chips">' + recruitBadge(c.recruitment) + renderBadge(membersLabel(c.memberCount), 'gray') + '</div>' +
         '<h3>' + escHtml(c.name) + '</h3>' +
         '<div class="tc-meta">' + escHtml(c.category) + ' · ' + escHtml(c.school) + (c.zip ? ' · ' + escHtml(c.zip) : '') + '</div>' +
         '<button class="btn primary" onclick="openClub(\'' + c.id + '\')">' + t('card_view') + '</button>' +
@@ -529,7 +530,7 @@ function renderCard(club) {
         '<div class="card-meta">' + escHtml(club.school) + (club.zip ? ' · ' + escHtml(club.zip) : '') + '</div>' +
         (club.clubId ? '<div class="card-idline"><span class="club-id-chip">#' + escHtml(club.clubId) + '</span></div>' : '') +
         '<p class="card-desc">' + escHtml(club.desc) + '</p>' +
-        '<div class="chips">' + recruitBadge(club.recruitment) + renderBadge((club.memberCount || 0) + ' members', 'gray') + '</div>' +
+        '<div class="chips">' + recruitBadge(club.recruitment) + renderBadge(membersLabel(club.memberCount), 'gray') + '</div>' +
         '<div class="card-foot">' + foot + '</div>' +
       '</div>' +
     '</article>'

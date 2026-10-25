@@ -52,7 +52,7 @@ function loadPartnerAgreements(cb) {
 }
 /* Directory cards don't carry the tag — it lives on the club/business banner. */
 function partnershipBadge() { return ''; }
-function _fmtAgrDate(s) { try { return new Date(s + 'T00:00:00').toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return s; } }
+function _fmtAgrDate(s) { try { return new Date(s + 'T00:00:00').toLocaleDateString(siteLocale(), { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return s; } }
 
 /* On-page box for each live partnership. The owner always sees the full deal with a
    show/hide eye and a status chip; visitors never see a hidden one. */

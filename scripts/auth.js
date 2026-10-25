@@ -35,6 +35,8 @@ function escHtml(s) {
 }
 
 /* Relative "time ago", falling back to an absolute date for anything older than ~a month */
+/* Dates and times follow the site language, not the browser's. */
+function siteLocale() { return (typeof LANG !== 'undefined' && LANG) || 'en'; }
 function timeAgo(ts) {
   if (!ts) return '';
   var s = Math.floor((Date.now() - ts) / 1000);
@@ -44,7 +46,7 @@ function timeAgo(ts) {
   var h = Math.floor(m / 60); if (h < 24) return h + ' hour' + (h === 1 ? '' : 's') + ' ago';
   var d = Math.floor(h / 24); if (d < 7) return d + ' day' + (d === 1 ? '' : 's') + ' ago';
   var w = Math.floor(d / 7); if (w < 5) return w + ' week' + (w === 1 ? '' : 's') + ' ago';
-  try { return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; }
+  try { return new Date(ts).toLocaleDateString(siteLocale(), { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; }
 }
 
 /* ---------- i18n - translates all FIXED UI text (user-typed content stays as typed) ---------- */
@@ -292,7 +294,7 @@ var I18N_EXTRA5 = {
     you_pres:'You: President', mg_privacy_h:'Club Privacy Status', mg_privacy_title:'Private club',
     mg_privacy_desc:'Private clubs require an application to join; public clubs are open to all.' },
   es: { joined_label:'Inscrito', vis_public:'Público', vis_private:'Privado', you_pres:'Tú: Presidente' },
-  fr: { joined_label:'Membre', vis_public:'Public', vis_private:'Privé', you_pres:'Vous : Président' },
+  fr: { joined_label:'Membre', vis_public:'Public', vis_private:'Privé', you_pres:'Toi : Président' },
   ja: { joined_label:'参加済み', vis_public:'公開', vis_private:'非公開', you_pres:'あなた：会長' },
   'zh-CN': { joined_label:'已加入', vis_public:'公开', vis_private:'私密', cc_visibility:'社团状态',
     sort_joined:'已加入', sort_notjoined:'未加入', sort_public:'公开', sort_private:'私密',
@@ -435,6 +437,7 @@ function applyLanguage(lang) {
   try { localStorage.setItem(LS.lang, lang); } catch (e) {}
   document.querySelectorAll('[data-i18n]').forEach(function (el) { var v = t(el.getAttribute('data-i18n')); if (v != null) el.innerHTML = v; });
   document.querySelectorAll('[data-i18n-ph]').forEach(function (el) { var v = t(el.getAttribute('data-i18n-ph')); if (v != null) el.setAttribute('placeholder', v); });
+  if (typeof uiLanguageChanged === 'function') uiLanguageChanged();   // fixed English UI text (i18n-dom.js)
   document.documentElement.setAttribute('lang', lang);
 }
 /* Re-render dynamic (JS-built) views so their strings pick up the new language too. */

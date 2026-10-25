@@ -77,7 +77,7 @@ function _admEmpty(text) { return '<div class="adm-empty">' + svgIcon('check', 2
 function _admFail(ex) { _admList('<p class="form-note">' + escHtml(ex.message) + '</p>'); }
 function _admWhen(s) {
   if (!s) return '';
-  var d = new Date(s); return escHtml(d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }));
+  var d = new Date(s); return escHtml(d.toLocaleDateString(siteLocale(), { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' + d.toLocaleTimeString(siteLocale(), { hour: 'numeric', minute: '2-digit' }));
 }
 function _admDate(s) { return s ? escHtml(_fmtAgrDate(String(s).slice(0, 10))) : ''; }
 /* A link to the club / business / profile something is about (or a note if it no longer exists). */
