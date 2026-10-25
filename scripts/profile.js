@@ -84,17 +84,17 @@ function renderProfile(name) {
 var _profileInfo = {};
 /* Resolve the profile person's email + member ID (for looking up their shops / joined clubs). */
 function _resolveProfilePerson(name, rec) {
-  if (currentUser && currentUser.name === name) return Promise.resolve({ email: (currentUser.email || '').toLowerCase(), memberId: currentUser.memberId || '' });
-  if (rec && (rec.email || rec.memberId)) return Promise.resolve({ email: (rec.email || '').toLowerCase(), memberId: rec.memberId || '' });
+  if (currentUser && currentUser.name === name) return Promise.resolve({ memberId: currentUser.memberId || '' });
+  if (rec && rec.memberId) return Promise.resolve({ memberId: rec.memberId });
   if (_profileInfo[name]) return Promise.resolve(_profileInfo[name]);
-  if (typeof sbRest !== 'function') return Promise.resolve({ email: '', memberId: '' });
-  return sbRest('profiles?name=eq.' + encodeURIComponent(name) + '&select=member_id,email,private,profile_type,headline,bio,details&limit=1')
+  if (typeof sbRest !== 'function') return Promise.resolve({ memberId: '' });
+  return sbRest('profiles?name=eq.' + encodeURIComponent(name) + '&select=member_id,private,profile_type,headline,bio,details&limit=1')
     .then(function (r) {
-      var p = r && r[0], out = p ? { email: (p.email || '').toLowerCase(), memberId: p.member_id || '', private: !!p.private,
-        pub: { type: p.profile_type || 'student', headline: p.headline || '', bio: p.bio || '', details: p.details || {} } } : { email: '', memberId: '', private: false };
+      var p = r && r[0], out = p ? { memberId: p.member_id || '', private: !!p.private,
+        pub: { type: p.profile_type || 'student', headline: p.headline || '', bio: p.bio || '', details: p.details || {} } } : { memberId: '', private: false };
       _profileInfo[name] = out; return out;
     })
-    .catch(function () { return { email: '', memberId: '' }; });
+    .catch(function () { return { memberId: '' }; });
 }
 /* Build every applicable section for a profile: clubs led, businesses led (shops
    they own), and clubs joined. Shops + another user's joined clubs load async. */
@@ -105,8 +105,10 @@ function _populateProfileLists(name, isSelf, rec) {
   _resolveProfilePerson(name, rec).then(function (pp) {
     if (currentProfileName !== name) return;   // profile changed while loading
     var led = clubsLedBy(name, pp.memberId);
-    var bizP = pp.email
-      ? sbRest('businesses?owner_email=eq.' + encodeURIComponent(pp.email) + '&select=*' + (isSelf ? '' : '&status=eq.verified')).catch(function () { return []; })
+    var bizP = pp.memberId
+      ? sbRpc('member_business_ids', { p_member: pp.memberId }).then(function (ids) {
+          return (ids && ids.length) ? sbRest('businesses?id=in.(' + ids.map(encodeURIComponent).join(',') + ')&select=' + BIZ_SELECT) : [];
+        }).catch(function () { return []; })
       : Promise.resolve([]);
     var memP = (!isSelf && pp.memberId)
       ? sbRest('club_members?member_id=eq.' + encodeURIComponent(pp.memberId) + '&select=club_id').catch(function () { return []; })

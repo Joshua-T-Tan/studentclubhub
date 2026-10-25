@@ -316,9 +316,9 @@ function deleteBusiness(id) {
     var q = encodeURIComponent(id);
     sbRest('partner_agreements?or=(and(a_type.eq.business,a_id.eq.' + q + '),and(b_type.eq.business,b_id.eq.' + q + '))&status=in.(pending,launched)',
       { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'ended' }) }).catch(function () {});
-    sbRest('businesses?id=eq.' + q, { method: 'DELETE', headers: { Prefer: 'return=representation' } }).then(function (rows) {
+    sbRest('businesses?id=eq.' + q + '&select=id', { method: 'DELETE', headers: { Prefer: 'return=representation' } }).then(function (rows) {
       if (!rows || !rows.length) throw new Error('Couldn’t delete this business. Try again.');
-      delete _bizOwned[id]; if (typeof _bizExtra !== 'undefined') delete _bizExtra[id]; _bizCache = null; currentBiz = null;
+      delete _bizOwned[id]; if (typeof _bizExtra !== 'undefined') delete _bizExtra[id]; _bizCache = null; currentBiz = null; refreshMyBizIds();
       if (typeof loadPartnerAgreements === 'function') loadPartnerAgreements();
       toast('Business deleted.'); openShops('my');
     }).catch(function (ex) { toast(ex.message); });

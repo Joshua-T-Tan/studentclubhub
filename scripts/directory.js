@@ -241,7 +241,7 @@ function _openClubFromQuery() {
   if (dc) openClub(dc.id); else toast('That club link isn’t valid anymore.');
 }
 /* ---------- Club members (roster) sync — Step 2 ---------- */
-function _memberToRosterEntry(r) { return { name: r.name, role: r.role, memberId: r.member_id, email: r.email }; }
+function _memberToRosterEntry(r) { return { name: r.name, role: r.role, memberId: r.member_id }; }
 function _applyMembers(club, rows) {
   if (!club) return;
   club.roster = (rows || []).map(_memberToRosterEntry);
@@ -255,7 +255,7 @@ function loadClubMembers(clubId, cb) {
     var club = getClub(clubId);
     if ((!rows || !rows.length) && club && (club.roster || []).length) {
       var seedRows = club.roster.map(function (m, i) {
-        return { club_id: clubId, member_id: m.memberId || ('seed-' + clubId + '-' + i), email: (m.email || '').toLowerCase() || null, name: m.name, role: m.role || 'Member' };
+        return { club_id: clubId, member_id: m.memberId || ('seed-' + clubId + '-' + i), name: m.name, role: m.role || 'Member' };
       });
       sbRest('club_members?on_conflict=club_id,member_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=representation' }, body: JSON.stringify(seedRows) })
         .then(function (ins) { _applyMembers(club, ins || seedRows); if (typeof cb === 'function') cb(); })
@@ -269,7 +269,7 @@ function loadClubMembers(clubId, cb) {
 /* One request for all rosters, so Browse cards, counts, and "am I a member?" never come from a stale club blob. */
 function _loadAllMembers() {
   if (typeof sbRest !== 'function') return;
-  sbRest('club_members?select=club_id,member_id,name,role,email&order=joined_at.asc').then(function (rows) {
+  sbRest('club_members?select=club_id,member_id,name,role&order=joined_at.asc').then(function (rows) {
     var by = {}; (rows || []).forEach(function (r) { (by[r.club_id] = by[r.club_id] || []).push(r); });
     CLUBS.forEach(function (c) { if (by[c.id]) _applyMembers(c, by[c.id]); });
     renderStats(); renderTopClubs(); if (typeof applyFilters === 'function') applyFilters();
@@ -286,7 +286,7 @@ function _memberWrite(path, opts, failMsg) {
 }
 function sbAddMember(clubId, m) {
   return _memberWrite('club_members?on_conflict=club_id,member_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' },
-    body: JSON.stringify({ club_id: clubId, member_id: m.memberId, email: (m.email || '').toLowerCase() || null, name: m.name, role: m.role || 'Member' }) }, 'Couldn’t join this club.');
+    body: JSON.stringify({ club_id: clubId, member_id: m.memberId, name: m.name, role: m.role || 'Member' }) }, 'Couldn’t join this club.');
 }
 function sbSetMemberRole(clubId, memberId, role) {
   return _memberWrite('club_members?club_id=eq.' + encodeURIComponent(clubId) + '&member_id=eq.' + encodeURIComponent(memberId), { method: 'PATCH', body: JSON.stringify({ role: role }) }, 'Only the President can change roles.');

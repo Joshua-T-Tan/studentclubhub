@@ -289,3 +289,20 @@ alter table public.profiles add column if not exists profile_type text not null 
 alter table public.profiles add column if not exists headline text;
 alter table public.profiles add column if not exists bio text;
 alter table public.profiles add column if not exists details jsonb not null default '{}'::jsonb;
+
+-- Migration "privacy_hide_emails": nobody's login email is readable from the browser.
+--  * profiles.email and businesses.owner_email: column SELECT revoked for anon/authenticated
+--    (the site uses claim_my_profile / save_my_profile / my_business_ids / member_business_ids instead)
+--  * club_members.email, partner_agreements.a_owner_email / b_owner_email: dropped (never needed)
+--  * retired tables (conversations, messages, partner_links, partnerships, biz_connections): no read policies
+-- (Full function bodies are in the applied migration; summary of grants below.)
+revoke select on public.profiles from anon, authenticated;
+grant select (member_id, name, updated_at, private, profile_type, headline, bio, details) on public.profiles to anon, authenticated;
+revoke select on public.businesses from anon, authenticated;
+grant select (id, name, category, address, city, zip, perk_type, perk_description, redemption_instructions, contact_email, partnered_club_id,
+  status, created_at, about, phone, website, price_tier, cuisines, hours, photos, rating, review_count, partnership_open, listing_goal,
+  gate_messages, banner, gallery, links, public_id, deal_hidden, is_private, perk_audience, perk_start, perk_end, verified, reviews_enabled)
+  on public.businesses to anon, authenticated;
+alter table public.club_members drop column if exists email;
+alter table public.partner_agreements drop column if exists a_owner_email;
+alter table public.partner_agreements drop column if exists b_owner_email;

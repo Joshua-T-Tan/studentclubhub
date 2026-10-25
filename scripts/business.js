@@ -78,7 +78,22 @@ function sbRest(path, opts) {
 }
 /* Call a database function (POST /rest/v1/rpc/<name>). */
 function sbRpc(name, args) { return sbRest('rpc/' + name, { method: 'POST', body: JSON.stringify(args || {}) }); }
-function sbFetchBusinesses() { return sbRest('businesses?status=eq.verified&select=*&order=created_at.desc'); }
+/* Every public business column. owner_email is private: "do I own this?" comes from my_business_ids(). */
+var BIZ_SELECT = 'id,name,category,address,city,zip,perk_type,perk_description,redemption_instructions,contact_email,status,created_at,about,phone,website,cuisines,hours,photos,rating,review_count,partnership_open,banner,gallery,links,public_id,deal_hidden,is_private,perk_audience,perk_start,perk_end,verified,reviews_enabled';
+function sbFetchBusinesses() { return sbRest('businesses?status=eq.verified&select=' + BIZ_SELECT + '&order=created_at.desc'); }
+/* Which businesses the signed-in account owns (asked of the server, so nobody's email is ever sent to the browser). */
+var _myBizIds = [];
+function refreshMyBizIds() {
+  if (!currentUser || typeof sbHasSession !== 'function' || !sbHasSession(currentUser.email)) { _myBizIds = []; return Promise.resolve(_myBizIds); }
+  return sbRpc('my_business_ids').then(function (ids) {
+    var before = _myBizIds.join(); _myBizIds = (ids || []).map(String);
+    if (before !== _myBizIds.join()) {   // ownership just loaded/changed: refresh what's on screen
+      if (typeof currentBiz !== 'undefined' && currentBiz && $('view-business') && !$('view-business').classList.contains('hidden')) renderBusinessPage(currentBiz);
+      if ($('view-shops') && !$('view-shops').classList.contains('hidden') && typeof renderShops === 'function') renderShops();
+    }
+    return _myBizIds;
+  }).catch(function () { return _myBizIds; });
+}
 function sbRegisterBusiness(data) { return sbRest('businesses', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(data) }); }
 
 /* ---------- Saved Businesses (localStorage, mirrors Saved Clubs) ---------- */
@@ -212,7 +227,7 @@ function openBusiness(id) {
   if (cached) { currentBiz = cached; renderBusinessPage(cached); } else { currentBiz = null; msg('Loading…'); }
   loadBizReviews(id);
   // Always pull the freshest copy, so edits made on another device or account show up.
-  sbRest('businesses?id=eq.' + encodeURIComponent(id) + '&select=*').then(function (rows) {
+  sbRest('businesses?id=eq.' + encodeURIComponent(id) + '&select=' + BIZ_SELECT).then(function (rows) {
     var fresh = rows && rows[0];
     if (currentBiz && currentBiz.id !== id) return;                   // user moved on
     if (!fresh || (fresh.status !== 'verified' && !isBizOwner(fresh))) { if (!cached) msg('This business isn’t available.'); return; }
@@ -538,7 +553,7 @@ function _myBizReview(bizId) { return (_bizReviewsFor === bizId) ? (_bizReviews 
 /* After any review change: reload the list AND the business row (the DB trigger recomputes rating/count). */
 function _afterBizReviewChange(bizId) {
   loadBizReviews(bizId); _bizCache = null;
-  sbRest('businesses?id=eq.' + encodeURIComponent(bizId) + '&select=*').then(function (rows) {
+  sbRest('businesses?id=eq.' + encodeURIComponent(bizId) + '&select=' + BIZ_SELECT).then(function (rows) {
     if (rows && rows[0]) { _rememberBiz(rows[0]); if (currentBiz && currentBiz.id === bizId) { currentBiz = rows[0]; renderBusinessPage(rows[0]); } }
   }).catch(function () {});
 }
@@ -661,6 +676,7 @@ function submitBusiness() {
   authBusy2('bizSubmit', true, 'Submitting…');
   sbRegisterBusiness(payload).then(function () {
     _bizCache = null;   // force a refetch so the new listing shows immediately
+    refreshMyBizIds();
     $('shopsBody').innerHTML =
       '<div class="soon-card" style="margin-top:40px"><div class="soon-ico">' + svgIcon('check', 34) + '</div>' +
         '<h2>Your business is live!</h2>' +
@@ -678,13 +694,12 @@ function authBusy2(id, busy, label) {
 /* ============================================================
    OWNER: identity (email-match MVP) + My Business dashboard + editor
    ============================================================ */
-function isBizOwner(b) {   // (owner emails are stored lowercase; compare case-insensitively for older rows)
-  return !!(currentUser && b && b.owner_email && currentUser.email &&
-    b.owner_email.toLowerCase() === currentUser.email.toLowerCase());
+function isBizOwner(b) {
+  return !!(currentUser && b && b.id != null && _myBizIds.indexOf(String(b.id)) > -1);
 }
 /* Returns the updated row; a refusal (0 rows) becomes an error instead of a silent no-op. */
 function sbUpdateBusiness(id, patch) {
-  return sbRest('businesses?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(patch) })
+  return sbRest('businesses?id=eq.' + id + '&select=' + BIZ_SELECT, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(patch) })
     .then(function (rows) { if (!rows || !rows.length) throw new Error('Couldn’t save — only the owner can edit this business. Try logging in again.'); return rows; });
 }
 var _bizOwned = {};
@@ -715,8 +730,9 @@ function renderMyBusiness(el) {
   }
   el.innerHTML = '<div class="page-head centered"><h1>My Business</h1><p>Edit your storefront, perks, hours, and partnership settings.</p></div>' +
     '<div id="myBizList" class="grid"><p class="form-note" style="grid-column:1/-1;text-align:center;padding:40px">Loading your listings…</p></div>';
-  sbRest('businesses?owner_email=eq.' + encodeURIComponent(currentUser.email.toLowerCase()) + '&select=*&order=created_at.desc')
-    .then(function (rows) {
+  refreshMyBizIds().then(function (ids) {
+    return ids.length ? sbRest('businesses?id=in.(' + ids.map(encodeURIComponent).join(',') + ')&select=' + BIZ_SELECT + '&order=created_at.desc') : [];
+  }).then(function (rows) {
       var g = $('myBizList'); if (!g) return;
       if (!rows || !rows.length) {
         g.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="big">' + svgIcon('store', 40) + '</div>' +

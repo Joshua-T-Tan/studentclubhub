@@ -14,14 +14,14 @@ var _reachCtx = null, PARTNER_TYPES = ['Discount for members', 'Sponsorship / fu
 function closeReach() { if (typeof closeOverlay === 'function') closeOverlay('bizOverlay'); }
 function _isEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s || ''); }
 
-/* ---------- Who currently leads a club (by verifiedOwner) + their login email ---------- */
+/* ---------- Who currently leads a club (by verifiedOwner) ---------- */
 function _resolveClubOwner(club) {
   var pid = (club && club.verifiedOwner) || '';
   var pres = (club && club.roster || []).find(function (m) { return pid && m.memberId === pid; });
-  var base = { memberId: pid, name: pres ? pres.name : '', email: '' };
+  var base = { memberId: pid, name: pres ? pres.name : '' };
   if (!pid) return Promise.resolve(base);
   return sbFindProfileById(pid).then(function (p) {
-    if (p) { base.email = (p.email || '').toLowerCase(); base.name = base.name || p.name || ''; }
+    if (p) base.name = base.name || p.name || '';
     return base;
   });
 }
@@ -40,11 +40,10 @@ function openReachOut(targetType, id) {
   var isMine = targetType === 'business' ? (typeof isBizOwner === 'function' && isBizOwner(obj)) : (typeof ownerOf === 'function' && ownerOf(obj));
   var targetOpen = targetType === 'business' ? !!obj.partnership_open : !!obj.partnershipOpen;
   // The recipient's login email is stored on the request for reference only (routing is by club/business).
-  var recip = targetType === 'club' ? _resolveClubOwner(obj) : Promise.resolve({ email: String(obj.owner_email || '').toLowerCase() });
+  var recip = targetType === 'club' ? _resolveClubOwner(obj) : Promise.resolve({});
   recip.then(function (r) {
     _reachCtx = {
       targetType: targetType, id: String(id), name: obj.name, publicEmail: publicEmail, isMine: isMine, targetOpen: targetOpen,
-      recipientEmail: ((r && r.email) || '').toLowerCase(),
       targetRealId: targetType === 'business' ? (obj.public_id || '') : (obj.clubId || '')
     };
     var gather = isMine ? Promise.resolve([]) : _gatherMyEntities();
@@ -108,9 +107,9 @@ function submitReachOutRequest() {
   authBusy2('roSend', true, 'Sending…');
   // a = sender (pre-filled/confirmed), b = recipient. Mirrored so the tag + deal box render on approval.
   var row = {
-    a_type: fromType, a_id: fromId, a_name: fromEnt.name, a_owner_email: currentUser.email.toLowerCase(),
+    a_type: fromType, a_id: fromId, a_name: fromEnt.name,
     a_real_id: fromEnt.publicId || '', a_partner_id: c.targetRealId || '', a_start: start, a_end: end, a_deal: dealText, a_agreed: true, a_confirmed: true,
-    b_type: c.targetType, b_id: c.id, b_name: c.name, b_owner_email: c.recipientEmail || null,
+    b_type: c.targetType, b_id: c.id, b_name: c.name,
     b_real_id: c.targetRealId || '', b_partner_id: fromEnt.publicId || '', b_start: start, b_end: end, b_deal: dealText,
     status: 'pending'
   };
@@ -139,20 +138,14 @@ function sbUpsertProfile() {
   if (!currentUser || typeof sbRest !== 'function' || !currentUser.memberId) return Promise.resolve();
   if (typeof sbHasSession === 'function' && !sbHasSession(currentUser.email)) return Promise.resolve();
   // user_id ties this member ID to the server account — the database uses it to know who "me" is.
-  return sbRest('profiles?on_conflict=member_id', {
-    method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify(_publicProfileRow())
-  }).catch(function () {});
-}
-function sbFindProfileByEmail(email) {
-  if (typeof sbRest !== 'function' || !email) return Promise.resolve(null);
-  return sbRest('profiles?email=eq.' + encodeURIComponent(email.toLowerCase()) + '&select=member_id,email,name,private')
-    .then(function (r) { return (r && r[0]) || null; }).catch(function () { return null; });
+  var r = _publicProfileRow();   // saved by the server, which takes the email from the login itself
+  return sbRpc('save_my_profile', { p_member_id: r.member_id, p_name: r.name, p_private: r.private, p_type: r.profile_type,
+    p_headline: r.headline, p_bio: r.bio, p_details: r.details }).catch(function () {});
 }
 function sbFindProfileById(memberId) {
   var id = String(memberId || '').trim(); if (!id || typeof sbRest !== 'function') return Promise.resolve(null);
   if (id[0] !== '#') id = '#' + id;
-  return sbRest('profiles?member_id=eq.' + encodeURIComponent(id) + '&select=member_id,email,name,private')
+  return sbRest('profiles?member_id=eq.' + encodeURIComponent(id) + '&select=member_id,name,private')
     .then(function (r) { return (r && r[0]) || null; }).catch(function () { return null; });
 }
 

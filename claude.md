@@ -181,6 +181,11 @@ Schema + policies: `supabase/security_2026_10.sql` (and later `supabase/*.sql`).
 - **Verified seal is admin-granted.** Owners send a request
   (`verification_requests`); an admin approves it on the Admin page. Triggers
   ignore any other attempt to set `verified`.
+- **Emails are never readable from the browser.** `profiles.email` and
+  `businesses.owner_email` have column SELECT revoked; business queries must use
+  `BIZ_SELECT` (never `select=*`). Ownership comes from `my_business_ids()` /
+  `member_business_ids()` (`isBizOwner` reads `_myBizIds`), the profile row is
+  written by `save_my_profile()` and found by `claim_my_profile()`.
 - **Invite codes are private** (`invite_codes` table, admin-only); the site can
   only ask `check_invite_code`. Never put codes in the JS.
 - **Rollout switch:** `app_settings.legacy_writes` = `'on'` lets old anonymous

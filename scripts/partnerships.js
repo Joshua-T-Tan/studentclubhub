@@ -83,7 +83,9 @@ function _gatherMyEntities() {
   var mine = [];
   if (!currentUser) return Promise.resolve(mine);
   if (typeof CLUBS !== 'undefined') CLUBS.forEach(function (c) { if (typeof ownerOf === 'function' && ownerOf(c)) mine.push({ type: 'club', id: String(c.id), name: c.name, open: !!c.partnershipOpen, publicId: c.clubId || '' }); });
-  return sbRest('businesses?owner_email=eq.' + encodeURIComponent(currentUser.email.toLowerCase()) + '&select=id,name,partnership_open,public_id').then(function (rows) {
+  return refreshMyBizIds().then(function (ids) {
+    return ids.length ? sbRest('businesses?id=in.(' + ids.map(encodeURIComponent).join(',') + ')&select=id,name,partnership_open,public_id') : [];
+  }).then(function (rows) {
     (rows || []).forEach(function (b) { mine.push({ type: 'business', id: String(b.id), name: b.name, open: !!b.partnership_open, publicId: b.public_id || '' }); });
     return mine;
   }).catch(function () { return mine; });

@@ -642,6 +642,7 @@ function setSession(rec) {
   // database needs before it accepts my writes), then sync my memberships.
   var prof = (typeof sbUpsertProfile === 'function') ? sbUpsertProfile() : Promise.resolve();
   prof.then(function () { if (typeof reconcileMyMemberships === 'function') reconcileMyMemberships(); });
+  if (typeof refreshMyBizIds === 'function') refreshMyBizIds();   // which businesses I own (asked of the server)
 }
 /* Read a preference from the account record (nested user.preferences first, then flat legacy) */
 function prefsGet(rec, key) { return (rec && rec.preferences && rec.preferences[key]) || (rec && rec[key]) || ''; }
@@ -852,12 +853,8 @@ function submitVerify() {
    same person always gets the same Member ID on every device. Builds/refreshes the local record. */
 function _afterServerLogin(email, newName) {
   email = String(email).toLowerCase();
-  var uid = sbSession && sbSession.user.id;
-  var byUser = sbRest('profiles?user_id=eq.' + encodeURIComponent(uid) + '&select=member_id,name,private,email').catch(function () { return []; });
-  return byUser.then(function (rows) {
-    if (rows && rows[0]) return rows[0];
-    return sbRest('profiles?email=eq.' + encodeURIComponent(email) + '&select=member_id,name,private,email').then(function (r2) { return r2 && r2[0]; }, function () { return null; });
-  }).then(function (p) {
+  // The server finds MY profile (by account, then by my login email) — emails are never readable from the browser.
+  return sbRpc('claim_my_profile').then(function (rows) { return (rows && rows[0]) || null; }, function () { return null; }).then(function (p) {
     var users = loadUsers(), rec = users[email], isNew = !p && !(rec && rec.memberId);
     var idP = p ? Promise.resolve(p.member_id) : (rec && rec.memberId ? Promise.resolve(rec.memberId) : genMemberIdUnique());
     return idP.then(function (memberId) {
@@ -898,6 +895,7 @@ function doLogout() {
   currentUser = null;
   if (typeof sbSignOut === 'function') sbSignOut();
   if (typeof isAdminUser !== 'undefined') isAdminUser = false;
+  if (typeof _myBizIds !== 'undefined') _myBizIds = [];
   clearSessionEmail();
   // Reset guest UI to the Light + English defaults
   applyTheme('light'); applyLanguage('en');
