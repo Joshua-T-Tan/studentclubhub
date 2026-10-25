@@ -6,31 +6,26 @@
    requireAuth, t, escHtml, openOverlay/closeOverlay).
    ============================================================ */
 
-/* ---------- Brand logo (orange suspension-bridge badge) ----------
-   ONE source of truth used in every location (header, Our Philosophy, How It
-   Works, FAQ, reviews). For a pixel-perfect match to your artwork, drop the file
-   at styles/logo.png and set LOGO_IMG_SRC below - every logo swaps at once. */
-var LOGO_IMG_SRC = 'styles/logo.png';   // real artwork; set to '' to fall back to the built-in SVG
-function schStar(cx, cy, k) {
-  return '<g transform="translate(' + cx + ',' + cy + ') scale(' + k + ')">' +
-    '<path d="M0,-10 2.9,-3.1 9.5,-3.1 4.3,1.2 5.9,7.9 0,4 -5.9,7.9 -4.3,1.2 -9.5,-3.1 -2.9,-3.1Z" fill="var(--accent)"/></g>';
-}
+/* ---------- Brand logo ----------
+   A yellow sticky note pinned with a red push-pin (the paper / bulletin-board theme) carrying a
+   "hub": one red center dot linked to three nodes — clubs and local businesses, connected.
+   Bold, few shapes so it still reads at 30px. ONE source of truth for every logo spot; the same
+   artwork is saved as styles/logo.svg for the browser-tab icon. */
+var LOGO_SVG_INNER =
+  '<g transform="rotate(-6 32 35)">' +
+    '<rect x="11" y="14" width="44" height="44" rx="3" fill="#1a1a1a"/>' +                                   /* hard paper shadow */
+    '<rect x="8" y="11" width="44" height="44" rx="3" fill="#ffd84d" stroke="#1a1a1a" stroke-width="3"/>' +  /* sticky note */
+    '<path d="M30 37V25M30 37l-10.5 7.5M30 37l10.5 7.5" stroke="#1a1a1a" stroke-width="3.4" stroke-linecap="round"/>' +
+    '<circle cx="30" cy="24.5" r="4.4" fill="#fff" stroke="#1a1a1a" stroke-width="2.8"/>' +
+    '<circle cx="19" cy="45" r="4.4" fill="#fff" stroke="#1a1a1a" stroke-width="2.8"/>' +
+    '<circle cx="41" cy="45" r="4.4" fill="#fff" stroke="#1a1a1a" stroke-width="2.8"/>' +
+    '<circle cx="30" cy="37" r="6" fill="#d62828" stroke="#1a1a1a" stroke-width="2.8"/>' +
+  '</g>' +
+  '<circle cx="31" cy="9" r="5" fill="#d62828" stroke="#1a1a1a" stroke-width="2.6"/>' +                       /* push-pin */
+  '<circle cx="29.4" cy="7.6" r="1.4" fill="#fff"/>';
 function schLogo(px) {
-  if (LOGO_IMG_SRC) return '<img class="sch-logo" src="' + LOGO_IMG_SRC + '" width="' + px + '" height="' + px + '" alt="Student Club Hub logo">';
-  return '<svg class="sch-logo" viewBox="0 0 100 100" width="' + px + '" height="' + px + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Student Club Hub logo">' +
-    '<circle cx="50" cy="50" r="47" fill="none" stroke="var(--accent)" stroke-width="3"/>' +
-    '<circle cx="50" cy="50" r="40" fill="var(--accent)" fill-opacity="0.12"/>' +
-    schStar(50, 15, 0.72) + schStar(33, 20, 0.5) + schStar(67, 20, 0.5) +
-    '<rect x="13" y="70" width="74" height="5" rx="1.5" fill="var(--accent)"/>' +
-    /* two towers, each with a pointed (gothic) arch - Brooklyn-Bridge silhouette */
-    '<path fill-rule="evenodd" fill="var(--accent)" d="M33 72 L33 36 L43 36 L43 72 Z M35 72 L35 52 Q35 45.5 38 43.5 Q41 45.5 41 52 L41 72 Z"/>' +
-    '<path fill-rule="evenodd" fill="var(--accent)" d="M57 72 L57 36 L67 36 L67 72 Z M59 72 L59 52 Q59 45.5 62 43.5 Q65 45.5 65 52 L65 72 Z"/>' +
-    /* main suspension cable draped across both towers */
-    '<path d="M14 69 Q26 41 38 36 Q50 52 62 36 Q74 41 86 69" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round"/>' +
-    /* vertical suspender ropes */
-    '<g stroke="var(--accent)" stroke-width="1.1" opacity="0.9">' +
-    '<path d="M20 57 20 70M27 53 27 70M33 50 33 70M45 50 45 70M50 53 50 70M55 50 55 70M67 53 67 70M73 57 73 70M80 60 80 70"/></g>' +
-    '</svg>';
+  return '<svg class="sch-logo" viewBox="0 0 64 64" width="' + px + '" height="' + px + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Student Club Hub logo">' +
+    LOGO_SVG_INNER + '</svg>';
 }
 /* Orange feature-card icons (replace the emoji) */
 var ICON_STUDENT = '<svg viewBox="0 0 24 24" width="30" height="30" fill="var(--accent)"><path d="M12 3 1 8l11 5 9-4.1V15h2V8L12 3z"/><path d="M5 12.2V16c0 1.7 3.1 3 7 3s7-1.3 7-3v-3.8l-7 3.2-7-3.2z"/></svg>';
@@ -137,7 +132,7 @@ function renderFeatureCards() {
 /* ============================================================
    CONTACT US overlay (info + email; no money/data collection)
    ============================================================ */
-var CONTACT_EMAIL = 'hello@studentclubhub.org';
+var CONTACT_EMAIL = 'support@studentclubhub.com';   // Zoho Mail inbox
 /* ---- POPUP (main-page "Contact Us" button): short + quick message box ---- */
 function openContactUs() {
   var li = !!currentUser;

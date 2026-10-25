@@ -177,7 +177,7 @@ function businessCard(b) {
   var coverBg = b.banner ? 'background:center/cover no-repeat url(' + escAttr(b.banner) + ')' : 'background:' + m.grad;
   return '<article class="card biz-card">' +
     '<div class="card-cover" style="' + coverBg + '" onclick="openBusiness(\'' + b.id + '\')">' +
-      (b.banner ? '' : '<span class="cover-mark">' + m.icon + '</span>' + cardDoodles(b.id)) +
+      (b.banner ? '' : '<span class="cover-mark">' + m.icon + '</span>' + cardDoodles(b.id, 'biz')) +
       '<button class="card-share" title="Share" onclick="event.stopPropagation(); shareBusiness(\'' + b.id + '\')">' + (typeof ICON_SHARE !== 'undefined' ? ICON_SHARE : '') + '</button>' +
       (isBizOwner(b) ? '' : '<button class="card-flag" title="Report this business" onclick="event.stopPropagation(); openReport(\'business\',\'' + b.id + '\',\'' + jsArg(b.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>') +
       '<span class="cover-cat">' + escHtml(b.category) + '</span></div>' +
@@ -256,7 +256,7 @@ function renderBusinessPage(b) {
   var hero =
     '<div class="biz-slideshow' + (slides[0] && slides[0].paper ? ' is-paper' : '') + '" id="bizSlideshow">' +
       slides.map(function (s, i) {
-        if (s.paper) return '<div class="biz-slide active paper-slide">' + doodleLayer('banner') + '</div>';
+        if (s.paper) return '<div class="biz-slide active paper-slide">' + doodleLayer('bizBanner') + '</div>';
         return '<div class="biz-slide' + (i === 0 ? ' active' : '') + '" style="' +
           (s.img ? 'background-image:url(' + escAttr(s.img) + ')' : 'background:' + s.grad) + '">' +
           (s.img ? '' : '<span class="biz-slide-ico">' + s.icon + '</span><span class="biz-slide-txt">' + escHtml(s.txt || '') + '</span>') + '</div>';

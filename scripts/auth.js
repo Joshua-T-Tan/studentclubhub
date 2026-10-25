@@ -837,11 +837,11 @@ function submitVerify() {
   sbVerifyOtp(verifyEmail, code).then(function () {
     if (otpMode === 'login2fa') return _afterServerLogin(verifyEmail).then(function (r) { finishAuth('Welcome back, ' + r.name.split(' ')[0] + '!'); });
     if (otpMode === 'upgrade') {
-      return sbUpdateUser({ password: pendingReg.pass }).catch(function () {}).then(function () { return _afterServerLogin(verifyEmail); })
+      return sbUpdateUser({ password: pendingReg.pass, data: { has_password: true } }).catch(function () {}).then(function () { return _afterServerLogin(verifyEmail); })
         .then(function (r) { pendingReg = null; finishAuth('You’re all set, ' + r.name.split(' ')[0] + '. Your account is now secured on the server.'); });
     }
     // sign-up: save the password on the server, then reuse this email's member ID if it already had one
-    return sbUpdateUser({ password: pendingReg.pass }).catch(function () {}).then(function () {
+    return sbUpdateUser({ password: pendingReg.pass, data: { has_password: true } }).catch(function () {}).then(function () {
       return _afterServerLogin(pendingReg.email, pendingReg.name);
     }).then(function (r) {
       var fresh = r._new; delete r._new; pendingReg = null;

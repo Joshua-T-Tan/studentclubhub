@@ -62,7 +62,7 @@ monetary features have been intentionally removed and must not be reintroduced.
 | `scripts/qr.js` | Self-contained offline QR-code generator (byte mode, EC level L, v1–5) for the Share Club modal. Loaded first. |
 | `scripts/supabase.js` | Minimal Supabase Auth email-OTP client (`sbSendOtp`/`sbVerifyOtp`) via plain `fetch`. Holds the public project URL + publishable key. Loaded before auth.js. |
 | `styles/theme.css` | The active "Paper" theme (red/yellow, graph paper, ink borders, hard shadows, Roboto). Loaded LAST; token-only re-skin. Remove its `<link>` to revert. |
-| `scripts/icons.js` | The drawn icon set (`svgIcon(name, size)`, line icons in one ink style) + school doodles (`doodleLayer('banner'|'page')`) for blank banners and About Us page banners. Loaded before auth.js. |
+| `scripts/icons.js` | The drawn icon set (`svgIcon(name, size)`, line icons in one ink style) + doodles for blank banners: school supplies for clubs/About Us (`banner`, `page`, `card1-3`) and storefront items for businesses (`bizBanner`, `bizcard1-3`, via `cardDoodles(id, 'biz')`). Loaded before auth.js. |
 | `scripts/reviews.js` | Club reviews (members only, one per member) + homepage website reviews (static seeds + `site_reviews` table) and the shared review composer. Loaded right after modal.js. |
 | `scripts/business.js` | Local-business directory: `sbRest()`, cards, business page, deal visibility (`dealVisibleToPublic` / `dealVisibleTo` / owner status chip), reviews (one per member), hours (Pacific time, overnight spans), registration (login required), `#biz=<id>` links. |
 | `scripts/messages.js` | "Reach Out" popup (public contact email + partnership request form), profiles table sync, Partnership Requests inbox + FAB badge. |
@@ -110,6 +110,8 @@ Typography: **Roboto** (400/500/700/900) for both headings and body, loaded from
 Google Fonts with a system-font fallback stack (`--font-head` / `--font-body`).
 
 **Blank banners:** a club/business with no uploaded images gets a white "sheet of paper" banner (`.is-paper`) with yellow tape and school doodles, set off from the page by a heavy ink rule. About Us page banners use the same paper + doodles.
+
+**Logo:** a pinned yellow sticky note with a red "hub" mark (`schLogo` / `LOGO_SVG_INNER` in pages.js; same art in `styles/logo.svg`, the browser-tab icon).
 
 **Homepage hero:** an animated canvas (`scripts/hero-motion.js`, `#heroMotion`) —
 a seamless 10-second loop of local businesses and school clubs wired together

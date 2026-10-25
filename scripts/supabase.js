@@ -130,7 +130,10 @@ function sbFinishOAuthRedirect() {
   return sbFetch('/auth/v1/token?grant_type=id_token', { provider: 'google', id_token: q.get('id_token'), nonce: saved.nonce }).then(_sbStore);
 }
 /* Signed in only through Google (no Student Club Hub password)? */
+/* Signed up with Google and hasn't set a Website Login password yet? (has_password is recorded
+   whenever the site sets a password, because Supabase doesn't list a password as a provider.) */
 function sbIsGoogleOnly() {
-  var p = (sbSession && sbSession.user.providers) || [];
-  return p.indexOf('google') > -1 && p.indexOf('email') === -1;
+  var p = (sbSession && sbSession.user.providers) || [], m = (sbSession && sbSession.user.meta) || {};
+  return p.indexOf('google') > -1 && p.indexOf('email') === -1 && !m.has_password;
 }
+function sbUsesGoogle() { return ((sbSession && sbSession.user.providers) || []).indexOf('google') > -1; }

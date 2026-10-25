@@ -92,7 +92,22 @@ var DOODLES = {
   arrow: '<svg viewBox="0 0 130 60"><path class="dd-ink dd-dash" d="M6 44C30 8 60 8 70 32s35 20 50-14"/><path class="dd-ink" d="m109 17 11 1-3 11"/></svg>',
   aplus: '<svg viewBox="0 0 84 70"><text class="dd-aplus" x="42" y="47" text-anchor="middle">A+</text>' +
     '<path class="dd-redline" d="M14 38c0-22 56-27 60-5 3 18-40 28-56 14-6-5-5-16 6-22"/></svg>',
-  squiggle: '<svg viewBox="0 0 120 24"><path class="dd-redline" d="M4 14c10-12 18 8 28-2s18 8 28-2 18 8 28-2 18 8 28-2"/></svg>'
+  squiggle: '<svg viewBox="0 0 120 24"><path class="dd-redline" d="M4 14c10-12 18 8 28-2s18 8 28-2 18 8 28-2 18 8 28-2"/></svg>',
+  /* ---- local-business set (blank business banners + directory cards) ---- */
+  store: '<svg viewBox="0 0 110 92"><rect class="dd-ink dd-paper" x="12" y="26" width="86" height="60"/>' +
+    '<path class="dd-ink dd-red" d="M4 28 14 8h82l10 20Z"/><path class="dd-ink" d="M31 8l-5 20M48 8l-2 20M64 8l2 20M80 8l5 20"/>' +
+    '<rect class="dd-ink dd-note" x="22" y="50" width="20" height="36"/><circle class="dd-solid" cx="37" cy="69" r="1.8"/>' +
+    '<rect class="dd-ink dd-paper" x="52" y="40" width="36" height="26"/><path class="dd-ink" d="M70 40v26M52 53h36"/></svg>',
+  cup: '<svg viewBox="0 0 72 72"><path class="dd-ink" d="M24 17c-4-4 4-6 0-11M33 17c-4-4 4-6 0-11M42 17c-4-4 4-6 0-11"/>' +
+    '<path class="dd-ink dd-paper" d="M12 24h38l-4 37a6 6 0 0 1-6 5H22a6 6 0 0 1-6-5Z"/><path class="dd-ink dd-note" d="M13.4 34h35.2l-1.4 13H14.8Z"/>' +
+    '<path class="dd-ink" d="M49 32h5a8 8 0 0 1 0 16h-7"/></svg>',
+  bag: '<svg viewBox="0 0 70 82"><path class="dd-ink dd-note" d="M10 28h50l-4 50H14Z"/><path class="dd-ink" d="M24 34V22a11 11 0 0 1 22 0v12"/>' +
+    '<path class="dd-ink dd-red" d="M35 46l3 6 6.5 1-4.7 4.5 1.1 6.5L35 61l-5.9 3 1.1-6.5L25.5 53l6.5-1Z"/></svg>',
+  tag: '<svg viewBox="0 0 92 50"><path class="dd-ink dd-note" d="M30 6h52a4 4 0 0 1 4 4v30a4 4 0 0 1-4 4H30L8 25Z"/>' +
+    '<circle class="dd-ink dd-paper" cx="27" cy="25" r="4"/><path class="dd-ink" d="M23 25C15 25 9 18 4 10"/><path class="dd-ink" d="M42 19h32M42 31h22"/></svg>',
+  open: '<svg viewBox="0 0 100 70"><path class="dd-ink" d="M50 6 18 28M50 6l32 22"/><circle class="dd-solid" cx="50" cy="6" r="3.5"/>' +
+    '<rect class="dd-ink dd-red" x="8" y="28" width="84" height="36" rx="4"/><text class="dd-open" x="50" y="54" text-anchor="middle">OPEN</text></svg>',
+  pin: '<svg viewBox="0 0 50 66"><path class="dd-ink dd-red" d="M25 62C12 44 6 34 6 24a19 19 0 0 1 38 0c0 10-6 20-19 38Z"/><circle class="dd-ink dd-paper" cx="25" cy="24" r="7"/></svg>'
 };
 /* name, left%, top%, width px, rotation°, hide-on-small-screens */
 var DOODLE_LAYOUTS = {
@@ -106,6 +121,15 @@ var DOODLE_LAYOUTS = {
   card1: [['pencil', 6, 50, 92, -8, 0], ['star', 42, 58, 20, 12, 0], ['note', 60, 40, 50, 6, 0], ['apple', 86, 54, 30, -8, 0]],
   card2: [['ruler', 5, 56, 110, 3, 0], ['aplus', 47, 42, 50, -6, 0], ['bulb', 70, 42, 34, 8, 0], ['star', 88, 62, 18, -10, 0]],
   card3: [['books', 6, 46, 62, -4, 0], ['arrow', 30, 54, 80, 0, 0], ['clip', 62, 40, 16, 20, 0], ['cap', 76, 46, 66, -6, 0]],
+  /* Business banner + cards with no uploaded photo: storefront doodles instead of school supplies */
+  bizBanner: [
+    ['store', 6, 12, 150, -4, 0], ['star', 29, 10, 30, 12, 1], ['tag', 37, 16, 100, -12, 0], ['cup', 55, 9, 62, 6, 1],
+    ['open', 64, 14, 108, 4, 0], ['bag', 83, 24, 60, -6, 0], ['star', 90, 6, 22, -10, 1], ['pin', 22, 44, 40, -8, 1],
+    ['arrow', 44, 46, 130, 0, 1], ['cup', 71, 52, 50, -8, 1], ['tag', 58, 68, 74, 10, 1], ['store', 85, 56, 108, 3, 1]
+  ],
+  bizcard1: [['store', 6, 44, 76, -4, 0], ['star', 40, 58, 20, 12, 0], ['open', 55, 40, 66, 6, 0], ['cup', 86, 50, 32, -8, 0]],
+  bizcard2: [['tag', 5, 52, 86, -6, 0], ['pin', 41, 44, 24, -6, 0], ['bag', 63, 40, 40, 6, 0], ['star', 87, 62, 18, -10, 0]],
+  bizcard3: [['cup', 6, 46, 42, -6, 0], ['arrow', 29, 54, 80, 0, 0], ['open', 57, 42, 60, -5, 0], ['store', 82, 44, 58, 4, 0]],
   /* About Us page banner: title on the left, doodles mostly on the right */
   page: [
     ['star', 34, 14, 26, 12, 1], ['pencil', 52, 16, 160, -14, 1], ['note', 76, 12, 92, 6, 0], ['star', 92, 10, 24, -8, 1],
@@ -115,17 +139,17 @@ var DOODLE_LAYOUTS = {
 /* The doodle layer + two strips of yellow tape. Purely decorative. */
 function doodleLayer(layout) {
   var items = DOODLE_LAYOUTS[layout] || DOODLE_LAYOUTS.banner;
-  var tape = layout.indexOf('card') === 0 ? '' : '<span class="dd-tape dd-tape-l"></span><span class="dd-tape dd-tape-r"></span>';
+  var tape = /card/.test(layout) ? '' : '<span class="dd-tape dd-tape-l"></span><span class="dd-tape dd-tape-r"></span>';
   return '<div class="doodles" aria-hidden="true">' + tape +
     items.map(function (d) {
       return '<span class="dd' + (d[5] ? ' dd-sm-hide' : '') + '" style="left:' + d[1] + '%;top:' + d[2] + '%;width:' + d[3] + 'px;transform:rotate(' + d[4] + 'deg)">' + DOODLES[d[0]] + '</span>';
     }).join('') + '</div>';
 }
 /* Pick one of the card doodle sets per club/business (stable for a given id) so the grid isn't repetitive. */
-function cardDoodles(id) {
+function cardDoodles(id, kind) {
   var s = String(id || ''), h = 0;
   for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  return doodleLayer('card' + (h % 3 + 1));
+  return doodleLayer((kind === 'biz' ? 'bizcard' : 'card') + (h % 3 + 1));
 }
 /* Google's "G" mark for the "Continue with Google" button (Google's sign-in branding requires their own logo). */
 var ICON_GOOGLE = '<svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true">' +

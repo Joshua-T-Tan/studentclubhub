@@ -292,9 +292,9 @@ function settingsAccount() {
     '<div class="toggle-row"><div><div class="tr-title">' + t('set_dark_title') + '</div>' +
       '<div class="form-note">' + t('set_dark_desc') + '</div></div>' +
       '<button class="switch ' + (getTheme() === 'dark' ? 'on' : '') + '" onclick="toggleTheme()"><span></span></button></div>' +
-    (sbIsGoogleOnly()
-      ? '<div class="section-title">' + t('set_change_pw') + '</div><p class="form-note" style="margin-bottom:6px">' + ICON_GOOGLE + ' You sign in with Google, so your password and 2-step verification are managed in your Google account.</p>'
+    (sbIsGoogleOnly() ? websitePasswordSetupHTML()
       : '<div class="section-title">' + t('set_change_pw') + '</div>' +
+      (sbUsesGoogle() ? '<p class="form-note" style="margin-bottom:10px">This is your <strong>Website Login</strong> password for Student Club Hub. It’s separate from your Google password, which you change in your Google account.</p>' : '') +
     '<div class="field"><label>' + t('set_curpw') + ' *</label><input id="pwCurrent" type="password"></div>' +
     '<div class="two-col">' +
       '<div class="field"><label>' + t('set_newpw') + '</label><input id="pwNew" type="password"></div>' +
@@ -314,6 +314,29 @@ function toggle2fa() {
     toast(nv ? 'Two-factor authentication enabled.' : 'Two-factor authentication disabled.');
   }).catch(function (ex) { toast(ex.message); });
 }
+/* Google sign-ups have no Student Club Hub password. This lets them add one so they can also use the
+   email form ("Website Login") — and says plainly that it isn't their Google password. */
+function websitePasswordSetupHTML() {
+  return '<div class="section-title">Website Login password</div>' +
+    '<div class="pw-explain">' + ICON_GOOGLE + '<div><p><strong>You sign in with Google.</strong> That keeps working no matter what you do here.</p>' +
+      '<p>Want to also log in with your email and a password (the email form under “Continue with Google”)? Set a password here.</p>' +
+      '<p>This password is <strong>only for Student Club Hub</strong>. It won’t change your Google password, and your Google password won’t work in the email form. Please choose a <strong>different</strong> password from your Google one.</p></div></div>' +
+    '<div class="two-col">' +
+      '<div class="field"><label>New Website Login password</label><input id="wpNew" type="password" autocomplete="new-password"></div>' +
+      '<div class="field"><label>Confirm password</label><input id="wpConfirm" type="password" autocomplete="new-password"></div>' +
+    '</div><p class="form-note" style="margin:-6px 0 10px">' + t('au_pwhint') + '</p>' +
+    '<div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button id="wpSave" class="btn primary" onclick="setWebsitePassword()">Set password</button></div>';
+}
+function setWebsitePassword() {
+  var nw = $('wpNew').value, cf = $('wpConfirm').value;
+  if (!validPassword(nw)) return toast('Password must be at least 8 characters and include a number or symbol.');
+  if (nw !== cf) return toast('Passwords don’t match.');
+  authBusy2('wpSave', true, 'Saving…');
+  sbUpdateUser({ password: nw, data: { has_password: true } }).then(function () {
+    renderSettings();
+    toast('Password set. You can now also log in with ' + currentUser.email + ' and this password, or keep using Google.');
+  }).catch(function (ex) { authBusy2('wpSave', false); toast(ex.message); });
+}
 function doChangePassword() {
   var cur = $('pwCurrent').value, nw = $('pwNew').value, cf = $('pwConfirm').value;
   if (!cur) return toast('Enter your current password.');
@@ -321,7 +344,7 @@ function doChangePassword() {
   if (nw === cur) return toast('Pick a new password that’s different from your current one.');
   if (nw !== cf) return toast('New passwords don’t match.');
   // Re-check the current password with the server, then save the new one there.
-  sbPasswordLogin(currentUser.email, cur).then(function () { return sbUpdateUser({ password: nw }); }).then(function () {
+  sbPasswordLogin(currentUser.email, cur).then(function () { return sbUpdateUser({ password: nw, data: { has_password: true } }); }).then(function () {
     $('pwCurrent').value = ''; $('pwNew').value = ''; $('pwConfirm').value = '';
     toast('Your password has been updated.');
   }).catch(function (ex) { toast(ex.status === 400 && /match/i.test(ex.message) ? 'Your current password is incorrect.' : ex.message); });
@@ -363,7 +386,7 @@ function submitForgotReset() {
   if (!validPassword(nw)) return _fpErr('Password must be at least 8 characters and include a number or symbol.');
   if (nw !== cf) return _fpErr('Passwords don’t match.');
   authBusy2('fpReset', true, 'Checking code…');
-  sbVerifyOtp(_fpEmail, code).then(function () { return sbUpdateUser({ password: nw }); })
+  sbVerifyOtp(_fpEmail, code).then(function () { return sbUpdateUser({ password: nw, data: { has_password: true } }); })
     .then(function () { return _afterServerLogin(_fpEmail); })
     .then(function (r) { delete r._new; closeForgot(); toast('Password reset. You’re signed in.'); if (typeof refreshFavUI === 'function') refreshFavUI(); })
     .catch(function (ex) { authBusy2('fpReset', false); _fpErr(ex.message || 'That code is incorrect or has expired.'); });
