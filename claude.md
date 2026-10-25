@@ -72,7 +72,7 @@ monetary features have been intentionally removed and must not be reintroduced.
 | `scripts/deals.js` | How deals look everywhere. **Partnership** = red box + puzzle piece; **promotion** (a business's own deal, `business_promotions`, up to 3 at once, all fields required except "How to redeem") = yellow note + black price tag. Card bottom box (visible partnership first, else a promotion), name-row squares (yellow puzzle = open to partnerships, red puzzle = partnered, ×2/×3 on hover; price tag = promotion), banner chips (count shown), on-page boxes with owner controls (timer, edit, hide, delete), the ticking countdown timer (only while live), and `refreshDealViews()`. Visitors see an item only while it is live and not hidden. |
 | `scripts/live.js` | Instant updates: one plain WebSocket to Supabase Realtime (no SDK) subscribed to `partner_agreements` + `business_promotions` changes (RLS decides what each browser hears). A change reloads partnerships/promotions and the Partnership Requests badge/list within a second or two; it re-joins with the new token on sign-in/out and reconnects with back-off. The 20s poll in messages.js is the fallback. |
 | `scripts/editors.js` | Per-section owner editors (gear/pencil popups) for clubs and businesses (incl. the promotion editor `editPromotion` / `savePromotion`), the President-only danger zone (hand off & leave, delete club) and Delete business. |
-| `scripts/admin.js` | Admin page (emails in the server's `admins` table): tabs for Reports (resolve/dismiss/reopen), Messages from the Contact Us box (mark handled, reply by email), Verification (approve/reject, remove seals) and private Invite codes; summary counts + a to-do badge on the header's Admin button. Loaded last. |
+| `scripts/admin.js` | Admin page (emails in the server's `admins` table): Reports (via `admin_reports()`: the reported club/business/person with its ID + owner/accused email, the reporter's ID + email, and "where it happened"; resolve/dismiss/reopen/delete), Messages from the Contact Us box, Verification (approve/reject, remove seals) and Invite codes (single use; shows the club that used each code and whether it still exists; turn off unused codes, delete any). The header's Admin badge counts what's NEW since you last opened the page (cleared on open) and updates live. Loaded last. |
 | `scripts/hero-motion.js` | Canvas animation behind the homepage hero (10-second seamless loop). Loaded after pages.js. |
 
 - **Maximum 1,000 lines per file module.** If a module approaches the limit,
@@ -193,8 +193,8 @@ Schema + policies: `supabase/security_2026_10.sql` (and later `supabase/*.sql`).
   written by `save_my_profile()` and found by `claim_my_profile()`.
 - **Club records carry no emails.** A trigger strips `email` from `clubs.data.leaders[]` / `roster[]` on every write; the club's public contact address is `data.email`, which the President types in.
 - **Partnerships and promotions are enforced in the database** (`supabase/partnerships_v2_2026_10.sql`): only the side whose turn it is can approve or counter, names come from the real listings, at most 3 active partnerships per club/business and 3 running promotions per business, and hidden promotions aren't readable by visitors.
-- **Invite codes are private** (`invite_codes` table, admin-only); the site can
-  only ask `check_invite_code`. Never put codes in the JS.
+- **Invite codes are private and single use** (`invite_codes` table, admin-only); the site can
+  only ask `check_invite_code`, and creating a club claims the code (`_consume_invite_code`, recorded in `used_*`). Never put codes in the JS.
 - **Rollout switch:** `app_settings.legacy_writes` = `'on'` lets old anonymous
   writes through (transition only). It must be `'off'` in production.
 - **Known limits:** 2FA (email code at login) is enforced by the site, not the

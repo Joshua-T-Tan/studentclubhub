@@ -946,7 +946,26 @@ UI_PHRASES["zh-TW"] = {
 "It will be removed from your Partnership Requests for good. The other side keeps their own copy.": "它將從你的合作請求中永久刪除。對方會保留自己的紀錄。",
 "Deleted from your Past list.": "已從你的「過往」列表中刪除。",
 "Couldn’t delete it. Only the club’s President or the business owner can.": "無法刪除。只有社團主席或店主可以刪除。",
-"Only past partnerships can be deleted.": "只能刪除過往的合作。"
+"Only past partnerships can be deleted.": "只能刪除過往的合作。",
+"Where did this happen? *": "這發生在哪裡？ *",
+"e.g. Biology Club chat, a review on Harbor Lanes": "例如：Biology Club 的聊天、Harbor Lanes 的評價",
+"Say where it happened (for example, which club’s chat).": "請說明發生在哪裡（例如哪個社團的聊天）。",
+"That club leader invite code isn't valid (or it was already used).": "此社團負責人邀請碼無效（或已被使用）。",
+"Reports, messages, verification and invite codes, all in one place. New items appear here by themselves.": "檢舉、訊息、認證和邀請碼都在這裡。新內容會自動出現。",
+"unused": "未使用",
+"Unused": "未使用",
+"Used": "已使用",
+"Used by": "使用者",
+"Owner:": "店主：",
+"President:": "主席：",
+"Accused:": "被檢舉人：",
+"Where:": "地點：",
+"no email on file": "未登記電子郵件",
+"Delete code": "刪除邀請碼",
+"Delete report": "刪除檢舉",
+"Delete message": "刪除訊息",
+"Delete this code?": "刪除這個邀請碼？",
+"Couldn’t update the code (it may have just been used).": "無法更新邀請碼（可能剛剛被使用）。"
 };
 UI_HTML["zh-TW"] = {
 "<strong>Important Note:</strong> Student Club Hub only helps you connect. Any partnership, sponsorship, discount, or agreement you arrange is strictly between you and the other party. We are not involved in it and take no responsibility or legal liability for it. Verify who you’re dealing with before committing to anything.": "<strong>重要提醒：</strong>Student Club Hub 只協助你們建立聯繫。你所安排的任何合作、贊助、折扣或協議，都僅限於你與對方之間。我們不參與其中，也不承擔任何責任或法律責任。在做出任何承諾前，請先確認對方的身分。",
@@ -969,7 +988,8 @@ UI_HTML["zh-TW"] = {
 "Your school and your neighborhood,<br>on the same page.": "你的學校和你的社區，<br>在同一個頁面上。",
 "Open a request to approve it, suggest changes, or turn it down. Changes go back and forth until one side’s version is approved. To contact a club or business, or send them a request, use the <strong>Reach Out</strong> button on their page.": "打開請求即可核准、提議修改或婉拒。雙方可以來回修改，直到其中一方的版本獲得核准。若要聯繫社團或商家，或向他們送出請求，請使用其頁面上的<strong>聯繫</strong>按鈕。",
 "No open requests. To start one, open a club or business that’s “Open to partnerships” and tap <strong>Reach Out</strong>.": "目前沒有待處理的請求。若要發起請求，請打開「開放合作」的社團或商家頁面，並點擊<strong>聯繫</strong>。",
-"A club or business can have up to <strong>three active partnerships</strong>, and a business can run up to <strong>three promotions</strong> at once.": "社團或商家最多可以同時有<strong>三項進行中的合作</strong>，商家最多可以同時進行<strong>三個促銷活動</strong>。"
+"A club or business can have up to <strong>three active partnerships</strong>, and a business can run up to <strong>three promotions</strong> at once.": "社團或商家最多可以同時有<strong>三項進行中的合作</strong>，商家最多可以同時進行<strong>三個促銷活動</strong>。",
+"Give an unused code to a club’s leader so they can publish their club. Each code works <strong>once</strong>: after a club is created with it, nobody can use it again. Only admins can see this list.": "把未使用的邀請碼交給社團負責人，他們就能發布社團。每個邀請碼只能用<strong>一次</strong>：用它建立社團後，任何人都不能再用。只有管理員能看到這個列表。"
 };
 UI_PATTERNS["zh-TW"] = [
 [
@@ -1323,5 +1343,9 @@ UI_PATTERNS["zh-TW"] = [
 [
 "^Valid (.+)$",
 "有效期間：$1"
+],
+[
+"^Created (.+)$",
+"建立於 $1"
 ]
 ];

@@ -50,6 +50,12 @@ function verifiedSeal(size, disc, check) {
     petals + '<circle cx="12" cy="12" r="9.1" fill="' + disc + '"/>' +
     '<path d="M7.8 12.3l2.9 2.9 5.9-6.3" fill="none" stroke="' + check + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 }
+/* Small flag to report a PERSON (chat message, review), with where it happened pre-filled. */
+function reportUserFlag(memberId, name, where) {
+  if (!memberId || !currentUser || memberId === currentUser.memberId) return '';
+  return '<button class="mini-flag" title="Report this user" aria-label="Report this user" onclick="event.stopPropagation(); openReport(\'user\',\'' + jsArg(memberId) + '\',\'' + jsArg(name || '') + '\',\'' + jsArg(where || '') + '\')">' + ICON_FLAG + '</button>';
+}
+
 /* ---------- Relationship helpers ---------- */
 function ownerOf(club) { return !!(currentUser && club && club.verifiedOwner && club.verifiedOwner === currentUser.memberId); }
 /* 24h "15:30" ↔ 12h "3:30 PM" (for the <input type=time> meeting dial) */
@@ -451,7 +457,7 @@ function chatHTML(club) {
     return '<div class="chat-msg ' + (m.announce ? 'announce' : '') + '">' + avatarHTML(m.who, 'sm') +
       '<div class="cm-body"><div class="cm-top"><span class="cm-who">' + escHtml(m.who) + '</span>' +
       (m.announce ? '<span class="badge">' + svgIcon('megaphone', 13) + ' Announcement</span>' : '') +
-      '<span class="cm-time">' + fmtTime(m.ts) + (m.edited ? ' · (edited)' : '') + '</span></div>' +
+      '<span class="cm-time">' + fmtTime(m.ts) + (m.edited ? ' · (edited)' : '') + '</span>' + (own ? '' : reportUserFlag(m.memberId, m.who, club.name + ' chat')) + '</div>' +
       '<div class="cm-text">' + escHtml(m.text) + '</div>' + ctrls + '</div></div>';
   }).join('') : '<p class="form-note" style="text-align:center;padding:14px">No messages yet.</p>';
 

@@ -945,7 +945,26 @@ UI_PHRASES["es"] = {
 "It will be removed from your Partnership Requests for good. The other side keeps their own copy.": "Se eliminará de tus Solicitudes de alianza para siempre. La otra parte conserva su propia copia.",
 "Deleted from your Past list.": "Eliminado de tu lista de Pasadas.",
 "Couldn’t delete it. Only the club’s President or the business owner can.": "No se pudo eliminar. Solo el Presidente del club o el dueño del negocio pueden hacerlo.",
-"Only past partnerships can be deleted.": "Solo se pueden eliminar las alianzas pasadas."
+"Only past partnerships can be deleted.": "Solo se pueden eliminar las alianzas pasadas.",
+"Where did this happen? *": "¿Dónde pasó esto? *",
+"e.g. Biology Club chat, a review on Harbor Lanes": "p. ej. el chat de Biology Club, una reseña de Harbor Lanes",
+"Say where it happened (for example, which club’s chat).": "Indica dónde pasó (por ejemplo, en el chat de qué club).",
+"That club leader invite code isn't valid (or it was already used).": "Ese código de invitación para líderes de club no es válido (o ya se usó).",
+"Reports, messages, verification and invite codes, all in one place. New items appear here by themselves.": "Reportes, mensajes, verificación y códigos de invitación, todo en un lugar. Lo nuevo aparece aquí solo.",
+"unused": "sin usar",
+"Unused": "Sin usar",
+"Used": "Usado",
+"Used by": "Usado por",
+"Owner:": "Dueño:",
+"President:": "Presidente:",
+"Accused:": "Acusado:",
+"Where:": "Dónde:",
+"no email on file": "sin correo registrado",
+"Delete code": "Eliminar código",
+"Delete report": "Eliminar reporte",
+"Delete message": "Eliminar mensaje",
+"Delete this code?": "¿Eliminar este código?",
+"Couldn’t update the code (it may have just been used).": "No se pudo actualizar el código (puede que se acabe de usar)."
 };
 UI_HTML["es"] = {
 "<strong>Important Note:</strong> Student Club Hub only helps you connect. Any partnership, sponsorship, discount, or agreement you arrange is strictly between you and the other party. We are not involved in it and take no responsibility or legal liability for it. Verify who you’re dealing with before committing to anything.": "<strong>Nota importante:</strong> Student Club Hub solo te ayuda a conectar. Cualquier alianza, patrocinio, descuento o acuerdo que hagas es estrictamente entre tú y la otra parte. No participamos en él y no asumimos ninguna responsabilidad ni obligación legal al respecto. Verifica con quién estás tratando antes de comprometerte a algo.",
@@ -968,7 +987,8 @@ UI_HTML["es"] = {
 "Your school and your neighborhood,<br>on the same page.": "Tu escuela y tu barrio,<br>en la misma página.",
 "Open a request to approve it, suggest changes, or turn it down. Changes go back and forth until one side’s version is approved. To contact a club or business, or send them a request, use the <strong>Reach Out</strong> button on their page.": "Abre una solicitud para aprobarla, sugerir cambios o rechazarla. Los cambios van y vienen hasta que se aprueba la versión de una de las partes. Para contactar a un club o negocio, o para enviarle una solicitud, usa el botón <strong>Contactar</strong> en su página.",
 "No open requests. To start one, open a club or business that’s “Open to partnerships” and tap <strong>Reach Out</strong>.": "No hay solicitudes abiertas. Para iniciar una, abre un club o negocio que esté “Abierto a alianzas” y toca <strong>Contactar</strong>.",
-"A club or business can have up to <strong>three active partnerships</strong>, and a business can run up to <strong>three promotions</strong> at once.": "Un club o negocio puede tener hasta <strong>tres alianzas activas</strong>, y un negocio puede tener hasta <strong>tres promociones</strong> a la vez."
+"A club or business can have up to <strong>three active partnerships</strong>, and a business can run up to <strong>three promotions</strong> at once.": "Un club o negocio puede tener hasta <strong>tres alianzas activas</strong>, y un negocio puede tener hasta <strong>tres promociones</strong> a la vez.",
+"Give an unused code to a club’s leader so they can publish their club. Each code works <strong>once</strong>: after a club is created with it, nobody can use it again. Only admins can see this list.": "Dale un código sin usar al líder de un club para que pueda publicar su club. Cada código funciona <strong>una sola vez</strong>: después de crear un club con él, nadie más puede usarlo. Solo los administradores ven esta lista."
 };
 UI_PATTERNS["es"] = [
 [
@@ -1342,5 +1362,9 @@ UI_PATTERNS["es"] = [
 [
 "^Valid (.+)$",
 "Válida $1"
+],
+[
+"^Created (.+)$",
+"Creado $1"
 ]
 ];

@@ -128,7 +128,7 @@ function reviewsSectionHTML(club) {
     var replyBtn = canReply ? '<button class="review-reply-btn" onclick="replyReview(\'' + club.id + '\',\'' + r.id + '\')">↩ ' + t('rv_reply') + '</button>' : '';
     return '<div class="review"><div class="review-top">' + avatarHTML(r.name, 'sm') +
       '<div class="review-who"><div class="n">' + escHtml(r.name) + '</div>' + starRow(r.rating, 'sm') + '</div>' +
-      (r.ts ? '<span class="review-time">' + escHtml(timeAgo(r.ts)) + '</span>' : '') + '</div>' +
+      (r.ts ? '<span class="review-time">' + escHtml(timeAgo(r.ts)) + '</span>' : '') + (mine ? '' : reportUserFlag(r.author_id, r.name, 'A review on ' + club.name)) + '</div>' +
       '<p class="review-text">' + escHtml(r.text) + '</p>' + ctrls + replies + replyBtn + '</div>';
   }).join('');
   return toggle + header + body;

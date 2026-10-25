@@ -723,3 +723,17 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
   .biz-slideshow .lb-btn { top: 60px; transform: none; width: 34px; height: 34px; font-size: 1.1rem; }
   .biz-slideshow .biz-sl-prev { left: 16px; } .biz-slideshow .biz-sl-next { right: 16px; }
 }
+/* Report-a-person flag on chat messages and reviews */
+.mini-flag { display: inline-grid; place-items: center; width: 24px; height: 24px; margin-left: 6px; padding: 0; flex: 0 0 auto;
+  background: var(--card); color: var(--muted); border: 1px solid var(--line); border-radius: var(--r-sm); cursor: pointer; vertical-align: middle; }
+.mini-flag svg { width: 12px; height: 12px; }
+.mini-flag:hover { background: var(--brand); color: #fff; border-color: var(--line); }
+/* Admin: kind label, IDs, "New", codes */
+.adm-kind { text-transform: none; }
+.adm-id { font-family: ui-monospace, Menlo, monospace; font-size: .78rem; font-weight: 700; color: var(--muted); }
+.adm-target { display: flex; flex-direction: column; min-width: 0; }
+.adm-target .adm-meta { margin-top: 2px; }
+.adm-new { padding: 2px 7px; font-size: .68rem; font-weight: 900; text-transform: uppercase; background: var(--brand); color: #fff; border: var(--edge); border-radius: var(--r-sm); }
+.adm-made { display: block; font-size: .76rem; opacity: .85; }
+.adm-code-use { flex-basis: 100%; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: .88rem; padding-top: 6px; border-top: 1px dashed var(--line); }
+.adm-row.adm-code-row > .adm-del { margin-left: 0; }

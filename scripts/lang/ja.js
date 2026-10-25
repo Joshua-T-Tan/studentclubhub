@@ -946,7 +946,26 @@ UI_PHRASES["ja"] = {
 "It will be removed from your Partnership Requests for good. The other side keeps their own copy.": "パートナーシップのリクエストから完全に削除されます。相手側の記録はそのまま残ります。",
 "Deleted from your Past list.": "過去の一覧から削除しました。",
 "Couldn’t delete it. Only the club’s President or the business owner can.": "削除できませんでした。削除できるのはクラブの会長か店舗のオーナーだけです。",
-"Only past partnerships can be deleted.": "削除できるのは過去のパートナーシップだけです。"
+"Only past partnerships can be deleted.": "削除できるのは過去のパートナーシップだけです。",
+"Where did this happen? *": "どこで起きましたか？ *",
+"e.g. Biology Club chat, a review on Harbor Lanes": "例：Biology Club のチャット、Harbor Lanes のレビュー",
+"Say where it happened (for example, which club’s chat).": "どこで起きたかを書いてください（例：どのクラブのチャットか）。",
+"That club leader invite code isn't valid (or it was already used).": "このクラブリーダー招待コードは無効です（または使用済みです）。",
+"Reports, messages, verification and invite codes, all in one place. New items appear here by themselves.": "報告、メッセージ、認証、招待コードをまとめて管理できます。新しい項目は自動で表示されます。",
+"unused": "未使用",
+"Unused": "未使用",
+"Used": "使用済み",
+"Used by": "使用先",
+"Owner:": "オーナー：",
+"President:": "会長：",
+"Accused:": "報告された人：",
+"Where:": "場所：",
+"no email on file": "メール未登録",
+"Delete code": "コードを削除",
+"Delete report": "報告を削除",
+"Delete message": "メッセージを削除",
+"Delete this code?": "このコードを削除しますか？",
+"Couldn’t update the code (it may have just been used).": "コードを更新できませんでした（使用されたばかりかもしれません）。"
 };
 UI_HTML["ja"] = {
 "<strong>Important Note:</strong> Student Club Hub only helps you connect. Any partnership, sponsorship, discount, or agreement you arrange is strictly between you and the other party. We are not involved in it and take no responsibility or legal liability for it. Verify who you’re dealing with before committing to anything.": "<strong>重要：</strong>Student Club Hub はつながるお手伝いをするだけです。あなたが取り決めるパートナーシップ、スポンサー、割引、合意はすべて、あなたと相手との間のものです。当サイトはこれに関与せず、一切の責任および法的責任を負いません。何かを約束する前に、相手が誰かを確認してください。",
@@ -969,7 +988,8 @@ UI_HTML["ja"] = {
 "Your school and your neighborhood,<br>on the same page.": "あなたの学校と地域が、<br>同じページに。",
 "Open a request to approve it, suggest changes, or turn it down. Changes go back and forth until one side’s version is approved. To contact a club or business, or send them a request, use the <strong>Reach Out</strong> button on their page.": "リクエストを開くと、承認、変更の提案、またはお断りができます。どちらかの案が承認されるまで、変更のやりとりを続けます。クラブやお店に連絡したり、リクエストを送ったりするには、相手のページの<strong>連絡する</strong>ボタンを使ってください。",
 "No open requests. To start one, open a club or business that’s “Open to partnerships” and tap <strong>Reach Out</strong>.": "対応中のリクエストはありません。始めるには、「パートナーシップ受付中」のクラブまたはお店を開いて<strong>連絡する</strong>をタップしてください。",
-"A club or business can have up to <strong>three active partnerships</strong>, and a business can run up to <strong>three promotions</strong> at once.": "クラブやお店は同時に<strong>3件まで有効なパートナーシップ</strong>を持てます。また、お店は同時に<strong>3件までプロモーション</strong>を実施できます。"
+"A club or business can have up to <strong>three active partnerships</strong>, and a business can run up to <strong>three promotions</strong> at once.": "クラブやお店は同時に<strong>3件まで有効なパートナーシップ</strong>を持てます。また、お店は同時に<strong>3件までプロモーション</strong>を実施できます。",
+"Give an unused code to a club’s leader so they can publish their club. Each code works <strong>once</strong>: after a club is created with it, nobody can use it again. Only admins can see this list.": "未使用のコードをクラブのリーダーに渡すと、クラブを公開できます。各コードは<strong>1回だけ</strong>使えます。クラブが作成されると、そのコードは二度と使えません。この一覧は管理者だけが見られます。"
 };
 UI_PATTERNS["ja"] = [
 [
@@ -1323,5 +1343,9 @@ UI_PATTERNS["ja"] = [
 [
 "^Valid (.+)$",
 "有効期間：$1"
+],
+[
+"^Created (.+)$",
+"作成日：$1"
 ]
 ];

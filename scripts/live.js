@@ -2,7 +2,8 @@
    live.js — instant updates for partnerships and promotions.
    One WebSocket to Supabase Realtime (plain WebSocket, no SDK).
    The database pushes a notice whenever a partner_agreements or
-   business_promotions row changes; each browser only hears about
+   business_promotions row changes (and, for admins, reports /
+   contact messages / verification requests); each browser only hears about
    rows its read policies allow (live partnerships for everyone,
    requests for the two sides). On a notice we reload the affected
    data, so a request, counter-offer, approval, withdrawal or end
@@ -20,7 +21,8 @@ function _liveSend(topic, event, payload, joinRef) {
 function _liveJoin() {
   _live.joinRef = String(++_live.ref);
   var payload = { config: { broadcast: { self: false }, presence: { key: '' },
-    postgres_changes: [{ event: '*', schema: 'public', table: 'partner_agreements' }, { event: '*', schema: 'public', table: 'business_promotions' }] } };
+    postgres_changes: ['partner_agreements', 'business_promotions', 'reports', 'contact_messages', 'verification_requests']
+      .map(function (t) { return { event: '*', schema: 'public', table: t }; }) } };   // admin tables only reach admins (read policies)
   if (_live.tok) payload.access_token = _live.tok;   // signed in: the database applies this account's read policies
   _live.ws.send(JSON.stringify({ topic: LIVE_TOPIC, event: 'phx_join', payload: payload, ref: _live.joinRef, join_ref: _live.joinRef }));
 }
@@ -70,6 +72,7 @@ function _liveChanged(d) {
       if (currentUser && typeof refreshUnread === 'function') refreshUnread();
     }
     if (t.business_promotions && typeof loadPromotions === 'function') loadPromotions();
+    if ((t.reports || t.contact_messages || t.verification_requests) && typeof adminLiveChanged === 'function') adminLiveChanged();
   }, 250);
 }
 function _liveCatchUp() { _live.tables = { partner_agreements: true, business_promotions: true }; _liveChanged(null); }

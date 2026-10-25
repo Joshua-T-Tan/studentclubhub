@@ -486,7 +486,8 @@ function paintBizReviews() {
       (owner && r.owner_reply ? '<button class="review-reply-btn" onclick="openBizReply(\'' + r.id + '\')">' + svgIcon('pen', 14) + ' Edit reply</button>' : '');
     return '<div class="review"><div class="review-top">' + avatarHTML(r.author, 'sm') +
       '<div class="review-who"><div class="n">' + escHtml(r.author) + '</div>' + starRow(r.rating, 'sm') + '</div>' +
-      (r.created_at ? '<span class="review-time">' + escHtml(timeAgo(new Date(r.created_at).getTime())) + '</span>' : '') + '</div>' +
+      (r.created_at ? '<span class="review-time">' + escHtml(timeAgo(new Date(r.created_at).getTime())) + '</span>' : '') +
+      (_isMyBizReview(r) ? '' : reportUserFlag(r.author_id, r.author, 'A review on ' + bizName)) + '</div>' +
       '<p class="review-text">' + escHtml(r.text) + '</p>' +
       (_isMyBizReview(r) ? '<span class="review-ctrls"><button onclick="openBizReview(\'' + jsArg(r.business_id) + '\')">Edit</button><button onclick="deleteBizReview(\'' + r.id + '\')">Delete</button></span>' : '') +
       reply + replyBtn + '</div>';

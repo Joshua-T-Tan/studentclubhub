@@ -218,7 +218,8 @@ var REPORT_REASONS = {
   user: ['Harassment or bullying', 'Impersonation', 'Inappropriate messages or content', 'Spam or scam', 'Other']
 };
 var _reportCtx = null;
-function openReport(type, id, name) {
+/* context = where it happened (e.g. "Biology Club chat"); asked for when reporting a person. */
+function openReport(type, id, name, context) {
   if (!currentUser) { toast('Please log in to report.'); if (typeof openAuth === 'function') openAuth('login'); return; }
   _reportCtx = { type: type, id: String(id), name: name || '' };
   var label = type === 'business' ? 'Business' : (type === 'user' ? 'User' : 'Club');
@@ -228,6 +229,7 @@ function openReport(type, id, name) {
     '<p class="form-note" style="margin-bottom:12px">Reporting <strong>' + escHtml(name) + '</strong>. Our team reviews every report, and the other party won’t see who reported them.</p>' +
     '<div id="rpErr" class="auth-error hidden"></div>' +
     '<div class="field"><label>Reason</label><select id="rpReason" class="select block-select">' + reasons + '</select></div>' +
+    (type === 'user' ? '<div class="field"><label>Where did this happen? *</label><input id="rpWhere" type="text" maxlength="120" placeholder="e.g. Biology Club chat, a review on Harbor Lanes" value="' + escAttr(context || '') + '"></div>' : '') +
     '<div class="field"><label>What happened? <span class="form-note">(optional, but it helps)</span></label>' +
       '<textarea id="rpDetails" maxlength="800" placeholder="Describe the problem…"></textarea></div>' +
     '<button id="rpSend" class="btn primary block lg" onclick="submitReport()">Submit report</button></div>';
@@ -239,10 +241,12 @@ function submitReport() {
   var details = ($('rpDetails') && $('rpDetails').value || '').trim();
   var err = function (m) { var e = $('rpErr'); if (e) { e.textContent = m; e.classList.remove('hidden'); } };
   if (!reason) return err('Pick a reason for the report.');
+  var where = ($('rpWhere') && $('rpWhere').value || '').trim();
+  if (c.type === 'user' && !where) return err('Say where it happened (for example, which club’s chat).');
   if (typeof authBusy2 === 'function') authBusy2('rpSend', true, 'Submitting…');
   sbRest('reports', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({
     reporter_email: currentUser.email.toLowerCase(), reporter_name: currentUser.name, reporter_id: currentUser.memberId || '',
-    target_type: c.type, target_id: c.id, target_name: c.name, reason: reason, details: details
+    target_type: c.type, target_id: c.id, target_name: c.name, reason: reason, details: details, context: where || null
   }) }).then(function () { closeReach(); toast('Report submitted. Thank you — our team will review it.'); })
     .catch(function () { if (typeof authBusy2 === 'function') authBusy2('rpSend', false); err('Couldn’t submit right now. Please try again later.'); });
 }

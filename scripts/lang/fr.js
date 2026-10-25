@@ -934,7 +934,26 @@ UI_PHRASES["fr"] = {
 "It will be removed from your Partnership Requests for good. The other side keeps their own copy.": "Il sera supprimé définitivement de tes demandes de partenariat. L’autre partie garde sa propre copie.",
 "Deleted from your Past list.": "Supprimé de ta liste des partenariats passés.",
 "Couldn’t delete it. Only the club’s President or the business owner can.": "Impossible de le supprimer. Seul le président du club ou le propriétaire du commerce peut le faire.",
-"Only past partnerships can be deleted.": "Seuls les partenariats passés peuvent être supprimés."
+"Only past partnerships can be deleted.": "Seuls les partenariats passés peuvent être supprimés.",
+"Where did this happen? *": "Où cela s’est-il passé ? *",
+"e.g. Biology Club chat, a review on Harbor Lanes": "ex. le chat de Biology Club, un avis sur Harbor Lanes",
+"Say where it happened (for example, which club’s chat).": "Indique où cela s’est passé (par exemple, dans le chat de quel club).",
+"That club leader invite code isn't valid (or it was already used).": "Ce code d’invitation pour responsable de club n’est pas valide (ou il a déjà été utilisé).",
+"Reports, messages, verification and invite codes, all in one place. New items appear here by themselves.": "Signalements, messages, vérification et codes d’invitation, tout au même endroit. Les nouveautés s’affichent ici automatiquement.",
+"unused": "non utilisés",
+"Unused": "Non utilisé",
+"Used": "Utilisé",
+"Used by": "Utilisé par",
+"Owner:": "Propriétaire :",
+"President:": "Président :",
+"Accused:": "Personne signalée :",
+"Where:": "Où :",
+"no email on file": "aucun e-mail enregistré",
+"Delete code": "Supprimer le code",
+"Delete report": "Supprimer le signalement",
+"Delete message": "Supprimer le message",
+"Delete this code?": "Supprimer ce code ?",
+"Couldn’t update the code (it may have just been used).": "Impossible de mettre à jour le code (il vient peut-être d’être utilisé)."
 };
 UI_HTML["fr"] = {
 "<strong>Important Note:</strong> Student Club Hub only helps you connect. Any partnership, sponsorship, discount, or agreement you arrange is strictly between you and the other party. We are not involved in it and take no responsibility or legal liability for it. Verify who you’re dealing with before committing to anything.": "<strong>Remarque importante :</strong> Student Club Hub t’aide seulement à te mettre en relation. Tout partenariat, sponsoring, réduction ou accord que tu conclus concerne uniquement toi et l’autre partie. Nous n’y sommes pas impliqués et déclinons toute responsabilité, y compris juridique, à cet égard. Vérifie à qui tu as affaire avant de t’engager.",
@@ -957,7 +976,8 @@ UI_HTML["fr"] = {
 "Your school and your neighborhood,<br>on the same page.": "Ton lycée et ton quartier,<br>sur la même page.",
 "Open a request to approve it, suggest changes, or turn it down. Changes go back and forth until one side’s version is approved. To contact a club or business, or send them a request, use the <strong>Reach Out</strong> button on their page.": "Ouvre une demande pour l’approuver, proposer des changements ou la refuser. Les changements font des allers-retours jusqu’à ce que la version d’une partie soit approuvée. Pour contacter un club ou un commerce, ou lui envoyer une demande, utilise le bouton <strong>Prendre contact</strong> sur sa page.",
 "No open requests. To start one, open a club or business that’s “Open to partnerships” and tap <strong>Reach Out</strong>.": "Aucune demande en cours. Pour en lancer une, ouvre un club ou un commerce “Ouvert aux partenariats” et touche <strong>Prendre contact</strong>.",
-"A club or business can have up to <strong>three active partnerships</strong>, and a business can run up to <strong>three promotions</strong> at once.": "Un club ou un commerce peut avoir jusqu’à <strong>trois partenariats actifs</strong>, et un commerce peut avoir jusqu’à <strong>trois promotions</strong> en même temps."
+"A club or business can have up to <strong>three active partnerships</strong>, and a business can run up to <strong>three promotions</strong> at once.": "Un club ou un commerce peut avoir jusqu’à <strong>trois partenariats actifs</strong>, et un commerce peut avoir jusqu’à <strong>trois promotions</strong> en même temps.",
+"Give an unused code to a club’s leader so they can publish their club. Each code works <strong>once</strong>: after a club is created with it, nobody can use it again. Only admins can see this list.": "Donne un code non utilisé au responsable d’un club pour qu’il puisse publier son club. Chaque code ne fonctionne <strong>qu’une fois</strong> : une fois un club créé avec, personne ne peut le réutiliser. Seuls les administrateurs voient cette liste."
 };
 UI_PATTERNS["fr"] = [
 [
@@ -1331,5 +1351,9 @@ UI_PATTERNS["fr"] = [
 [
 "^Valid (.+)$",
 "Valable $1"
+],
+[
+"^Created (.+)$",
+"Créé le $1"
 ]
 ];
