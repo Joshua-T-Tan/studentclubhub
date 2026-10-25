@@ -421,6 +421,9 @@ var I18N_EXTRA8 = {
     rv_reply:'回覆', rv_reply_prompt:'寫下對這則評價的回覆：', rv_reply_done:'回覆已發布。', rv_reply_del_h:'刪除回覆？', rv_reply_del_msg:'這則回覆將對所有人刪除。'
   }
 };
+I18N_EXTRA8.en = { coming_soon: 'Coming soon' };
+I18N_EXTRA8.es.coming_soon = 'Próximamente'; I18N_EXTRA8.fr.coming_soon = 'Bientôt disponible'; I18N_EXTRA8.ja.coming_soon = '近日公開';
+I18N_EXTRA8['zh-CN'].coming_soon = '即将推出'; I18N_EXTRA8['zh-TW'].coming_soon = '即將推出';
 Object.keys(I18N_EXTRA8).forEach(function (lc) { var d = I18N[lc] || (I18N[lc] = {}); var s = I18N_EXTRA8[lc]; for (var k in s) d[k] = s[k]; });
 var LANG = 'en';
 function getLang() { try { return localStorage.getItem(LS.lang) || 'en'; } catch (e) { return 'en'; } }

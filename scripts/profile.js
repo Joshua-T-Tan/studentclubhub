@@ -279,9 +279,10 @@ function settingsAccount() {
         LANGS.map(function (l) { return '<option value="' + l.code + '"' + (getLang() === l.code ? ' selected' : '') + '>' + l.label + '</option>'; }).join('') +
       '</select></div>' +
     '<div class="section-title">' + t('set_notifications') + '</div>' +
-    '<div class="toggle-row"><div><div class="tr-title">' + t('set_email_notif_title') + '</div>' +
+    // Not built yet: nothing sends these emails, so the switch is shown as "Coming soon" and can't be turned on.
+    '<div class="toggle-row is-soon"><div><div class="tr-title">' + t('set_email_notif_title') + ' <span class="badge soon-badge">' + t('coming_soon') + '</span></div>' +
       '<div class="form-note">' + t('set_email_notif_desc') + '</div></div>' +
-      '<button class="switch ' + (u.emailNotif !== false ? 'on' : '') + '" onclick="toggleEmailNotif()"><span></span></button></div>' +
+      '<button class="switch" disabled title="' + escAttr(t('coming_soon')) + '"><span></span></button></div>' +
     (sbIsGoogleOnly() ? '' :   // Google accounts use Google's own 2-step verification
     '<div class="section-title">' + t('set_security') + '</div>' +
     '<div class="toggle-row"><div><div class="tr-title">' + t('set_2fa_title') + '</div>' +
@@ -415,7 +416,9 @@ function saveSettings() {
   renderSettings(); toast('Your changes have been saved.');
 }
 function togglePrivacy() { currentUser.private = !currentUser.private; persistUser(); if (typeof sbUpsertProfile === 'function') sbUpsertProfile(); renderSettings(); toast(currentUser.private ? 'Profile is now private.' : 'Profile is now public.'); }
-function toggleEmailNotif() { currentUser.emailNotif = (currentUser.emailNotif === false); persistUser(); renderSettings(); toast(currentUser.emailNotif ? 'Email notifications on.' : 'Email notifications off.'); }
+function toggleEmailNotif() { return;   // coming soon (see settingsAccount)
+}
+function _toggleEmailNotifLater() { currentUser.emailNotif = (currentUser.emailNotif === false); persistUser(); renderSettings(); toast(currentUser.emailNotif ? 'Email notifications on.' : 'Email notifications off.'); }
 function setLanguage(lang) { applyLanguage(lang); onLanguageChanged(); if (currentUser) { currentUser.lang = lang; persistUser(); } }
 /* Deleting an account requires re-entering the correct password */
 function deleteAccount() { openDeleteAccount(); }

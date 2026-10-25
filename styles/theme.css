@@ -449,3 +449,6 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 .google-btn svg { flex-shrink: 0; }
 .auth-or { display: flex; align-items: center; gap: 10px; margin: 14px 0; color: var(--muted); font-size: .82rem; }
 .auth-or::before, .auth-or::after { content: ''; flex: 1; border-top: 1px solid var(--line); opacity: .35; }
+/* Settings: features that aren't live yet */
+.toggle-row.is-soon .switch { opacity: .45; cursor: not-allowed; }
+.soon-badge { background: var(--note); color: #1a1a1a; font-size: .66rem; vertical-align: middle; margin-left: 6px; }
