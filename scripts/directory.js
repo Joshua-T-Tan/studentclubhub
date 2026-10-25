@@ -621,16 +621,15 @@ function publishClub() {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('ccEmail').value.trim())) return toast('Enter a valid leader contact email (name@example.com).');
   if (!/^\d{5}$/.test($('ccZip').value.trim())) return toast('Enter a 5-digit zip code.');
 
-  var tags = $('ccTags').value.split(',').map(function (t) { return t.trim(); }).filter(Boolean);
   var club = {
     id: 'u-' + Date.now().toString(36), clubId: genClubId(), created: Date.now(),
     name: name, category: cat, focus: [],
     school: school, district: district, zip: $('ccZip').value.trim(),
     recruitment: $('ccRecruit').value,
     desc: $('ccDesc').value.trim() || 'A new club on Student Club Hub.',
-    meeting: $('ccMeeting').value.trim() || 'Schedule TBD',
+    meeting: 'Schedule TBD',   // meeting times + tags are added later from the club page (Details pencil)
     email: $('ccEmail').value.trim() || currentUser.email,
-    tags: tags, memberCount: 1, banner: wizardBanner, gallery: wizardGallery.slice(),
+    tags: [], memberCount: 1, banner: wizardBanner, gallery: wizardGallery.slice(),
     socials: collectCreateLinks(), chatAccess: 'all',
     leaders: [{ name: currentUser.name, role: 'President', email: $('ccEmail').value.trim() || currentUser.email }],
     roster: [{ name: currentUser.name, role: 'President', memberId: currentUser.memberId }],
@@ -694,7 +693,7 @@ function collectCreateLinks() {
   return Array.prototype.map.call(document.querySelectorAll('#ccLinks .mg-link'), function (el) { return el.value.trim(); }).filter(isValidLink).slice(0, 8);
 }
 function resetCreateForm() {
-  ['ccName','ccDesc','ccMeeting','ccEmail','ccTags','ccSchool','ccDistrict','ccZip','ccOther','ccInvite'].forEach(function (id) { $(id).value = ''; });
+  ['ccName','ccDesc','ccEmail','ccSchool','ccDistrict','ccZip','ccOther','ccInvite'].forEach(function (id) { $(id).value = ''; });
   $('ccCategory').value = ''; $('ccOtherWrap').classList.add('hidden'); $('ccPublish').disabled = true;
   wizardBanner = ''; wizardGallery = []; paintBannerPreview(); paintGalleryPreview();
   seedCreateLinks(['']); editingDraftId = null; validateCreate();
@@ -722,7 +721,7 @@ function saveDraft() {
     name: $('ccName').value.trim(), category: $('ccCategory').value, other: $('ccOther').value.trim(),
     recruitment: $('ccRecruit').value, school: $('ccSchool').value.trim(), district: $('ccDistrict').value.trim(),
     zip: $('ccZip').value.trim(), email: $('ccEmail').value.trim(), desc: $('ccDesc').value.trim(),
-    meeting: $('ccMeeting').value.trim(), tags: $('ccTags').value.trim(), invite: $('ccInvite').value.trim(),
+    invite: $('ccInvite').value.trim(),
     banner: wizardBanner, gallery: wizardGallery.slice(), links: collectCreateLinks(), saved: Date.now()
   };
   var list = loadDrafts();
@@ -741,8 +740,8 @@ function resumeDraft(id) {
   $('ccOtherWrap').classList.toggle('hidden', d.category !== 'Other');
   $('ccRecruit').value = (d.recruitment === 'Private' || d.recruitment === 'Application Required') ? 'Private' : 'Public';
   $('ccSchool').value = d.school || ''; $('ccDistrict').value = d.district || ''; $('ccZip').value = d.zip || '';
-  $('ccEmail').value = d.email || ''; $('ccDesc').value = d.desc || ''; $('ccMeeting').value = d.meeting || '';
-  $('ccTags').value = d.tags || ''; $('ccInvite').value = d.invite || '';
+  $('ccEmail').value = d.email || ''; $('ccDesc').value = d.desc || '';
+  $('ccInvite').value = d.invite || '';
   wizardBanner = d.banner || ''; wizardGallery = (d.gallery || []).slice();
   paintBannerPreview(); paintGalleryPreview(); seedCreateLinks(d.links || ['']); validateCreate();
 }

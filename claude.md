@@ -68,7 +68,7 @@ monetary features have been intentionally removed and must not be reintroduced.
 | `scripts/messages.js` | "Reach Out" popup (public contact email + partnership request form), profiles table sync, Partnership Requests inbox + FAB badge. |
 | `scripts/partnerships.js` | Partnership lifecycle (pending → launched/declined/deleted, launched → ended; every transition is status-guarded), the "Partnership" tag and deal boxes. Requests are addressed to the club/business id, not a person. |
 | `scripts/editors.js` | Per-section owner editors (gear/pencil popups) for clubs and businesses, incl. the President-only danger zone (hand off & leave, delete club) and Delete business. |
-| `scripts/admin.js` | Admin page (emails in the server's `admins` table): approve/reject Verified-seal requests, remove seals, manage private invite codes. Loaded last. |
+| `scripts/admin.js` | Admin page (emails in the server's `admins` table): tabs for Reports (resolve/dismiss/reopen), Messages from the Contact Us box (mark handled, reply by email), Verification (approve/reject, remove seals) and private Invite codes; summary counts + a to-do badge on the header's Admin button. Loaded last. |
 | `scripts/hero-motion.js` | Canvas animation behind the homepage hero (10-second seamless loop). Loaded after pages.js. |
 
 - **Maximum 1,000 lines per file module.** If a module approaches the limit,

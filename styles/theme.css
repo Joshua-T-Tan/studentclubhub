@@ -464,3 +464,46 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
    leaves a little space above Save Club / View Club. */
 .card:not(.draft-card) { min-height: 386px; }   /* club + business cards share one height */
 .card:not(.biz-card):not(.draft-card) .card-desc { -webkit-line-clamp: 2; line-clamp: 2; line-height: 1.4; flex: 0 0 auto; }
+
+/* ---------- Admin page ---------- */
+.admin-btn { position: relative; }
+.admin-count { position: absolute; top: -8px; right: -8px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px;
+  background: var(--brand); color: #fff; font-size: .7rem; font-weight: 800; line-height: 20px; text-align: center; border: 2px solid var(--card); }
+.adm-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 6px 0 22px; }
+.adm-tile { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 10px; align-items: center; text-align: left;
+  background: var(--card); border: var(--edge); border-radius: var(--r); box-shadow: var(--shadow-sm); padding: 12px 14px; cursor: pointer; color: var(--ink); }
+.adm-tile:hover { transform: translate(-1px, -1px); box-shadow: var(--shadow-md); }
+.adm-tile.active { background: var(--note); color: #1a1a1a; }
+.adm-tile-ico { grid-row: 1 / span 2; display: grid; place-items: center; width: 34px; height: 34px; border: var(--edge); border-radius: var(--r-sm); background: var(--card); color: var(--ink); }
+.adm-tile-n { font-size: 1.5rem; font-weight: 900; line-height: 1; }
+.adm-tile-l { font-size: .82rem; font-weight: 700; }
+.adm-tile-l small { display: block; font-weight: 500; opacity: .7; }
+.adm-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.adm-toolbar h2 { font-size: 1.25rem; margin: 0; margin-right: auto; }
+.adm-filter { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--muted); cursor: pointer; }
+.adm-list { display: grid; gap: 12px; margin-bottom: 40px; }
+.adm-card { background: var(--card); border: var(--edge); border-radius: var(--r); box-shadow: var(--shadow-sm); padding: 14px 16px; }
+.adm-card.is-open { border-left: 5px solid var(--brand); }
+.adm-card-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.adm-card-top .adm-pill { margin-left: auto; }
+.adm-pill { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; padding: 3px 8px; border-radius: var(--r-pill); border: var(--edge); }
+.adm-pill.st-open { background: var(--brand); color: #fff; }
+.adm-pill.st-resolved { background: var(--note); color: #1a1a1a; }
+.adm-pill.st-dismissed { background: var(--card); color: var(--muted); }
+.adm-reason { margin-top: 8px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.adm-text { margin-top: 8px; white-space: pre-wrap; word-break: break-word; color: var(--ink); line-height: 1.5; }
+.adm-meta { margin-top: 8px; font-size: .82rem; color: var(--muted); }
+.adm-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.adm-actions .adm-del { margin-left: auto; }
+.adm-empty { text-align: center; padding: 34px 16px; border: 2px dashed var(--line); border-radius: var(--r); color: var(--muted); }
+.adm-empty svg { opacity: .6; margin-bottom: 6px; }
+.adm-sub { font-size: 1rem; margin: 18px 0 8px; }
+.adm-rows { display: grid; gap: 8px; }
+.adm-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--card); border: var(--edge); border-radius: var(--r); padding: 10px 12px; }
+.adm-row > .btn:first-of-type { margin-left: auto; }
+.adm-row.is-off { opacity: .6; }
+.adm-row-note { color: var(--muted); font-size: .85rem; flex: 1; min-width: 120px; }
+.adm-code { font-family: ui-monospace, Menlo, monospace; font-weight: 700; font-size: .95rem; }
+.adm-newcode { display: flex; gap: 8px; margin-bottom: 10px; }
+.adm-newcode input { flex: 1; }
+@media (max-width: 640px) { .adm-tiles { grid-template-columns: repeat(2, 1fr); } }

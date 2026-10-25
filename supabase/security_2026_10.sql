@@ -274,3 +274,11 @@ update public.club_chat set sender_id = '#8825' where sender_id = '#9892';
 update public.club_reviews set author_id = '#8825' where author_id = '#9892';
 update public.biz_reviews set author_id = '#8825' where author_id = '#9892';
 update public.site_reviews set author_id = '#8825' where author_id = '#9892';
+
+-- Migration "admin_inbox_policies": admins read/resolve Contact Us messages and reports (Admin page).
+create policy "contact admin read" on public.contact_messages for select using (is_admin());
+create policy "contact admin update" on public.contact_messages for update using (is_admin()) with check (is_admin());
+create policy "contact admin delete" on public.contact_messages for delete using (is_admin());
+create policy "reports admin read" on public.reports for select using (is_admin());
+create policy "reports admin update" on public.reports for update using (is_admin()) with check (is_admin());
+create policy "reports admin delete" on public.reports for delete using (is_admin());

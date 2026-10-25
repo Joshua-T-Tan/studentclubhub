@@ -944,7 +944,8 @@ function renderAuthArea() {
       avatarHTML(currentUser.name, 'sm') +
       '<span class="name">' + escHtml(currentUser.name.split(' ')[0]) + '</span>' +
     '</button>' +
-    (typeof isAdminUser !== 'undefined' && isAdminUser ? '<button class="logout-btn" title="Admin" onclick="openAdmin()">' + svgIcon('lock', 16) + '<span>Admin</span></button>' : '') +
+    (typeof isAdminUser !== 'undefined' && isAdminUser ? '<button class="logout-btn admin-btn" title="Admin' + (adminTodo ? ': ' + adminTodo + ' waiting' : '') + '" onclick="openAdmin()">' + svgIcon('lock', 16) + '<span>Admin</span>' +
+      (adminTodo ? '<b class="admin-count">' + (adminTodo > 99 ? '99+' : adminTodo) + '</b>' : '') + '</button>' : '') +
     '<button id="logoutBtn" class="logout-btn" title="' + escAttr(t('set_logout')) + '" onclick="logout()">' + ICON_LOGOUT + '<span>' + t('set_logout') + '</span></button>';
 }
 
