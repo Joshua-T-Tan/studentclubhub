@@ -92,39 +92,42 @@ function sbSignOut() {
   if (tok) sbFetch('/auth/v1/logout', {}, 'POST', tok).catch(function () {});
 }
 
-/* ---- "Continue with Google" (OAuth with PKCE) ----
-   We send the browser to Supabase, which sends it to Google; Google sends it back here with a
-   one-time ?code= that only this browser can exchange (it holds the secret "verifier").
-   If a Student Club Hub account already uses that Gmail address, Supabase links the two. */
-var LS_PKCE = 'sch_pkce_verifier';
-function _b64url(buf) {
-  var s = '', b = new Uint8Array(buf); for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
-  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+/* ---- "Continue with Google" ----
+   Google sends the user straight back to OUR site with a signed ID token (so Google's screen says
+   "Sign in to studentclubhub.com", not the Supabase server's address). We then hand that token to
+   Supabase, which checks Google's signature and the one-time nonce before creating the session.
+   A Gmail that already has an account is linked to it. */
+var GOOGLE_CLIENT_ID = '826931560744-0dm75csaa0dtuv9o70176tf3m856oceo.apps.googleusercontent.com';   // public by design
+var LS_GOOGLE = 'sch_google_signin';
+function _rand(n) { var b = new Uint8Array(n); crypto.getRandomValues(b); return Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
+function _sha256hex(s) {
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)).then(function (h) {
+    return Array.prototype.map.call(new Uint8Array(h), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+  });
 }
 function sbSignInWithGoogle() {
   if (!window.crypto || !crypto.subtle) return Promise.reject(new Error('Google sign-in needs a secure (https) page.'));
-  var rnd = new Uint8Array(48); crypto.getRandomValues(rnd);
-  var verifier = _b64url(rnd);
-  try { localStorage.setItem(LS_PKCE, verifier); } catch (e) {}
-  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)).then(function (hash) {
-    var back = location.origin + location.pathname;   // land back on this page (keeps http://localhost working in dev)
-    location.href = SUPABASE_URL + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(back) +
-      '&code_challenge=' + _b64url(hash) + '&code_challenge_method=s256';
+  var nonce = _rand(32), state = _rand(16);
+  // remember where the user was (e.g. a #biz= link) so they land back there
+  try { localStorage.setItem(LS_GOOGLE, JSON.stringify({ nonce: nonce, state: state, back: location.hash || '' })); } catch (e) {}
+  return _sha256hex(nonce).then(function (hashed) {
+    location.href = 'https://accounts.google.com/o/oauth2/v2/auth?client_id=' + encodeURIComponent(GOOGLE_CLIENT_ID) +
+      '&redirect_uri=' + encodeURIComponent(location.origin + '/') + '&response_type=id_token' +
+      '&scope=' + encodeURIComponent('openid email profile') + '&nonce=' + hashed + '&state=' + state + '&prompt=select_account';
   });
 }
-/* On page load: if Google just sent us back, trade the code for a session. Resolves with the
+/* On page load: if Google just sent us back (#id_token=…), trade it for a session. Resolves with the
    session, null if this wasn't a sign-in return, or rejects with a readable error. */
 function sbFinishOAuthRedirect() {
-  var q = new URLSearchParams(location.search);
-  var code = q.get('code'), err = q.get('error_description') || q.get('error');
-  if (!code && !err) return Promise.resolve(null);
-  ['code', 'error', 'error_code', 'error_description', 'state'].forEach(function (k) { q.delete(k); });
-  var rest = q.toString();
-  history.replaceState(null, '', location.pathname + (rest ? '?' + rest : '') + location.hash);   // tidy the address bar
-  if (err) return Promise.reject(new Error('Google sign-in didn’t finish: ' + err.replace(/\+/g, ' ')));
-  var verifier = null; try { verifier = localStorage.getItem(LS_PKCE); localStorage.removeItem(LS_PKCE); } catch (e) {}
-  if (!verifier) return Promise.reject(new Error('Google sign-in expired. Please try again.'));
-  return sbFetch('/auth/v1/token?grant_type=pkce', { auth_code: code, code_verifier: verifier }).then(_sbStore);
+  var h = location.hash || '';
+  if (!/[#&](id_token|error)=/.test(h)) return Promise.resolve(null);
+  var q = new URLSearchParams(h.slice(1));
+  var saved = null; try { saved = JSON.parse(localStorage.getItem(LS_GOOGLE)); localStorage.removeItem(LS_GOOGLE); } catch (e) {}
+  history.replaceState(null, '', location.pathname + location.search + ((saved && saved.back) || ''));   // tidy the address bar
+  var err = q.get('error');
+  if (err) return Promise.reject(new Error(err === 'access_denied' ? 'Google sign-in was cancelled.' : 'Google sign-in didn’t finish: ' + err));
+  if (!saved || !saved.nonce || q.get('state') !== saved.state) return Promise.reject(new Error('Google sign-in expired. Please try again.'));
+  return sbFetch('/auth/v1/token?grant_type=id_token', { provider: 'google', id_token: q.get('id_token'), nonce: saved.nonce }).then(_sbStore);
 }
 /* Signed in only through Google (no Student Club Hub password)? */
 function sbIsGoogleOnly() {
