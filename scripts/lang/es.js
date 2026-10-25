@@ -932,7 +932,20 @@ UI_PHRASES["es"] = {
 "A business can run up to three promotions at once, and any club or business can have up to three active partnerships at once. Once one ends (or you delete or end it), you can add another.": "Un negocio puede tener hasta tres promociones activas a la vez, y cualquier club o negocio puede tener hasta tres alianzas activas a la vez. Cuando una termina (o la eliminas o la terminas), puedes añadir otra.",
 "What is the countdown timer?": "¿Qué es la cuenta regresiva?",
 "Owners can turn on a ticking countdown for any partnership or promotion that’s running. It shows the time left until the end date on the page and on the directory card, and it disappears once the deal is over. Tap the clock button on the deal to turn it on or off.": "Los dueños pueden activar una cuenta regresiva en tiempo real para cualquier alianza o promoción activa. Muestra el tiempo restante hasta la fecha de fin en la página y en la tarjeta del directorio, y desaparece cuando termina la oferta. Toca el botón del reloj en la oferta para activarla o desactivarla.",
-"New": "Nuevo"
+"New": "Nuevo",
+"approved the final version": "aprobó la versión final",
+"turned down the request": "rechazó la solicitud",
+"withdrew the request": "retiró la solicitud",
+"ended the partnership early": "terminó la alianza antes de tiempo",
+"The partnership ended on schedule.": "La alianza terminó en la fecha prevista.",
+"The partnership was ended early.": "La alianza se terminó antes de tiempo.",
+"Final version": "Versión final",
+"Delete from my list": "Eliminar de mi lista",
+"Delete this from Past?": "¿Eliminar esto de Pasadas?",
+"It will be removed from your Partnership Requests for good. The other side keeps their own copy.": "Se eliminará de tus Solicitudes de alianza para siempre. La otra parte conserva su propia copia.",
+"Deleted from your Past list.": "Eliminado de tu lista de Pasadas.",
+"Couldn’t delete it. Only the club’s President or the business owner can.": "No se pudo eliminar. Solo el Presidente del club o el dueño del negocio pueden hacerlo.",
+"Only past partnerships can be deleted.": "Solo se pueden eliminar las alianzas pasadas."
 };
 UI_HTML["es"] = {
 "<strong>Important Note:</strong> Student Club Hub only helps you connect. Any partnership, sponsorship, discount, or agreement you arrange is strictly between you and the other party. We are not involved in it and take no responsibility or legal liability for it. Verify who you’re dealing with before committing to anything.": "<strong>Nota importante:</strong> Student Club Hub solo te ayuda a conectar. Cualquier alianza, patrocinio, descuento o acuerdo que hagas es estrictamente entre tú y la otra parte. No participamos en él y no asumimos ninguna responsabilidad ni obligación legal al respecto. Verifica con quién estás tratando antes de comprometerte a algo.",

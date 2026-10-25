@@ -921,7 +921,20 @@ UI_PHRASES["fr"] = {
 "A business can run up to three promotions at once, and any club or business can have up to three active partnerships at once. Once one ends (or you delete or end it), you can add another.": "Un commerce peut avoir jusqu’à trois promotions en même temps, et chaque club ou commerce peut avoir jusqu’à trois partenariats actifs en même temps. Dès que l’un se termine (ou que tu le supprimes ou y mets fin), tu peux en ajouter un autre.",
 "What is the countdown timer?": "C’est quoi, le compte à rebours ?",
 "Owners can turn on a ticking countdown for any partnership or promotion that’s running. It shows the time left until the end date on the page and on the directory card, and it disappears once the deal is over. Tap the clock button on the deal to turn it on or off.": "Les propriétaires peuvent activer un compte à rebours pour tout partenariat ou promotion en cours. Il affiche le temps restant jusqu’à la date de fin sur la page et sur la carte de l’annuaire, et disparaît une fois l’offre terminée. Touche le bouton horloge sur l’offre pour l’activer ou le désactiver.",
-"New": "Nouveau"
+"New": "Nouveau",
+"approved the final version": "a approuvé la version finale",
+"turned down the request": "a refusé la demande",
+"withdrew the request": "a retiré la demande",
+"ended the partnership early": "a mis fin au partenariat plus tôt",
+"The partnership ended on schedule.": "Le partenariat s’est terminé à la date prévue.",
+"The partnership was ended early.": "Le partenariat a pris fin plus tôt.",
+"Final version": "Version finale",
+"Delete from my list": "Supprimer de ma liste",
+"Delete this from Past?": "Supprimer ceci des partenariats passés ?",
+"It will be removed from your Partnership Requests for good. The other side keeps their own copy.": "Il sera supprimé définitivement de tes demandes de partenariat. L’autre partie garde sa propre copie.",
+"Deleted from your Past list.": "Supprimé de ta liste des partenariats passés.",
+"Couldn’t delete it. Only the club’s President or the business owner can.": "Impossible de le supprimer. Seul le président du club ou le propriétaire du commerce peut le faire.",
+"Only past partnerships can be deleted.": "Seuls les partenariats passés peuvent être supprimés."
 };
 UI_HTML["fr"] = {
 "<strong>Important Note:</strong> Student Club Hub only helps you connect. Any partnership, sponsorship, discount, or agreement you arrange is strictly between you and the other party. We are not involved in it and take no responsibility or legal liability for it. Verify who you’re dealing with before committing to anything.": "<strong>Remarque importante :</strong> Student Club Hub t’aide seulement à te mettre en relation. Tout partenariat, sponsoring, réduction ou accord que tu conclus concerne uniquement toi et l’autre partie. Nous n’y sommes pas impliqués et déclinons toute responsabilité, y compris juridique, à cet égard. Vérifie à qui tu as affaire avant de t’engager.",

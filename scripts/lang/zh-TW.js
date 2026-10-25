@@ -933,7 +933,20 @@ UI_PHRASES["zh-TW"] = {
 "A business can run up to three promotions at once, and any club or business can have up to three active partnerships at once. Once one ends (or you delete or end it), you can add another.": "商家最多可以同時進行三個促銷活動，而任何社團或商家最多可以同時有三項進行中的合作。等其中一項結束（或你將其刪除或結束）後，就可以再新增。",
 "What is the countdown timer?": "什麼是倒數計時？",
 "Owners can turn on a ticking countdown for any partnership or promotion that’s running. It shows the time left until the end date on the page and on the directory card, and it disappears once the deal is over. Tap the clock button on the deal to turn it on or off.": "擁有者可以為任何進行中的合作或促銷活動開啟即時倒數計時。它會在頁面和目錄卡片上顯示距離結束日期的剩餘時間，並在優惠結束後消失。點擊優惠上的時鐘按鈕即可開啟或關閉。",
-"New": "新"
+"New": "新",
+"approved the final version": "核准了最終版本",
+"turned down the request": "婉拒了請求",
+"withdrew the request": "撤回了請求",
+"ended the partnership early": "提前結束了合作",
+"The partnership ended on schedule.": "合作已如期結束。",
+"The partnership was ended early.": "合作已提前結束。",
+"Final version": "最終版本",
+"Delete from my list": "從我的列表中刪除",
+"Delete this from Past?": "從「過往」中刪除？",
+"It will be removed from your Partnership Requests for good. The other side keeps their own copy.": "它將從你的合作請求中永久刪除。對方會保留自己的紀錄。",
+"Deleted from your Past list.": "已從你的「過往」列表中刪除。",
+"Couldn’t delete it. Only the club’s President or the business owner can.": "無法刪除。只有社團主席或店主可以刪除。",
+"Only past partnerships can be deleted.": "只能刪除過往的合作。"
 };
 UI_HTML["zh-TW"] = {
 "<strong>Important Note:</strong> Student Club Hub only helps you connect. Any partnership, sponsorship, discount, or agreement you arrange is strictly between you and the other party. We are not involved in it and take no responsibility or legal liability for it. Verify who you’re dealing with before committing to anything.": "<strong>重要提醒：</strong>Student Club Hub 只協助你們建立聯繫。你所安排的任何合作、贊助、折扣或協議，都僅限於你與對方之間。我們不參與其中，也不承擔任何責任或法律責任。在做出任何承諾前，請先確認對方的身分。",

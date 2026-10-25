@@ -679,3 +679,47 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 /* "New" on a request you haven't seen yet (shown for the rest of that visit) */
 .pr-new { flex: 0 0 auto; padding: 2px 7px; font-size: .68rem; font-weight: 900; text-transform: uppercase; letter-spacing: .03em;
   background: var(--brand); color: #fff; border: var(--edge); border-radius: var(--r-sm); }
+/* Partnership history: approval / ending events + delete on Past cards */
+.prh-item.is-ok::before { background: var(--note); border-color: var(--box-ink); }
+.prh-item.is-stop::before { background: var(--ink); border-color: var(--ink); }
+.prh-item.is-current.is-ok::before { background: var(--note); }
+.pr-del { flex: 0 0 auto; width: 32px; height: 32px; display: inline-grid; place-items: center; background: var(--card); color: var(--ink);
+  border: var(--edge); border-radius: var(--r); cursor: pointer; }
+.pr-del:hover { background: var(--brand); color: #fff; }
+
+/* ==== Club & business pages share one look (photo banners included) ==== */
+/* Banner controls are paper buttons on EVERY banner, not just blank ones */
+.biz-slideshow .banner-back, .biz-slideshow .banner-ico, .biz-slideshow .banner-gear, .biz-slideshow .name-ico {
+  background: var(--card); color: var(--ink); border: var(--edge); border-radius: var(--r); box-shadow: var(--shadow-sm);
+  backdrop-filter: none; -webkit-backdrop-filter: none; }
+.biz-slideshow .banner-back:hover, .biz-slideshow .banner-ico:hover, .biz-slideshow .name-ico:hover,
+.biz-slideshow .banner-gear:hover { background: var(--note); color: #1a1a1a; border-color: var(--line); }
+.biz-slideshow .name-ico.flag:hover { background: var(--brand); color: #fff; border-color: var(--line); }
+.biz-slideshow .banner-ico.on, .biz-slideshow .banner-ico.on .bm-ico { color: var(--brand); }
+.biz-slideshow .lb-btn { background: var(--card); color: var(--ink); border: var(--edge); border-radius: var(--r); box-shadow: var(--shadow-sm);
+  backdrop-filter: none; -webkit-backdrop-filter: none; }
+.biz-slideshow .lb-btn:hover { background: var(--note); color: #1a1a1a; }
+/* The ID chip is a yellow note everywhere (it was see-through on photos) */
+.biz-slideshow .biz-idchip { background: var(--note); color: #1a1a1a; border: var(--edge); border-radius: var(--r-sm); }
+/* Banner badges (Public / You: President) get the same ink edge as the other chips */
+.biz-slideshow .biz-tagline .badge { border: var(--edge); border-radius: var(--r-sm); line-height: 1.3; }
+.biz-slideshow .biz-tagline .badge.join { background: var(--card); color: var(--ink); }
+
+/* Club page body, matched to the business page */
+.club-main-content .about-box { margin: 0 0 4px; padding: 0; background: none; border: none; border-radius: 0;
+  color: var(--muted); font-size: 1rem; line-height: 1.7; max-height: none; overflow: visible; }
+.club-main-content .gallery, .club-main-content .gallery-fixed { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); grid-template-rows: none; gap: 10px; margin-bottom: 8px; }
+.club-main-content .gallery .thumb { height: 120px; border-radius: var(--r); }
+.club-detail-grid { align-items: start; }
+@media (min-width: 961px) { .club-detail-grid { grid-template-columns: minmax(0, 1fr) 340px; gap: 30px; } }   /* same columns as the business page */
+.side-chat { flex: 0 0 auto; }
+.side-chat:has(.chat-locked) { min-height: 0; }   /* "Join to view the chat" doesn't need a tall empty card */
+.club-reviews-full { margin: 30px 0 24px; }
+/* Phones: photo banners grow to fit the (wrapping) name + chips, and the slide arrows sit up top
+   under Back / Save, so nothing overlaps the title. */
+@media (max-width: 760px) {
+  .biz-slideshow:not(.is-paper) { height: auto; min-height: 260px; }
+  .biz-slideshow:not(.is-paper) .biz-hero-info { position: relative; bottom: auto; padding-top: 112px; padding-bottom: 16px; }
+  .biz-slideshow .lb-btn { top: 60px; transform: none; width: 34px; height: 34px; font-size: 1.1rem; }
+  .biz-slideshow .biz-sl-prev { left: 16px; } .biz-slideshow .biz-sl-next { right: 16px; }
+}

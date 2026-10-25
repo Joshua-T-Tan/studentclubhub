@@ -19,6 +19,9 @@ alter table public.partner_agreements add column if not exists b_timer boolean n
 alter table public.partner_agreements add column if not exists decided_at timestamptz;
 -- decided_by = which side made the last decision ('a'/'b'), so the other side can be told "X withdrew / turned down / ended it"
 alter table public.partner_agreements add column if not exists decided_by text check (decided_by in ('a', 'b'));
+-- a/b_archived = that side deleted this PAST partnership from its own list (the other side keeps its copy)
+alter table public.partner_agreements add column if not exists a_archived boolean not null default false;
+alter table public.partner_agreements add column if not exists b_archived boolean not null default false;
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'partner_agreements_awaiting_chk') then
     alter table public.partner_agreements add constraint partner_agreements_awaiting_chk check (awaiting in ('a', 'b'));
@@ -62,6 +65,7 @@ begin
     new.a_name := _entity_name(new.a_type, new.a_id); new.b_name := _entity_name(new.b_type, new.b_id);
     new.b_deal := new.a_deal; new.b_start := new.a_start; new.b_end := new.a_end;
     new.status := 'pending'; new.awaiting := 'b'; new.a_hidden := false; new.b_hidden := false; new.a_timer := false; new.b_timer := false;
+    new.a_archived := false; new.b_archived := false;
     new.launched_at := null; new.decided_at := null; new.decided_by := null;
     new.history := jsonb_build_array(jsonb_build_object('by', 'a', 'at', now(), 'ptype', new.ptype, 'deal', new.a_deal, 'start', new.a_start, 'end', new.a_end));
     return new;
@@ -72,9 +76,13 @@ begin
   new.a_name := old.a_name; new.b_name := old.b_name;
   new.launched_at := old.launched_at; new.decided_at := old.decided_at; new.decided_by := old.decided_by;
   new.b_deal := new.a_deal; new.b_start := new.a_start; new.b_end := new.a_end;
-  -- each side controls only its own visibility and countdown timer
-  if not mine_a then new.a_hidden := old.a_hidden; new.a_timer := old.a_timer; end if;
-  if not mine_b then new.b_hidden := old.b_hidden; new.b_timer := old.b_timer; end if;
+  -- each side controls only its own visibility, countdown timer and "deleted from my list"
+  if not mine_a then new.a_hidden := old.a_hidden; new.a_timer := old.a_timer; new.a_archived := old.a_archived; end if;
+  if not mine_b then new.b_hidden := old.b_hidden; new.b_timer := old.b_timer; new.b_archived := old.b_archived; end if;
+  if (new.a_archived, new.b_archived) is distinct from (old.a_archived, old.b_archived)
+     and not (old.status in ('declined', 'deleted', 'ended') or (old.status = 'launched' and coalesce(old.a_end, old.b_end) < current_date)) then
+    raise exception 'Only past partnerships can be deleted.';
+  end if;
   my_turn := (old.awaiting = 'a' and mine_a) or (old.awaiting = 'b' and mine_b);
   terms_changed := (new.ptype, new.a_deal, new.a_start, new.a_end) is distinct from (old.ptype, old.a_deal, old.a_start, old.a_end);
   new.history := old.history;

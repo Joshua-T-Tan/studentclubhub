@@ -163,7 +163,7 @@ function renderClub() {
         '<div class="club-main-content">' + clubLeftMainHTML(club) + '</div>' +
         '<aside class="club-side">' + clubRightColHTML(club) + '</aside>' +
       '</div>' +
-      '<div class="sidebar-card club-reviews-full">' + reviewsSectionHTML(club) + '</div>' +
+      '<div class="biz-reviews-full club-reviews-full">' + reviewsSectionHTML(club) + '</div>' +
     '</div>';
   _syncClubSlides(slides.length);
 }
@@ -191,9 +191,10 @@ function clubHeroSlideshow(club, relBadge, slides) {
   var bannerTR = '<div class="banner-tr">' +
     '<button class="banner-ico ' + (saved ? 'on' : '') + '" title="' + escAttr(saved ? t('card_saved') : t('save_club')) + '" onclick="toggleFavorite(\'' + club.id + '\')">' + bookmarkSvg(saved) + '</button></div>';
   var openP = club.partnershipOpen ? '<span class="open-partner-chip">' + ICON_PARTNER + ' Open to partnerships</span>' : '';
-  var chips = recruitBadge(club.recruitment) + renderBadge(membersLabel(club.memberCount), 'gray') + (relBadge || '');
-  var meta = '<span class="biz-cuisines">' + escHtml(club.category) + '  •  ' + escHtml(club.school) + (club.zip ? '  •  ' + escHtml(club.zip) : '') + '</span>' +
-    openP + (typeof dealBannerChips === 'function' ? dealBannerChips('club', club) : '') + (club.clubId ? '<span class="biz-idchip">#' + escHtml(club.clubId) + '</span>' : '');
+  // One row, like the business banner (zip + member count live further down the page)
+  var meta = '<span class="biz-cuisines">' + escHtml(club.category) + '  •  ' + escHtml(club.school) + '</span>' +
+    recruitBadge(club.recruitment) + openP + (typeof dealBannerChips === 'function' ? dealBannerChips('club', club) : '') +
+    (club.clubId ? '<span class="biz-idchip">#' + escHtml(club.clubId) + '</span>' : '') + (relBadge || '');
   var galleryN = (club.gallery || []).filter(Boolean).length;
   var paper = !!(slides[0] && slides[0].paper);
   return '<div class="biz-slideshow' + (paper ? ' is-paper' : '') + '" id="clubSlideshow">' +
@@ -211,8 +212,7 @@ function clubHeroSlideshow(club, relBadge, slides) {
       (club.verified ? '<span class="name-verified-ico" title="Verified">' + (paper ? verifiedSeal(20, '#e6b422', '#ffffff') : verifiedSeal(20, '#ffffff', '#b8860b')) + '</span>' : '') +
       '<button class="name-ico share" title="' + escAttr(t('share_club')) + '" onclick="openShare(\'' + club.id + '\')">' + ICON_SHARE + '</button>' +
       (ownerOf(club) ? '' : '<button class="name-ico flag" title="Report this club" onclick="openReport(\'club\',\'' + club.id + '\',\'' + jsArg(club.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>') + '</div>' +
-      '<div class="biz-tagline">' + chips + '</div>' +
-      '<div class="biz-tagline biz-meta-row" style="margin-top:6px">' + meta + '</div></div></div>';
+      '<div class="biz-tagline">' + meta + '</div></div></div>';
 }
 function clubSlideStep(d) {
   var s = document.querySelectorAll('#clubSlideshow .biz-slide'); if (!s.length) return;
@@ -244,7 +244,7 @@ function clubActionsHTML(club) {
   var owner = ownerOf(club), member = isClubMember(club), b = '';
   if (!owner && !member) b += '<button class="btn join" onclick="toggleJoin(\'' + club.id + '\')">' + t('club_join') + '</button>';
   if (member && !owner) b += '<button class="btn ghost" onclick="toggleJoin(\'' + club.id + '\')">' + t('club_leave') + '</button>';
-  if (!owner) b += '<button class="btn primary" onclick="openContact(\'' + club.id + '\')">' + ICON_MAIL + ' ' + t('club_contact') + '</button>';
+  if (!owner) b += '<button class="btn ghost" onclick="openContact(\'' + club.id + '\')">' + ICON_MAIL + ' ' + t('club_contact') + '</button>';
   return b ? '<div class="modal-actions wrap club-actions">' + b + '</div>' : '';
 }
 /* Key details block — back in the LEFT main column */
@@ -298,9 +298,7 @@ function galleryBoxHTML(club) {
   var owner = canEditClub(club);
   var g = (club.gallery || []).filter(Boolean);
   var title = secTitle(t('sec_gallery'), owner ? 'editClubGallery(\'' + club.id + '\')' : '');
-  if (!g.length) {
-    return title + '<div class="gallery gallery-fixed gallery-empty">' + t('gallery_empty') + '</div>';
-  }
+  if (!g.length) return owner ? title + '<p class="form-note">No photos yet — add some with the pencil.</p>' : '';
   var extra = g.length - 8;                        // >0 → hidden photos remain
   var cells = g.slice(0, 8).map(function (src, i) {
     if (i === 7 && extra > 0) {

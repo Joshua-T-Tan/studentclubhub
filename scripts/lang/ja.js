@@ -933,7 +933,20 @@ UI_PHRASES["ja"] = {
 "A business can run up to three promotions at once, and any club or business can have up to three active partnerships at once. Once one ends (or you delete or end it), you can add another.": "お店は同時に3件までプロモーションを実施でき、クラブやお店は同時に3件まで有効なパートナーシップを持てます。1件が終了すれば（または削除・終了すれば）、新しく追加できます。",
 "What is the countdown timer?": "カウントダウンタイマーとは何ですか？",
 "Owners can turn on a ticking countdown for any partnership or promotion that’s running. It shows the time left until the end date on the page and on the directory card, and it disappears once the deal is over. Tap the clock button on the deal to turn it on or off.": "オーナーは、実施中のパートナーシップやプロモーションに、時を刻むカウントダウンを表示できます。ページと一覧のカードに終了日までの残り時間が表示され、特典が終わると消えます。特典の時計ボタンをタップしてオン・オフを切り替えます。",
-"New": "新着"
+"New": "新着",
+"approved the final version": "が最終版を承認",
+"turned down the request": "がリクエストを断りました",
+"withdrew the request": "がリクエストを取り下げました",
+"ended the partnership early": "がパートナーシップを早期終了しました",
+"The partnership ended on schedule.": "パートナーシップは予定どおり終了しました。",
+"The partnership was ended early.": "パートナーシップは早期終了しました。",
+"Final version": "最終版",
+"Delete from my list": "自分のリストから削除",
+"Delete this from Past?": "過去の一覧から削除しますか？",
+"It will be removed from your Partnership Requests for good. The other side keeps their own copy.": "パートナーシップのリクエストから完全に削除されます。相手側の記録はそのまま残ります。",
+"Deleted from your Past list.": "過去の一覧から削除しました。",
+"Couldn’t delete it. Only the club’s President or the business owner can.": "削除できませんでした。削除できるのはクラブの会長か店舗のオーナーだけです。",
+"Only past partnerships can be deleted.": "削除できるのは過去のパートナーシップだけです。"
 };
 UI_HTML["ja"] = {
 "<strong>Important Note:</strong> Student Club Hub only helps you connect. Any partnership, sponsorship, discount, or agreement you arrange is strictly between you and the other party. We are not involved in it and take no responsibility or legal liability for it. Verify who you’re dealing with before committing to anything.": "<strong>重要：</strong>Student Club Hub はつながるお手伝いをするだけです。あなたが取り決めるパートナーシップ、スポンサー、割引、合意はすべて、あなたと相手との間のものです。当サイトはこれに関与せず、一切の責任および法的責任を負いません。何かを約束する前に、相手が誰かを確認してください。",

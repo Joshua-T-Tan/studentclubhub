@@ -18,7 +18,7 @@ var TR_ATTRS = ['placeholder', 'title', 'aria-label'];
 /* User-written content: never translate inside these. */
 var TR_SKIP = 'script,style,textarea,select option[data-raw],[data-no-tr],[contenteditable="true"],' +
   '.card-title h3,.card-desc,.card-meta,.chat-feed,.review-text,.review-head .n,.tquote,.tby-text .tn,.tby-text .tr,' +
-  '.name-row h1,.biz-cuisines,.about-text,.club-about,.perk-box p,.pdeal-box p,.promo-box p.dbox-deal,.promo-redeem,.pdeal-partner,.pbox-name,.pr-name,.pr-deal,.prd-deal,.pdeal-tag,.adm-text,.adm-meta,.adm-card-top strong,' +
+  '.name-row h1,.biz-cuisines,.about-text,.club-about,.about-box,.biz-about:not(.placeholder),.perk-box p,.pdeal-box p,.promo-box p.dbox-deal,.promo-redeem,.pdeal-partner,.pbox-name,.pr-name,.pr-deal,.prd-deal,.pdeal-tag,.adm-text,.adm-meta,.adm-card-top strong,' +
   '.profile-head h1,.pt-identity span,.roster-row .who,.leader-row .who,.club-id-chip,.biz-idchip,.brand-text,' +
   '#shareLinkInput,.adm-code,.adm-row-note,.tc-body h3,.tc-meta,.gp-title,.reach-contact a,.contact-emailline a';
 

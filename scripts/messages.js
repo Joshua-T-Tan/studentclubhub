@@ -171,6 +171,7 @@ function _myPartnershipRows() {
       (rows || []).forEach(function (a) {
         a.mySides = ['a', 'b'].filter(function (s) { return own[a[s + '_type'] + ':' + a[s + '_id']]; });
         if (!a.mySides.length) return;
+        if (a.mySides.every(function (sd) { return a[sd + '_archived']; })) return;   // I deleted it from my list
         a.myTurn = a.status === 'pending' && a.mySides.indexOf(a.awaiting || 'b') > -1;
         a.newsKey = _prNewsKey(a);
         _prRows[a.id] = a;
@@ -188,6 +189,8 @@ function _myPartnershipRows() {
 function prTab(k) { _prTab = k; _paintPrList(); }
 /* Ran its full term (or was retired by the expiry clean-up after its end date)? */
 function _agrCompleted(a) { var end = _agrEnd(a); return a.status === 'launched' || (a.status === 'ended' && !!end && !!a.decided_at && String(a.decided_at).slice(0, 10) > end); }
+/* When it ended: its end date if it ran its course, otherwise the day someone decided. */
+function _pastDate(a) { return (_agrCompleted(a) || (a.status === 'launched' && _agrExpired(a))) ? _agrEnd(a) : (a.decided_at ? String(a.decided_at).slice(0, 10) : ''); }
 /* How a past request ended, naming who did it when we know (HTML-escaped). */
 function _pastLabel(a) {
   var who = a.decided_by ? escHtml(_prSideName(a, a.decided_by)) : '';
@@ -203,15 +206,19 @@ function _prStatusLine(a) {
     return '<span>Waiting for ' + escHtml(other) + ' to respond</span>';
   }
   if (a.status === 'launched' && !_agrExpired(a)) return '<span>' + (_agrNotStarted(a) ? 'Approved. It goes live on the start date.' : 'Live now') + '</span>';
-  return '<span>' + _pastLabel(a) + '</span>' + (a.decided_at ? ' · <span>' + escHtml(_fmtAgrDate(String(a.decided_at).slice(0, 10))) + '</span>' : '');
+  var when = _pastDate(a);
+  return '<span>' + _pastLabel(a) + '</span>' + (when ? ' · <span>' + escHtml(_fmtAgrDate(when)) + '</span>' : '');
 }
+function _prIsPast(a) { return a.status !== 'pending' && !(a.status === 'launched' && !_agrExpired(a)); }
 function _prCard(a) {
   var dates = _agrDateRange(a);
   return '<div class="pr-card is-click' + (a.myTurn ? ' my-turn' : '') + '" role="button" tabindex="0" onclick="openPartnerRequest(\'' + a.id + '\')" onkeydown="if(event.key===\'Enter\')openPartnerRequest(\'' + a.id + '\')">' +
     '<div class="pr-body">' + ICON_PARTNER + '<div class="pr-main"><div class="pr-names"><strong class="pr-name">' + escHtml(a.a_name) + '</strong> <span class="pr-arrow">→</span> <strong class="pr-name">' + escHtml(a.b_name) + '</strong></div>' +
       '<div class="pr-line"><span class="pd-type">' + escHtml(a.ptype || 'Partnership') + '</span><span class="pr-deal">' + escHtml(a.a_deal || '') + '</span></div>' +
       '<div class="form-note">' + (dates ? svgIcon('calendar', 13) + ' ' + escHtml(dates) + ' · ' : '') + _prStatusLine(a) + '</div></div></div>' +
-    (_prFresh[a.id] ? '<span class="pr-new">New</span>' : '') + '<span class="pr-open">Open ›</span></div>';
+    (_prFresh[a.id] ? '<span class="pr-new">New</span>' : '') +
+    (_prIsPast(a) ? '<button class="pr-del" title="Delete from my list" aria-label="Delete from my list" onclick="event.stopPropagation(); deletePastPartnership(\'' + a.id + '\')">' + ICON_TRASH + '</button>' : '') +
+    '<span class="pr-open">Open ›</span></div>';
 }
 function _paintPrList() {
   var el = $('partnerAgrs'), tabs = $('prTabs'), r = _prData; if (!el || !r) return;
@@ -273,19 +280,48 @@ function _prTerms(t) {
     '<p class="prd-deal">' + escHtml(t.deal || '') + '</p>' +
     ((t.start || t.end) ? '<div class="form-note">' + svgIcon('calendar', 13) + ' ' + escHtml((t.start ? _fmtAgrDate(t.start) : '') + (t.end ? ' – ' + _fmtAgrDate(t.end) : '')) + '</div>' : '') + '</div>';
 }
+/* The full story of a request: every version of the terms, then what happened to it.
+   Approval = whoever's turn it was (awaiting doesn't change after approval). An ending after the
+   end date means it ran its course, so no one is named. */
+function _prWhen(at) { try { return new Date(at).toLocaleDateString(siteLocale(), { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; } }
+function _prHistItem(who, what, when, cls, extra) {
+  return '<li class="prh-item' + (cls ? ' ' + cls : '') + '"><div class="prh-head">' + (who ? '<strong class="pr-name">' + escHtml(who) + '</strong> ' : '') +
+    '<span>' + what + '</span>' + (when ? ' <span class="form-note">· ' + escHtml(when) + '</span>' : '') + (extra || '') + '</div>';
+}
+function _prHistoryHTML(a) {
+  var H = a.history || [], live = a.status === 'launched' && !_agrExpired(a);
+  var items = H.map(function (h, i) {
+    var last = i === H.length - 1, tag = last ? (a.status === 'pending' ? ' <span class="prh-now">Current version</span>' : (a.launched_at ? ' <span class="prh-now">Final version</span>' : '')) : '';
+    return _prHistItem(_prSideName(a, h.by), i === 0 ? 'sent the request' : 'suggested changes', _prWhen(h.at), last && a.status === 'pending' ? 'is-current' : '', tag) +
+      (last ? '' : _prTerms({ ptype: h.ptype, deal: h.deal, start: h.start, end: h.end })) + '</li>';
+  });
+  if (a.launched_at) items.push(_prHistItem(_prSideName(a, a.awaiting || 'b'), 'approved the final version', _prWhen(a.launched_at), live ? 'is-current is-ok' : 'is-ok') + '</li>');
+  var by = a.decided_by, end = _agrEnd(a);
+  if (a.status === 'declined') items.push(_prHistItem(_prSideName(a, by || 'b'), 'turned down the request', _prWhen(a.decided_at), 'is-current is-stop') + '</li>');
+  else if (a.status === 'deleted') items.push(_prHistItem(_prSideName(a, by || 'a'), 'withdrew the request', _prWhen(a.decided_at), 'is-current is-stop') + '</li>');
+  else if (_agrCompleted(a) || (a.status === 'launched' && _agrExpired(a))) items.push(_prHistItem('', 'The partnership ended on schedule.', end ? _fmtAgrDate(end) : '', 'is-current') + '</li>');
+  else if (a.status === 'ended') items.push(_prHistItem(by ? _prSideName(a, by) : '', by ? 'ended the partnership early' : 'The partnership was ended early.', _prWhen(a.decided_at), 'is-current is-stop') + '</li>');
+  return items.join('');
+}
+/* Past cards: each side can delete them from its OWN list (the other side keeps its copy). */
+function deletePastPartnership(id) {
+  var a = _prRows[id]; if (!a) return;
+  openConfirm('Delete this from Past?', 'It will be removed from your Partnership Requests for good. The other side keeps their own copy.', svgIcon('trash', 26), function () {
+    var patch = {}; a.mySides.forEach(function (s) { patch[s + '_archived'] = true; });
+    sbRest('partner_agreements?id=eq.' + encodeURIComponent(id), { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(patch) })
+      .then(function (rows) {
+        if (!rows || !rows.length) throw new Error('Couldn’t delete it. Only the club’s President or the business owner can.');
+        if (typeof closeReach === 'function' && document.querySelector('#bizBody [data-pr-id="' + id + '"]')) closeReach();
+        toast('Deleted from your Past list.'); renderPendingAgreements();
+      }).catch(function (ex) { toast(ex.message); });
+  }, 'Delete');
+}
 function openPartnerRequest(id) {
   var a = _prRows[id]; if (!a) return;
   var cur = { ptype: a.ptype, deal: a.a_deal, start: _agrStart(a), end: _agrEnd(a) };
   var mySide = a.myTurn ? a.awaiting : a.mySides[0];
   var title = a.status === 'pending' ? 'Partnership request' : (a.status === 'launched' && !_agrExpired(a)) ? 'Active partnership' : 'Past partnership';
-  var hist = (a.history || []).map(function (h, i) {
-    var when = h.at ? new Date(h.at).toLocaleDateString(siteLocale(), { month: 'short', day: 'numeric', year: 'numeric' }) : '';
-    var last = i === (a.history.length - 1);
-    return '<li class="prh-item' + (last ? ' is-current' : '') + '"><div class="prh-head"><strong class="pr-name">' + escHtml(_prSideName(a, h.by)) + '</strong> ' +
-      '<span>' + (i === 0 ? 'sent the request' : 'suggested changes') + '</span>' + (when ? ' <span class="form-note">· ' + escHtml(when) + '</span>' : '') +
-      (last && a.status === 'pending' ? ' <span class="prh-now">Current version</span>' : '') + '</div>' +
-      (last ? '' : _prTerms({ ptype: h.ptype, deal: h.deal, start: h.start, end: h.end })) + '</li>';
-  }).join('');
+  var hist = _prHistoryHTML(a);
   var days = _agrDays(a);
   var actions = '';
   if (a.status === 'pending' && a.myTurn) {
@@ -300,7 +336,8 @@ function openPartnerRequest(id) {
   } else if (a.status === 'launched' && !_agrExpired(a)) {
     actions = '<p class="form-note">You can hide it or show a countdown timer from your club or business page.</p><div class="prd-actions"><button class="btn danger" onclick="endPartnership(\'' + a.id + '\')">End partnership</button></div>';
   } else {
-    actions = '<p class="prd-past">' + _pastLabel(a) + (a.decided_at ? ' · ' + escHtml(_fmtAgrDate(String(a.decided_at).slice(0, 10))) : '') + '</p>';
+    actions = '<p class="prd-past">' + _pastLabel(a) + (_pastDate(a) ? ' · ' + escHtml(_fmtAgrDate(_pastDate(a))) : '') + '</p>' +
+      '<div class="prd-actions"><button class="btn ghost" onclick="deletePastPartnership(\'' + a.id + '\')">' + ICON_TRASH + ' Delete from my list</button></div>';
   }
   $('bizBody').innerHTML = '<div class="modal-pad prd" data-pr-id="' + a.id + '" data-pr-v="' + _prVersion(a) + '"><div class="ro-head"><h3>' + title + '</h3><button class="icon-btn" onclick="closeReach()">✕</button></div>' +
     '<div class="prd-parties"><div><span class="form-note">From</span><strong class="pr-name">' + escHtml(a.a_name) + '</strong><span class="form-note">' + (a.a_type === 'club' ? 'Club' : 'Business') + '</span></div>' +
