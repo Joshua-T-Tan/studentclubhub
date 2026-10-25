@@ -960,6 +960,46 @@ UI_HTML["ja"] = {
 };
 UI_PATTERNS["ja"] = [
 [
+"^Ended early by (.+)$",
+"$1が早期終了"
+],
+[
+"^Turned down by (.+)$",
+"$1がお断り"
+],
+[
+"^Withdrawn by (.+)$",
+"$1が取り下げ"
+],
+[
+"^You have (\\d+) new partnership updates\\.$",
+"パートナーシップの新しい更新が$1件あります。"
+],
+[
+"^(.+) ended the partnership\\.$",
+"$1がパートナーシップを終了しました。"
+],
+[
+"^(.+) withdrew their partnership request\\.$",
+"$1がパートナーシップのリクエストを取り下げました。"
+],
+[
+"^(.+) turned down the partnership request\\.$",
+"$1がパートナーシップのリクエストを断りました。"
+],
+[
+"^(.+) approved the partnership!$",
+"$1がパートナーシップを承認しました！"
+],
+[
+"^(.+) suggested changes to your partnership request\\.$",
+"$1がパートナーシップのリクエストに変更を提案しました。"
+],
+[
+"^New partnership request from (.+)\\.$",
+"$1から新しいパートナーシップのリクエストが届きました。"
+],
+[
 "^1 minute ago$",
 "1分前"
 ],

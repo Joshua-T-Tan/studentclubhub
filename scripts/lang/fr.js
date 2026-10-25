@@ -948,6 +948,46 @@ UI_HTML["fr"] = {
 };
 UI_PATTERNS["fr"] = [
 [
+"^Ended early by (.+)$",
+"Terminée plus tôt par $1"
+],
+[
+"^Turned down by (.+)$",
+"Refusée par $1"
+],
+[
+"^Withdrawn by (.+)$",
+"Retirée par $1"
+],
+[
+"^You have (\\d+) new partnership updates\\.$",
+"Tu as $1 nouvelles mises à jour de partenariat."
+],
+[
+"^(.+) ended the partnership\\.$",
+"$1 a mis fin au partenariat."
+],
+[
+"^(.+) withdrew their partnership request\\.$",
+"$1 a retiré sa demande de partenariat."
+],
+[
+"^(.+) turned down the partnership request\\.$",
+"$1 a refusé la demande de partenariat."
+],
+[
+"^(.+) approved the partnership!$",
+"$1 a approuvé le partenariat !"
+],
+[
+"^(.+) suggested changes to your partnership request\\.$",
+"$1 a proposé des changements à ta demande de partenariat."
+],
+[
+"^New partnership request from (.+)\\.$",
+"Nouvelle demande de partenariat de $1."
+],
+[
 "^1 minute ago$",
 "il y a 1 minute"
 ],

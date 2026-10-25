@@ -960,6 +960,46 @@ UI_HTML["zh-CN"] = {
 };
 UI_PATTERNS["zh-CN"] = [
 [
+"^Ended early by (.+)$",
+"由$1提前结束"
+],
+[
+"^Turned down by (.+)$",
+"被$1拒绝"
+],
+[
+"^Withdrawn by (.+)$",
+"由$1撤回"
+],
+[
+"^You have (\\d+) new partnership updates\\.$",
+"你有$1条新的合作动态。"
+],
+[
+"^(.+) ended the partnership\\.$",
+"$1结束了合作。"
+],
+[
+"^(.+) withdrew their partnership request\\.$",
+"$1撤回了合作请求。"
+],
+[
+"^(.+) turned down the partnership request\\.$",
+"$1拒绝了合作请求。"
+],
+[
+"^(.+) approved the partnership!$",
+"$1批准了合作！"
+],
+[
+"^(.+) suggested changes to your partnership request\\.$",
+"$1对你的合作请求提出了修改。"
+],
+[
+"^New partnership request from (.+)\\.$",
+"收到来自$1的新合作请求。"
+],
+[
 "^1 minute ago$",
 "1 分钟前"
 ],

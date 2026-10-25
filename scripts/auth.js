@@ -463,11 +463,11 @@ function onLanguageChanged() {
 /* Standard log-out icon (door/box with an outward-pointing arrow) - shared by header + confirm */
 var ICON_LOGOUT = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>';
 
-function toast(msg) {
+function toast(msg, ms) {
   var t = $('toast'); if (!t || !msg) return;
   t.textContent = msg; t.classList.add('show');
   clearTimeout(window._toastT);
-  window._toastT = setTimeout(function () { t.classList.remove('show'); }, 2600);
+  window._toastT = setTimeout(function () { t.classList.remove('show'); }, ms || 2600);
 }
 
 var VIEWS = ['main', 'browse', 'myclubs', 'saved', 'profile', 'settings', 'club', 'create', 'philosophy', 'shops', 'faq', 'howitworks', 'business', 'inbox', 'contact', 'admin'];

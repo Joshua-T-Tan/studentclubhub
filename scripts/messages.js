@@ -186,12 +186,15 @@ function _myPartnershipRows() {
   });
 }
 function prTab(k) { _prTab = k; _paintPrList(); }
+/* Ran its full term (or was retired by the expiry clean-up after its end date)? */
+function _agrCompleted(a) { var end = _agrEnd(a); return a.status === 'launched' || (a.status === 'ended' && !!end && !!a.decided_at && String(a.decided_at).slice(0, 10) > end); }
+/* How a past request ended, naming who did it when we know (HTML-escaped). */
 function _pastLabel(a) {
-  if (a.status === 'declined') return 'Turned down';
-  if (a.status === 'deleted') return 'Withdrawn';
-  var end = _agrEnd(a);
-  if (a.status === 'launched' || (end && a.decided_at && String(a.decided_at).slice(0, 10) > end)) return 'Completed';
-  return 'Ended early';
+  var who = a.decided_by ? escHtml(_prSideName(a, a.decided_by)) : '';
+  if (a.status === 'declined') return who ? 'Turned down by ' + who : 'Turned down';
+  if (a.status === 'deleted') return who ? 'Withdrawn by ' + who : 'Withdrawn';
+  if (_agrCompleted(a)) return 'Completed';
+  return who ? 'Ended early by ' + who : 'Ended early';
 }
 function _prStatusLine(a) {
   if (a.status === 'pending') {
@@ -223,9 +226,38 @@ function _paintPrList() {
     active: 'No active partnerships right now.', past: 'Partnerships that ended, were turned down or withdrawn show up here.' }[_prTab];
   el.innerHTML = list.length ? list.map(_prCard).join('') : '<div class="inbox-empty">' + empty + '</div>';
 }
+/* A short notice for each thing the other side does while you're on the site. The first load
+   after signing in only sets the baseline (the badge covers what happened while you were away). */
+var _prKnown = {}, _prKnownFor = null;
+function _prNewsText(a) {
+  var other = _prSideName(a, (a.mySides || []).indexOf('a') > -1 ? 'b' : 'a');   // plain text: toast() sets textContent
+  if (a.status === 'pending') return (a.history || []).length > 1 ? other + ' suggested changes to your partnership request.' : 'New partnership request from ' + other + '.';
+  if (a.status === 'launched') return other + ' approved the partnership!';
+  if (a.status === 'declined') return other + ' turned down the partnership request.';
+  if (a.status === 'deleted') return other + ' withdrew their partnership request.';
+  if (a.status === 'ended') return other + ' ended the partnership.';
+  return '';
+}
+function _prAnnounce(news) {
+  var me = currentUser && currentUser.email; if (!me) return;
+  var first = _prKnownFor !== me, fresh = [];
+  if (first) { _prKnown = {}; _prKnownFor = me; }
+  news.forEach(function (a) { if (!_prKnown[a.newsKey]) { _prKnown[a.newsKey] = true; if (!first) fresh.push(a); } });
+  if (fresh.length === 1) toast(_prNewsText(fresh[0]), 6000);
+  else if (fresh.length > 1) toast('You have ' + fresh.length + ' new partnership updates.', 6000);
+}
+/* The request popup that's open is out of date: redraw it so nobody acts on an old version. */
+function _prRefreshOpen() {
+  var ov = $('bizOverlay'), box = document.querySelector('#bizBody [data-pr-id]');
+  if (!box || !ov || ov.classList.contains('hidden')) return;
+  var a = _prRows[box.getAttribute('data-pr-id')]; if (!a) return;
+  if (box.getAttribute('data-pr-v') !== _prVersion(a)) openPartnerRequest(a.id);
+}
+function _prVersion(a) { return a.status + ':' + (a.history || []).length + ':' + (a.awaiting || ''); }
 function renderPendingAgreements() {
   var el = $('partnerAgrs'); if (!el || !currentUser) return;
   _myPartnershipRows().then(function (r) {
+    _prAnnounce(r.news); _prRefreshOpen();
     var seen = _prSeen();
     r.news.forEach(function (a) { if (!seen[a.newsKey]) _prFresh[a.id] = true; });   // labelled "New" for the rest of this visit
     _prMarkSeen(r.news);
@@ -270,7 +302,7 @@ function openPartnerRequest(id) {
   } else {
     actions = '<p class="prd-past">' + _pastLabel(a) + (a.decided_at ? ' · ' + escHtml(_fmtAgrDate(String(a.decided_at).slice(0, 10))) : '') + '</p>';
   }
-  $('bizBody').innerHTML = '<div class="modal-pad prd"><div class="ro-head"><h3>' + title + '</h3><button class="icon-btn" onclick="closeReach()">✕</button></div>' +
+  $('bizBody').innerHTML = '<div class="modal-pad prd" data-pr-id="' + a.id + '" data-pr-v="' + _prVersion(a) + '"><div class="ro-head"><h3>' + title + '</h3><button class="icon-btn" onclick="closeReach()">✕</button></div>' +
     '<div class="prd-parties"><div><span class="form-note">From</span><strong class="pr-name">' + escHtml(a.a_name) + '</strong><span class="form-note">' + (a.a_type === 'club' ? 'Club' : 'Business') + '</span></div>' +
       '<span class="prd-puzzle">' + ICON_PARTNER + '</span>' +
       '<div><span class="form-note">To</span><strong class="pr-name">' + escHtml(a.b_name) + '</strong><span class="form-note">' + (a.b_type === 'club' ? 'Club' : 'Business') + '</span></div></div>' +
@@ -283,7 +315,7 @@ function openCounterForm(id) {
   var a = _prRows[id]; if (!a || !a.myTurn) return;
   var today = _todayStr(), cur = a.ptype || PARTNER_TYPES[0];
   var types = PARTNER_TYPES.slice(); if (types.indexOf(cur) === -1) types.unshift(cur);
-  $('bizBody').innerHTML = '<div class="modal-pad"><div class="ro-head"><h3>Suggest changes</h3><button class="icon-btn" onclick="closeReach()">✕</button></div>' +
+  $('bizBody').innerHTML = '<div class="modal-pad" data-pr-id="' + a.id + '" data-pr-v="' + _prVersion(a) + '"><div class="ro-head"><h3>Suggest changes</h3><button class="icon-btn" onclick="closeReach()">✕</button></div>' +
     '<p class="form-note" style="margin-bottom:10px">Change anything below. ' + escHtml(_prSideName(a, a.awaiting === 'a' ? 'b' : 'a')) + ' then approves your version or suggests their own.</p>' +
     '<div id="roErr" class="auth-error hidden"></div>' +
     '<div class="field"><label>Partnership type</label><select id="coType" class="select block-select">' + types.map(function (t) { return '<option' + (t === cur ? ' selected' : '') + '>' + escHtml(t) + '</option>'; }).join('') + '</select></div>' +
@@ -318,9 +350,10 @@ function _prNewsKey(a) {
   var recent = !a.decided_at || (Date.now() - new Date(a.decided_at).getTime()) < 30 * 86400000;
   if (a.status === 'pending') return a.myTurn ? v : '';
   if (!recent) return '';
-  if (a.status === 'launched') return mine.indexOf(a.awaiting || 'b') === -1 ? v : '';   // they approved
-  if (a.status === 'declined') return mine.indexOf('b') === -1 ? v : '';                  // they turned it down
-  if (a.status === 'deleted') return mine.indexOf('a') === -1 ? v : '';                   // they withdrew
+  var by = a.decided_by || ({ launched: a.awaiting || 'b', declined: 'b', deleted: 'a' })[a.status];   // older rows: infer who acted
+  if (!by || mine.indexOf(by) > -1) return '';                                                    // I did it myself
+  if (a.status === 'launched' || a.status === 'declined' || a.status === 'deleted') return v;     // they approved / turned down / withdrew
+  if (a.status === 'ended' && a.decided_by && !_agrCompleted(a)) return v;                        // they ended it early
   return '';
 }
 function _prSeenKey() { return 'sch_pr_seen:' + ((currentUser && currentUser.email) || '').toLowerCase(); }
@@ -346,7 +379,7 @@ function _inboxOpen() { return !!($('view-inbox') && !$('view-inbox').classList.
 function refreshUnread() {
   if (!currentUser) { _unreadCount = 0; paintFabBadge(); return; }
   if (_inboxOpen()) { renderPendingAgreements(); return; }   // looking at the list: update it in place (and keep the badge clear)
-  _myPartnershipRows().then(function (r) { _unreadCount = _prUnseenCount(r.news); paintFabBadge(); }).catch(function () {});
+  _myPartnershipRows().then(function (r) { _prAnnounce(r.news); _unreadCount = _prUnseenCount(r.news); paintFabBadge(); }).catch(function () {});
 }
 function updateInboxFab(viewName) {
   var fab = $('inboxFab'); if (!fab) return;

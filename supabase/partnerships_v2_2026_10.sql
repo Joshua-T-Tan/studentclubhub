@@ -17,6 +17,8 @@ alter table public.partner_agreements add column if not exists history jsonb not
 alter table public.partner_agreements add column if not exists a_timer boolean not null default false;
 alter table public.partner_agreements add column if not exists b_timer boolean not null default false;
 alter table public.partner_agreements add column if not exists decided_at timestamptz;
+-- decided_by = which side made the last decision ('a'/'b'), so the other side can be told "X withdrew / turned down / ended it"
+alter table public.partner_agreements add column if not exists decided_by text check (decided_by in ('a', 'b'));
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'partner_agreements_awaiting_chk') then
     alter table public.partner_agreements add constraint partner_agreements_awaiting_chk check (awaiting in ('a', 'b'));
@@ -47,7 +49,7 @@ grant execute on function public._entity_name(text, text) to authenticated;
 grant execute on function public._entity_open(text, text) to authenticated;
 
 -- Turns, counter-offers, the 3-active limit, and "each side controls only its own switches".
-create or replace function public.trg_partner_guard() returns trigger language plpgsql as $$
+create or replace function public.trg_partner_guard() returns trigger language plpgsql set search_path = public as $$
 declare mine_a boolean; mine_b boolean; terms_changed boolean; my_turn boolean; n int;
 begin
   if not is_end_user() or is_admin() then return new; end if;
@@ -60,7 +62,7 @@ begin
     new.a_name := _entity_name(new.a_type, new.a_id); new.b_name := _entity_name(new.b_type, new.b_id);
     new.b_deal := new.a_deal; new.b_start := new.a_start; new.b_end := new.a_end;
     new.status := 'pending'; new.awaiting := 'b'; new.a_hidden := false; new.b_hidden := false; new.a_timer := false; new.b_timer := false;
-    new.launched_at := null; new.decided_at := null;
+    new.launched_at := null; new.decided_at := null; new.decided_by := null;
     new.history := jsonb_build_array(jsonb_build_object('by', 'a', 'at', now(), 'ptype', new.ptype, 'deal', new.a_deal, 'start', new.a_start, 'end', new.a_end));
     return new;
   end if;
@@ -68,7 +70,7 @@ begin
   -- the two parties never change
   new.a_type := old.a_type; new.a_id := old.a_id; new.b_type := old.b_type; new.b_id := old.b_id;
   new.a_name := old.a_name; new.b_name := old.b_name;
-  new.launched_at := old.launched_at; new.decided_at := old.decided_at;
+  new.launched_at := old.launched_at; new.decided_at := old.decided_at; new.decided_by := old.decided_by;
   new.b_deal := new.a_deal; new.b_start := new.a_start; new.b_end := new.a_end;
   -- each side controls only its own visibility and countdown timer
   if not mine_a then new.a_hidden := old.a_hidden; new.a_timer := old.a_timer; end if;
@@ -100,6 +102,7 @@ begin
     elsif old.status = 'launched' and new.status = 'ended' then null;
     else raise exception 'That change isn’t allowed.'; end if;
     new.decided_at := now();
+    new.decided_by := case when mine_a and not mine_b then 'a' when mine_b and not mine_a then 'b' else old.awaiting end;
   end if;
   return new;
 end $$;
@@ -174,3 +177,14 @@ update public.clubs set data = data where jsonb_typeof(data->'leaders') = 'array
 alter function public.trg_partner_guard() set search_path = public;
 alter function public.trg_promo_limit() set search_path = public;
 alter function public.trg_club_strip_emails() set search_path = public;
+
+-- ===================== Live updates (Supabase Realtime, used by scripts/live.js) =====================
+-- Each browser only receives rows its read policies allow (live partnerships for everyone, requests for the two sides).
+do $$ begin
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'partner_agreements') then
+    alter publication supabase_realtime add table public.partner_agreements;
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'business_promotions') then
+    alter publication supabase_realtime add table public.business_promotions;
+  end if;
+end $$;
