@@ -39,7 +39,7 @@ monetary features have been intentionally removed and must not be reintroduced.
   fully offline); everything else still does. Do not "restore" the on-screen demo
   code — it was intentionally removed.
 - **Scripts load as plain classic scripts** (not ES modules), in a fixed order
-  (`schools, qr, supabase, icons → auth → directory → modal → reviews → profile → pages →
+  (`schools, qr, supabase, icons → auth → directory → modal → reviews → profile → profile-types → pages →
   hero-motion → business → messages → partnerships → editors`) so they share one
   global scope. Files loaded before business.js must not call `sbRest` at load
   time — defer to `DOMContentLoaded`.
@@ -58,6 +58,7 @@ monetary features have been intentionally removed and must not be reintroduced.
 | `scripts/modal.js` | Full-page Club Detail view (About/Manage tabs, ranked roster, socials, chat w/ edit-delete-permissions, owner transfer/delete, member-only reviews), image lightbox, and shared overlays (contact, review, transfer, confirm). |
 | `scripts/profile.js` | Public user profiles, Saved-clubs lists, and the multi-tab Account Settings interface. |
 | `scripts/pages.js` | Header dropdown nav + mobile menu, hero carousel, Contact Us overlay, the "Our Purpose"/Philosophy page, homepage FAQ accordion, and the Local-Business shop scaffold views. Loaded last. |
+| `scripts/profile-types.js` | "Show me as" in Settings → Profile: Student / Business owner / Community member. Each type keeps its own saved headline, bio and two details; only the displayed version goes to the public `profiles` row (all versions are kept privately in the auth user's metadata). No sign-up questionnaire. Loaded after profile.js. |
 | `scripts/schools.js` | Pre-populated LA-County high-school directory + district mapping (data + option builders). Loaded first. |
 | `scripts/qr.js` | Self-contained offline QR-code generator (byte mode, EC level L, v1–5) for the Share Club modal. Loaded first. |
 | `scripts/supabase.js` | Minimal Supabase Auth email-OTP client (`sbSendOtp`/`sbVerifyOtp`) via plain `fetch`. Holds the public project URL + publishable key. Loaded before auth.js. |

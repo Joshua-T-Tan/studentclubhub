@@ -626,6 +626,7 @@ function setSession(rec) {
     name: rec.name, email: rec.email, memberId: rec.memberId,
     favorites: (rec.favorites || []).slice(), joined: (rec.joined || []).slice(),
     avatar: rec.avatar || null,
+    profiles: rec.profiles ? JSON.parse(JSON.stringify(rec.profiles)) : null, profileType: rec.profileType || '',
     school: rec.school || '', grad: rec.grad || '', headline: rec.headline || '',
     bio: rec.bio || '', private: !!rec.private,
     district: rec.district || '', zip: rec.zip || '', twofa: !!rec.twofa,
@@ -657,6 +658,7 @@ function persistUser() {
   rec.name = currentUser.name;
   rec.school = currentUser.school || ''; rec.grad = currentUser.grad || '';
   rec.headline = currentUser.headline || ''; rec.bio = currentUser.bio || '';
+  if (currentUser.profiles) { rec.profiles = JSON.parse(JSON.stringify(currentUser.profiles)); rec.profileType = currentUser.profileType; }
   rec.private = !!currentUser.private; delete rec.pass;
   rec.district = currentUser.district || ''; rec.zip = currentUser.zip || ''; rec.twofa = !!currentUser.twofa;
   rec.emailNotif = currentUser.emailNotif !== false;
@@ -666,9 +668,9 @@ function persistUser() {
 }
 
 /* ============================================================
-   AUTH MODAL - multi-step: login → (2FA) ; signup → verify → onboard
+   AUTH MODAL - multi-step: login → (2FA) ; signup → verify
    ============================================================ */
-var authStage = 'login';         // login | signup | verify | onboard
+var authStage = 'login';         // login | signup | verify
 var authIntroMsg = '';
 var pendingReg = null;           // {name,email,pass} held during signup until verified
 var otpMode = null, otpLoginRec = null, verifyEmail = null;
@@ -736,16 +738,6 @@ function renderAuth() {
       field('avCode', t('au_code'), 'text', 'Enter your code') +
       '<button id="btnVerify" class="btn primary block lg" onclick="submitVerify()">' + t('au_verify_btn') + '</button>' +
       '<p style="text-align:center;margin-top:10px"><a href="#" id="resendLink" class="link" onclick="resendOtp();return false;">' + t('au_resend') + '</a></p>';
-  } else if (authStage === 'onboard') {
-    b.innerHTML = '<h3 style="font-size:1.2rem;font-weight:800;margin-bottom:4px">' + t('au_onboard_h') + '</h3>' +
-      '<p class="form-note" style="margin-bottom:14px">' + t('au_onboard_p') + '</p>' + err +
-      '<div class="field"><label>' + t('au_hs') + '</label><select id="aoSchool" class="select block-select" onchange="onSchoolPick(\'aoSchool\',\'aoDistrict\')">' + schoolOptionsHTML('') + '</select></div>' +
-      '<div class="field"><label>' + t('au_district') + '</label><select id="aoDistrict" class="select block-select">' + districtOptionsHTML('') + '</select></div>' +
-      field('aoZip', t('au_zip'), 'text', '90274') +
-      '<div class="field"><label>' + t('au_lang') + '</label><select id="aoLang" class="select block-select">' +
-        LANGS.map(function (l) { return '<option value="' + l.code + '"' + (getLang() === l.code ? ' selected' : '') + '>' + l.label + '</option>'; }).join('') +
-      '</select></div>' +
-      '<button class="btn primary block lg" onclick="submitOnboard()">' + t('au_finish') + '</button>';
   }
   var e = $('authError'); if (e && authErrMsg && (authStage === 'login' || authStage === 'signup')) { e.textContent = authErrMsg; e.classList.remove('hidden'); }
 }
@@ -758,18 +750,21 @@ function startGoogleSignIn() {
   authBusy('btnGoogle', true, 'Opening Google…');
   sbSignInWithGoogle().catch(function (e) { authBusy('btnGoogle', false); authErr(e.message); });
 }
-/* Back from Google: sign in, and new accounts continue to "Complete your profile". */
+/* Back from Google: sign in (new accounts get a welcome pointing at Settings → Profile). */
 function finishGoogleSignIn() {
   sbFinishOAuthRedirect().then(function (s) {
     if (!s) return;
     var m = s.user.meta || {};
     return _afterServerLogin(s.user.email, m.full_name || m.name).then(function (r) {
       if (!r.avatar && m.avatar_url) { r.avatar = m.avatar_url; currentUser.avatar = m.avatar_url; persistUser(); renderAuthArea(); }
-      if (r._new) { delete r._new; authStage = 'onboard'; renderAuth(); openOverlay('authOverlay'); return; }
-      finishAuth('Welcome back, ' + r.name.split(' ')[0] + '!');
+      var fresh = r._new; delete r._new;
+      finishAuth(fresh ? _welcomeNew(r) : 'Welcome back, ' + r.name.split(' ')[0] + '!');
     });
   }).catch(function (e) { toast(e.message); });
 }
+/* No sign-up questionnaire: people say who they are (student / business owner / community member)
+   whenever they like, in Settings → Profile. */
+function _welcomeNew(r) { return 'Welcome, ' + r.name.split(' ')[0] + '! Your Member ID is ' + r.memberId + '. Add your profile anytime in Settings.'; }
 function authTabs() {
   return '<div class="tab-row"><button id="tabLogin" class="' + (authStage === 'login' ? 'active' : '') + '" onclick="setAuthTab(\'login\')">' + t('au_login') + '</button>' +
     '<button id="tabSignup" class="' + (authStage === 'signup' ? 'active' : '') + '" onclick="setAuthTab(\'signup\')">' + t('au_signup') + '</button></div>';
@@ -846,7 +841,7 @@ function submitVerify() {
     }).then(function (r) {
       var fresh = r._new; delete r._new; pendingReg = null;
       if (!fresh) return finishAuth('Welcome back, ' + r.name.split(' ')[0] + '! That email already had an account, so you’re signed in to it.');
-      authStage = 'onboard'; renderAuth();
+      finishAuth(_welcomeNew(r));
     });
   }).catch(function (e2) {
     authBusy('btnVerify', false);
@@ -872,6 +867,9 @@ function _afterServerLogin(email, newName) {
       rec.name = rec.name || (p && p.name) || newName || email.split('@')[0];
       if (p) rec.private = !!p.private;
       if (sbSession && sbSession.user.meta) rec.twofa = !!sbSession.user.meta.twofa || !!rec.twofa;
+      // profile versions saved on another device (kept privately in the account's metadata)
+      var meta = (sbSession && sbSession.user.meta) || {};
+      if (meta.profiles && typeof meta.profiles === 'object') { rec.profiles = meta.profiles; rec.profileType = meta.profile_type || rec.profileType || 'student'; }
       delete rec.pass;                                                     // passwords live on the server now
       users[email] = rec; saveUsers(users);
       setSession(rec); renderAuthArea();
@@ -880,15 +878,6 @@ function _afterServerLogin(email, newName) {
       return rec;
     });
   });
-}
-function submitOnboard() {
-  currentUser.school = ($('aoSchool').value || '').trim();
-  currentUser.district = ($('aoDistrict').value || '').trim();
-  currentUser.zip = ($('aoZip').value || '').trim();
-  var lang = $('aoLang').value; currentUser.lang = lang; applyLanguage(lang);
-  persistUser();
-  finishAuth('Welcome, ' + currentUser.name.split(' ')[0] + '! Your Member ID is ' + currentUser.memberId + '.');
-  if (typeof onLanguageChanged === 'function') onLanguageChanged();
 }
 
 function finishAuth(msg) {

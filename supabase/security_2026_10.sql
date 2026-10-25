@@ -282,3 +282,10 @@ create policy "contact admin delete" on public.contact_messages for delete using
 create policy "reports admin read" on public.reports for select using (is_admin());
 create policy "reports admin update" on public.reports for update using (is_admin()) with check (is_admin());
 create policy "reports admin delete" on public.reports for delete using (is_admin());
+
+-- Migration "profile_types_public_fields": the one public profile version a member chose to display.
+alter table public.profiles add column if not exists profile_type text not null default 'student'
+  check (profile_type in ('student', 'business', 'community'));
+alter table public.profiles add column if not exists headline text;
+alter table public.profiles add column if not exists bio text;
+alter table public.profiles add column if not exists details jsonb not null default '{}'::jsonb;

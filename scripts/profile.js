@@ -50,16 +50,19 @@ function renderProfile(name) {
   var ledLine = 'Leads ' + led.length + ' club' + (led.length === 1 ? '' : 's');
 
   // ----- Profile card (identity) -----
-  var metaBits = [data.school, data.grad ? 'Class of ' + data.grad : ''].filter(Boolean).map(escHtml);
+  // The ONE profile version they chose to show (Student / Business owner / Community member).
+  var pub = isSelf ? publicProfileOf(currentUser) : (rec ? publicProfileOf(rec) : (info && info.pub) || { type: 'student', headline: '', bio: '', details: {} });
+  var detailLine = profileDetailsLine(pub.type, pub.details);
   var identity;
   if (priv) {
     // Private: only Name, Member ID, and number of clubs led
     identity = '<p>' + (memberId ? 'Member ' + escHtml(memberId) + ' · ' : '') + ledLine + '</p>' +
       '<p class="form-note" style="margin-top:6px">' + svgIcon('lock', 14) + ' This profile is private.</p>';
   } else {
-    identity = (data.headline ? '<p style="color:var(--ink)">' + escHtml(data.headline) + '</p>' : '') +
-      '<p>' + (memberId ? 'Member ' + escHtml(memberId) : '') + (metaBits.length ? ' · ' + metaBits.join(' · ') : '') + '</p>' +
-      (data.bio ? '<p style="color:var(--muted);margin-top:6px">' + escHtml(data.bio) + '</p>' : '');
+    identity = '<div class="pt-identity">' + profileTypeBadge(pub.type) + (detailLine ? '<span>' + escHtml(detailLine) + '</span>' : '') + '</div>' +
+      (pub.headline ? '<p style="color:var(--ink)">' + escHtml(pub.headline) + '</p>' : '') +
+      '<p>' + (memberId ? 'Member ' + escHtml(memberId) : '') + '</p>' +
+      (pub.bio ? '<p style="color:var(--muted);margin-top:6px">' + escHtml(pub.bio) + '</p>' : '');
   }
 
   var html =
@@ -85,9 +88,10 @@ function _resolveProfilePerson(name, rec) {
   if (rec && (rec.email || rec.memberId)) return Promise.resolve({ email: (rec.email || '').toLowerCase(), memberId: rec.memberId || '' });
   if (_profileInfo[name]) return Promise.resolve(_profileInfo[name]);
   if (typeof sbRest !== 'function') return Promise.resolve({ email: '', memberId: '' });
-  return sbRest('profiles?name=eq.' + encodeURIComponent(name) + '&select=member_id,email,private&limit=1')
+  return sbRest('profiles?name=eq.' + encodeURIComponent(name) + '&select=member_id,email,private,profile_type,headline,bio,details&limit=1')
     .then(function (r) {
-      var p = r && r[0], out = p ? { email: (p.email || '').toLowerCase(), memberId: p.member_id || '', private: !!p.private } : { email: '', memberId: '', private: false };
+      var p = r && r[0], out = p ? { email: (p.email || '').toLowerCase(), memberId: p.member_id || '', private: !!p.private,
+        pub: { type: p.profile_type || 'student', headline: p.headline || '', bio: p.bio || '', details: p.details || {} } } : { email: '', memberId: '', private: false };
       _profileInfo[name] = out; return out;
     })
     .catch(function () { return { email: '', memberId: '' }; });
@@ -226,8 +230,8 @@ function renderSaved() {
    ACCOUNT SETTINGS (multi-tab)
    ============================================================ */
 var settingsTabName = 'profile';
-function openSettings() { if (!currentUser) return openAuth('login'); settingsTabName = 'profile'; showView('settings'); }
-function settingsTab(tab) { settingsTabName = tab; renderSettings(); }
+function openSettings() { if (!currentUser) return openAuth('login'); settingsTabName = 'profile'; if (typeof resetProfileDraft === 'function') resetProfileDraft(); showView('settings'); }
+function settingsTab(tab) { if (settingsTabName === 'profile' && tab !== 'profile' && typeof _ptCapture === 'function') _ptCapture(); settingsTabName = tab; renderSettings(); }
 
 function renderSettings() {
   var body = $('settingsBody'); if (!body || !currentUser) return;
@@ -241,23 +245,6 @@ function renderSettings() {
 }
 function stab(id, label) { return '<button class="settings-tab ' + (settingsTabName === id ? 'active' : '') + '" onclick="settingsTab(\'' + id + '\')">' + label + '</button>'; }
 
-function settingsProfile() {
-  var u = currentUser, bioLen = (u.bio || '').length;
-  var countCls = bioLen >= 200 ? 'max' : (bioLen >= 160 ? 'warn' : '');
-  return '<div class="avatar-edit"><span id="setAvatarWrap">' + avatarHTML(u.name, 'lg') + '</span>' +
-      '<div id="setAvatarCtrls"><label class="btn ghost sm-btn">' + t('set_upload_photo') + '<input type="file" accept="image/*" hidden onchange="onSettingsAvatar(event)"></label>' +
-      (u.avatar ? '<button class="btn danger sm-btn" style="margin-left:8px" onclick="removeAvatar()">' + t('set_remove') + '</button>' : '') +
-      '<p class="form-note" style="margin-top:6px">' + t('set_memberid') + ': <strong>' + escHtml(u.memberId) + '</strong></p></div></div>' +
-    '<div class="two-col"><div class="field"><label>' + t('set_fullname') + '</label><input id="setName" type="text" value="' + escAttr(u.name) + '"></div>' +
-      '<div class="field"><label>' + t('set_hs') + '</label><select id="setSchool" class="select block-select">' +
-        (typeof schoolOptionsHTML === 'function' ? schoolOptionsHTML(u.school) : '<option>' + escHtml(u.school) + '</option>') + '</select></div></div>' +
-    '<div class="two-col"><div class="field"><label>' + t('set_grad') + '</label><input id="setGrad" type="number" value="' + escAttr(u.grad) + '" placeholder="2027"></div>' +
-      '<div class="field"><label>' + t('set_headline') + '</label><input id="setHeadline" type="text" value="' + escAttr(u.headline) + '"></div></div>' +
-    '<div class="field"><label>' + t('set_bio') + '</label><textarea id="setBio" maxlength="200" oninput="updateBioCount()">' + escHtml(u.bio) + '</textarea>' +
-      '<div id="bioCount" class="char-count ' + countCls + '">' + bioLen + ' / 200 ' + t('bio_chars') + '</div></div>' +
-    '<div class="modal-actions"><button class="btn ghost" onclick="openProfile(currentUser.name)">' + t('set_view_public') + '</button>' +
-      '<button class="btn primary" onclick="saveSettings()">' + t('set_savechanges') + '</button></div>';
-}
 function updateBioCount() {
   var ta = $('setBio'), el = $('bioCount'); if (!ta || !el) return;
   var len = ta.value.length;
@@ -423,20 +410,6 @@ function removeAvatar() {
   currentUser.avatar = null; persistUser();
   renderAuthArea(); paintSettingsAvatar();
   if (typeof syncUserEverywhere === 'function') syncUserEverywhere();
-}
-function saveSettings() {
-  var oldName = currentUser.name;
-  currentUser.name = ($('setName').value || '').trim() || currentUser.name;
-  currentUser.school = ($('setSchool').value || '').trim();
-  currentUser.grad = ($('setGrad').value || '').trim();
-  currentUser.headline = ($('setHeadline').value || '').trim();
-  currentUser.bio = ($('setBio').value || '').slice(0, 200).trim();
-  if (currentUser.school && typeof districtForSchool === 'function') { var dist = districtForSchool(currentUser.school); if (dist) currentUser.district = dist; }
-  persistUser(); renderAuthArea();
-  if (typeof sbUpsertProfile === 'function') sbUpsertProfile();
-  if (currentUser.name !== oldName && typeof syncUserRename === 'function') syncUserRename(oldName, currentUser.name);
-  if (typeof syncUserEverywhere === 'function') syncUserEverywhere();
-  renderSettings(); toast('Your changes have been saved.');
 }
 function togglePrivacy() { currentUser.private = !currentUser.private; persistUser(); if (typeof sbUpsertProfile === 'function') sbUpsertProfile(); renderSettings(); toast(currentUser.private ? 'Profile is now private.' : 'Profile is now public.'); }
 function toggleEmailNotif() { return;   // coming soon (see settingsAccount)

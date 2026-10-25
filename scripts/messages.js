@@ -128,13 +128,20 @@ function submitReachOutRequest() {
    resolve by member ID or email. `private` mirrors the account's
    private-profile setting so other browsers can respect it.
    ============================================================ */
+/* The public profiles row: name + the ONE profile version they chose to show (blank when private). */
+function _publicProfileRow() {
+  var pub = (typeof publicProfileOf === 'function') ? publicProfileOf(currentUser) : { type: 'student', headline: '', bio: '', details: {} }, priv = !!currentUser.private;
+  return { member_id: currentUser.memberId, user_id: sbSession.user.id, email: currentUser.email.toLowerCase(), name: currentUser.name, private: priv,
+    profile_type: pub.type, headline: priv ? null : (pub.headline || null), bio: priv ? null : (pub.bio || null), details: priv ? {} : pub.details,
+    updated_at: new Date().toISOString() };
+}
 function sbUpsertProfile() {
   if (!currentUser || typeof sbRest !== 'function' || !currentUser.memberId) return Promise.resolve();
   if (typeof sbHasSession === 'function' && !sbHasSession(currentUser.email)) return Promise.resolve();
   // user_id ties this member ID to the server account — the database uses it to know who "me" is.
   return sbRest('profiles?on_conflict=member_id', {
     method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify({ member_id: currentUser.memberId, user_id: sbSession.user.id, email: currentUser.email.toLowerCase(), name: currentUser.name, private: !!currentUser.private, updated_at: new Date().toISOString() })
+    body: JSON.stringify(_publicProfileRow())
   }).catch(function () {});
 }
 function sbFindProfileByEmail(email) {
