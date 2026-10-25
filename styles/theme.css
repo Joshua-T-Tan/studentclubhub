@@ -458,3 +458,9 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 .pw-explain svg { flex-shrink: 0; margin-top: 3px; }
 .pw-explain p + p { margin-top: 6px; }
 .dd-open { font: 900 19px var(--font-head); fill: #fff; letter-spacing: 1px; }
+
+/* Club cards match business cards exactly (386px): the description is capped at two lines, like a
+   business card's two-line deal box, and the buttons sit on the bottom edge. A short description just
+   leaves a little space above Save Club / View Club. */
+.card:not(.draft-card) { min-height: 386px; }   /* club + business cards share one height */
+.card:not(.biz-card):not(.draft-card) .card-desc { -webkit-line-clamp: 2; line-clamp: 2; line-height: 1.4; flex: 0 0 auto; }
