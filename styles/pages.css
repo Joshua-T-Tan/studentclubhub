@@ -130,6 +130,7 @@
 .prose { color: var(--ink); font-size: 1rem; line-height: 1.7; margin: 34px auto 48px; }
 /* Centered logo (replaces the old lead heading) */
 .prose-logo { display: flex; justify-content: center; margin: 8px 0 26px; }
+.faq-page { margin-top: 34px; }   /* same space under the banner as the .prose pages (Philosophy, How It Works) */
 .prose-logo svg, .prose-logo img { width: 96px; height: 96px; object-fit: contain; }
 .prose > p { color: var(--muted); margin-bottom: 16px; }
 .prose h2 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; margin: 30px 0 16px; }

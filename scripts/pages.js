@@ -354,7 +354,7 @@ var faqOpen = -1;
 function renderFaq() {
   var el = $('faqBody'); if (!el) return;
   el.innerHTML = pageBanner('About Us', 'FAQ') +
-    '<div class="container narrow"><div class="prose-logo">' + schLogo(96) + '</div><div class="faq-list">' +
+    '<div class="container narrow faq-page"><div class="prose-logo">' + schLogo(96) + '</div><div class="faq-list">' +
     FAQ_ITEMS.map(function (f, i) {
       return '<div class="faq-item' + (i === faqOpen ? ' open' : '') + '">' +
         '<button class="faq-q" onclick="toggleFaq(' + i + ')"><span>' + escHtml(f.q) + '</span><span class="faq-caret">⌄</span></button>' +
