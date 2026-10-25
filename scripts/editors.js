@@ -198,7 +198,7 @@ function saveClubDetails(id) {
   if (_emVal('emDistrict')) c.district = _emVal('emDistrict');
   c.zip = _emVal('emZip');
   var email = _emVal('emEmail');
-  if (email) { c.email = email; var pres = (c.leaders || []).find(function (l) { return l.role === 'President'; }); if (pres) pres.email = email; }
+  if (email) c.email = email;
   c.tags = _emVal('emTags').split(',').map(function (x) { return x.trim(); }).filter(Boolean).slice(0, 12);
   _clubSave(id, 'Details updated.');
 }
@@ -365,31 +365,43 @@ function saveBizBanner(id) {
   _bizSave(id, _bizBannerPatch(id), 'Page settings saved.');
 }
 
-/* Deal / perk */
-function editBizPerk(id) {
-  var b = _biz(id); if (!b) return;
-  var perkOpts = Object.keys(PERK_TYPES).map(function (k) { return '<option value="' + k + '"' + (k === b.perk_type ? ' selected' : '') + '>' + PERK_TYPES[k] + '</option>'; }).join('');
-  var aud = b.perk_audience || 'student';
+/* Promotions (a business's own deals; up to 3 at once). Everything is required except "How to redeem". */
+function editPromotion(bizId, promoId) {
+  var b = _biz(bizId); if (!b) return;
+  var p = promoId ? (typeof _findPromo === 'function' ? _findPromo(promoId) : null) : null;
+  if (!p && openPromos(bizId).length >= PROMO_LIMIT) { toast('You’re running ' + PROMO_LIMIT + ' promotions, the most at once. Delete one or let it end first.'); return; }
+  p = p || { kind: 'discount', audience: 'student', starts: _todayStr(), ends: '' };
+  var kinds = PROMO_KINDS.map(function (k) { return '<option value="' + k[0] + '"' + (k[0] === p.kind ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('');
   var body =
-    '<div class="field"><label>Deal type</label><select id="emPerkType" class="select block-select">' + perkOpts + '</select></div>' +
-    '<div class="field"><label>Who it’s for</label><select id="emAud" class="select block-select">' +
-      '<option value="student"' + (aud === 'student' ? ' selected' : '') + '>Students only</option>' +
-      '<option value="everyone"' + (aud === 'everyone' ? ' selected' : '') + '>Everyone</option></select></div>' +
-    '<div class="field"><label>The deal / offer</label><textarea id="emPerk" placeholder="e.g. 15% off any drink">' + escHtml(b.perk_description || '') + '</textarea></div>' +
-    '<div class="field"><label>How to redeem it</label><textarea id="emRedeem" placeholder="e.g. Show your student ID, or use code HI at checkout.">' + escHtml(b.redemption_instructions || '') + '</textarea></div>' +
-    '<div class="two-col"><div class="field"><label>Starts <span class="form-note">(optional)</span></label><input id="emStart" type="date" value="' + escAttr(b.perk_start || '') + '"></div>' +
-      '<div class="field"><label>Ends <span class="form-note">(optional)</span></label><input id="emEnd" type="date" value="' + escAttr(b.perk_end || '') + '"></div></div>';
-  _emOpen('Edit deal', body, 'saveBizPerk(\'' + id + '\')');
+    '<div class="field"><label>Deal type *</label><select id="emKind" class="select block-select" onchange="var o=$(\'emKindOtherWrap\');if(o)o.hidden=this.value!==\'other\'">' + kinds + '</select></div>' +
+    '<div class="field" id="emKindOtherWrap"' + (p.kind === 'other' ? '' : ' hidden') + '><label>Name the deal type *</label><input id="emKindOther" type="text" maxlength="40" placeholder="e.g. Happy hour, Loyalty card" value="' + escAttr(p.kind_other || '') + '"></div>' +
+    '<div class="field"><label>Who it’s for *</label><select id="emAud" class="select block-select">' +
+      '<option value="student"' + (p.audience !== 'everyone' ? ' selected' : '') + '>Students only</option>' +
+      '<option value="everyone"' + (p.audience === 'everyone' ? ' selected' : '') + '>Everyone</option></select></div>' +
+    '<div class="field"><label>The deal *</label><textarea id="emPromo" maxlength="400" placeholder="e.g. 15% off any drink">' + escHtml(p.description || '') + '</textarea></div>' +
+    '<div class="field"><label>How to redeem it <span class="form-note">(optional)</span></label><textarea id="emRedeem" maxlength="300" placeholder="e.g. Show your student ID, or use code HI at checkout.">' + escHtml(p.redemption || '') + '</textarea></div>' +
+    '<div class="two-col"><div class="field"><label>Starts *</label><input id="emStart" type="date" value="' + escAttr(p.starts || '') + '"></div>' +
+      '<div class="field"><label>Ends *</label><input id="emEnd" type="date" min="' + _todayStr() + '" value="' + escAttr(p.ends || '') + '"></div></div>';
+  _emOpen(promoId ? 'Edit promotion' : 'Add a promotion', body, 'savePromotion(\'' + bizId + '\',\'' + (promoId || '') + '\')', promoId ? 'Save changes' : 'Add promotion');
 }
-function saveBizPerk(id) {
-  if (!_emVal('emPerk')) return _emErr('Describe the deal, or use the trash icon to remove it.');
-  var s = _emVal('emStart'), en = _emVal('emEnd');
-  if (s && en && en < s) return _emErr('The end date can’t be before the start date.');
-  _bizSave(id, {
-    perk_type: _emVal('emPerkType') || 'discount', perk_audience: _emVal('emAud') || 'student',
-    perk_description: _emVal('emPerk'), redemption_instructions: _emVal('emRedeem'),
-    perk_start: _emVal('emStart') || null, perk_end: _emVal('emEnd') || null
-  }, 'Deal updated.');
+function savePromotion(bizId, promoId) {
+  if (!_biz(bizId)) return;
+  var kind = _emVal('emKind') || 'discount', other = _emVal('emKindOther'), desc = _emVal('emPromo'), s = _emVal('emStart'), en = _emVal('emEnd');
+  if (kind === 'other' && !other) return _emErr('Name the deal type.');
+  if (!desc) return _emErr('Describe the deal.');
+  if (!s || !en) return _emErr('Set a start and an end date.');
+  if (en < s) return _emErr('The end date can’t be before the start date.');
+  if (!promoId && en < _todayStr()) return _emErr('The end date can’t be in the past.');
+  var row = { kind: kind, kind_other: kind === 'other' ? other : null, audience: _emVal('emAud') === 'everyone' ? 'everyone' : 'student',
+    description: desc, redemption: _emVal('emRedeem') || null, starts: s, ends: en };
+  authBusy2('emSave', true, 'Saving…');
+  var req = promoId
+    ? sbRest('business_promotions?id=eq.' + encodeURIComponent(promoId), { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(row) })
+    : (row.business_id = bizId, sbRest('business_promotions', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(row) }));
+  req.then(function (rows) {
+    if (!rows || !rows.length) throw new Error('Couldn’t save. Only the owner can change this business’s promotions.');
+    closeReach(); toast(promoId ? 'Promotion updated.' : 'Promotion added.'); return loadPromotions();
+  }).catch(function (ex) { authBusy2('emSave', false); _emErr(ex.message); });
 }
 
 /* About */
@@ -419,14 +431,6 @@ function saveBizContact(id) {
   if (!(typeof isValidEmail === 'function' ? isValidEmail(ce) : /@/.test(ce))) return _emErr('Enter a valid public contact email.');
   _bizSave(id, { address: _emVal('emAddr'), city: _emVal('emCity'), zip: _emVal('emZip'), phone: _emVal('emPhone'), website: web || null, contact_email: ce }, 'Contact updated.');
 }
-/* Delete the whole deal (with confirm) */
-function deleteBizPerk(id) {
-  var b = _biz(id); if (!b) return;
-  openConfirm('Delete this deal?', 'The student perk / offer will be removed from your page.', svgIcon('trash', 26), function () {
-    _bizSave(id, { perk_description: '', redemption_instructions: '', perk_start: null, perk_end: null, deal_hidden: false }, 'Deal deleted.');
-  });
-}
-
 /* Hours */
 function editBizHours(id) {
   var b = _biz(id); if (!b) return; var h = b.hours || {};

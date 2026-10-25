@@ -535,3 +535,143 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 .logout-btn span { white-space: nowrap; }
 /* Card buttons: fixed height so every language (CJK fonts are taller) keeps cards the same size */
 .card-foot .btn, .card-foot .fav-btn { height: 40px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
+
+/* ==== Partnerships (red, puzzle) vs. promotions (yellow note, black price tag) — deals.js ==== */
+/* Name-row squares on directory cards */
+.deal-sq { display: inline-flex; align-items: center; justify-content: center; gap: 0; height: 22px; min-width: 22px; padding: 0 4px;
+  border: var(--edge); border-radius: var(--r-sm); line-height: 1; flex: 0 0 auto; box-sizing: border-box; cursor: default; }
+.deal-sq svg { width: 13px; height: 13px; flex: 0 0 auto; }
+.deal-sq.is-partner { background: var(--brand); color: #fff; }
+.deal-sq.is-promo { background: var(--note); color: #1a1a1a; }
+.deal-sq .sq-n { max-width: 0; overflow: hidden; white-space: nowrap; font-size: .72rem; font-weight: 800; transition: max-width .18s ease, margin .18s ease; }
+.deal-sq:hover .sq-n, .deal-sq:focus .sq-n { max-width: 30px; margin-left: 3px; }
+.name-openp-ico { width: 22px; height: 22px; flex: 0 0 auto; }
+.card-title h3 { min-width: 0; overflow-wrap: anywhere; }
+/* Countdown timer: ticking clock + time left */
+.deal-timer { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 6px; box-sizing: border-box; flex: 0 0 auto;
+  background: var(--card); color: var(--ink); border: var(--edge); border-radius: var(--r-sm);
+  font-size: .72rem; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; vertical-align: middle; }
+.deal-timer .dt-clock { width: 13px; height: 13px; color: var(--brand); flex: 0 0 auto; }
+.deal-timer .dt-sec, .deal-timer .dt-min { transform-box: view-box; transform-origin: 12px 12px; }
+.deal-timer .dt-sec { animation: dtTick 12s steps(12) infinite; }
+.deal-timer .dt-min { animation: dtTick 144s steps(12) infinite; }
+.deal-timer.is-done { opacity: .6; }
+.deal-timer.is-done .dt-sec, .deal-timer.is-done .dt-min { animation: none; }
+@keyframes dtTick { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .deal-timer .dt-sec, .deal-timer .dt-min { animation: none; } }
+/* Banner chips (count already shown) */
+.deal-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px 3px 7px; font-size: .78rem; font-weight: 800;
+  border: var(--edge); border-radius: var(--r-sm); }
+.deal-chip svg { width: 15px; height: 15px; }
+.deal-chip b { font-weight: 900; margin-left: 1px; }
+.deal-chip.is-partner { background: var(--brand); color: #fff; }
+.deal-chip.is-promo { background: var(--note); color: #1a1a1a; }
+
+/* Card bottom box: partnership = red, promotion = yellow note */
+.perk-box.card-pbox { background: var(--brand); border: var(--edge); color: #fff; }
+.perk-box.card-pbox p { color: #fff; }
+.perk-box.card-pbox .perk-tag { background: #fff; color: var(--brand-dark); }
+.perk-box.card-promo { background: var(--note); border: var(--edge); }
+.perk-box.card-promo p, .perk-box.card-promo .perk-aud { color: #1a1a1a; }
+.perk-box.card-promo .perk-tag { background: #1a1a1a; color: var(--note); }
+.perk-box.card-pbox .perk-tag, .perk-box.card-promo .perk-tag { display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; }
+.perk-box .perk-tag svg { width: 11px; height: 11px; }
+.pbox-head { display: flex; align-items: center; gap: 6px; min-width: 0; margin-bottom: 6px; }
+.pbox-head .perk-tag { margin: 0; flex: 0 0 auto; white-space: nowrap; }
+.pbox-head .deal-vis { margin-left: auto; flex: 0 0 auto; }
+.pbox-with { font-size: .74rem; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.perk-box.card-promo .perk-aud { background: rgba(255,255,255,.65); border: 1px solid #1a1a1a; flex: 0 0 auto; }
+.perk-box.card-promo .pk-label { overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+.perk-box.is-private.card-pbox, .perk-box.is-private.card-promo { border: 2px dashed var(--box-ink); }
+
+/* On-page boxes */
+.deal-stack { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 14px; }
+.deal-stack:empty { display: none; }
+.pdeal-box, [data-theme] .pdeal-box, .promo-box { position: relative; margin: 0; padding: 14px 16px; border: var(--edge); border-radius: var(--r); box-shadow: var(--shadow-sm); }
+.pdeal-box, [data-theme] .pdeal-box { background: var(--brand); color: #fff; }
+.promo-box { background: var(--note); color: #1a1a1a; }
+.pdeal-box.is-private, .promo-box.is-private { border: 2px dashed var(--box-ink); }
+.pdeal-box .deal-ctrls, .promo-box .deal-ctrls { position: static; float: right; display: flex; gap: 6px; margin: -4px -4px 6px 10px; }
+.pdeal-box .deal-ctrls .deal-eye, .promo-box .deal-ctrls .deal-eye { position: static; }
+.dbox-title { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-weight: 900; font-size: .82rem; text-transform: uppercase; letter-spacing: .03em; }
+.dbox-title svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.pdeal-partner { color: #fff; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; text-transform: none; letter-spacing: 0; font-size: .95rem; }
+.pdeal-partner:hover { color: var(--note); }
+.dbox-chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.dbox-chips .deal-vis { margin-left: 0; }
+.pd-type { display: inline-flex; align-items: center; padding: 2px 8px; font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .03em;
+  background: #fff; color: var(--brand-dark); border: var(--edge); border-radius: var(--r-sm); white-space: nowrap; }
+.promo-box .perk-aud { background: #fff; color: #1a1a1a; border: 1px solid #1a1a1a; }
+.dbox-deal { clear: both; margin-top: 10px; font-size: 1.12rem; font-weight: 800; line-height: 1.4; word-break: break-word; }
+.pdeal-box p.dbox-deal { color: #fff; }
+.promo-box p, .promo-box .form-note, .promo-box .form-note strong { color: #1a1a1a; }
+.pdeal-box .form-note { color: rgba(255,255,255,.92); }
+.dbox-redeem { margin-top: 6px; }
+.dbox-dates { margin-top: 6px; display: flex; align-items: center; gap: 5px; }
+.timer-btn.on { background: var(--ink); color: var(--card); }
+.timer-btn.on:hover { background: var(--ink); color: var(--note); }
+.promo-add { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 12px; font-weight: 800;
+  background: transparent; color: var(--ink); border: 2px dashed var(--line); border-radius: var(--r); cursor: pointer; }
+.promo-add:hover { background: var(--note-soft); }
+.promo-limit { padding: 4px 2px; }
+
+/* ==== Partnership Requests: tabs, clickable cards, detail view ==== */
+.pr-tabs { margin: 4px 0 12px; }
+.pr-tabs .cat-pill { position: relative; }
+.pr-count { font-weight: 900; opacity: .7; }
+.pr-dot { position: absolute; top: -4px; right: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--brand); border: 2px solid var(--card); }
+.pr-card.is-click { cursor: pointer; flex-wrap: nowrap; transition: transform .12s ease, box-shadow .12s ease; }
+.pr-card.is-click:hover { transform: translate(-1px, -1px); box-shadow: var(--shadow-md); }
+.pr-card.my-turn { border-left: 6px solid var(--brand); }
+.pr-card.is-click .pr-body { flex: 1 1 auto; min-width: 0; }
+.pr-main { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 3px; }
+.pr-names { overflow-wrap: anywhere; }
+.pr-arrow { color: var(--muted); }
+.pr-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pr-deal { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.pr-turn { color: var(--brand-dark); font-weight: 800; }
+.pr-open { font-weight: 800; white-space: nowrap; color: var(--ink); }
+.prd-parties { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px; margin: 6px 0 12px;
+  background: var(--note-soft); border: var(--edge); border-radius: var(--r); }
+.prd-parties > div { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.prd-parties > div:last-child { text-align: right; }
+.prd-parties strong { font-size: 1.02rem; overflow-wrap: anywhere; }
+.prd-puzzle { color: var(--brand); flex: 0 0 auto; }
+.prd-puzzle svg { width: 26px; height: 26px; }
+.prd-current { padding: 14px 16px; background: var(--card); border: var(--edge); border-radius: var(--r); box-shadow: var(--shadow-sm); margin-bottom: 12px; }
+.prd-current .prd-deal { font-size: 1.25rem; font-weight: 800; line-height: 1.4; margin: 8px 0 6px; word-break: break-word; }
+.prd-terms .prd-deal { margin: 6px 0 4px; word-break: break-word; }
+.prd-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
+.prd-actions .btn { flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.prd-past { font-weight: 800; padding: 6px 0; }
+.prh { list-style: none; margin: 4px 0 0; padding: 0 0 0 14px; border-left: 2px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+.prh-item { position: relative; }
+.prh-item::before { content: ''; position: absolute; left: -20px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--card); border: 2px solid var(--line); }
+.prh-item.is-current::before { background: var(--brand); }
+.prh-item .prd-terms { margin-top: 4px; padding: 8px 10px; background: var(--surface, var(--card)); border: 1px dashed var(--line); border-radius: var(--r-sm); font-size: .9rem; opacity: .85; }
+.prh-now { display: inline-block; font-size: .68rem; font-weight: 800; text-transform: uppercase; padding: 1px 6px; background: var(--note); color: #1a1a1a; border: var(--edge); border-radius: var(--r-sm); }
+@media (max-width: 560px) {
+  .pr-card.is-click { flex-wrap: wrap; }
+  .pr-card.is-click .pr-body { flex-basis: 100%; }
+  .pr-line { flex-wrap: wrap; }
+  .prd-parties { flex-direction: column; align-items: stretch; text-align: left; }
+  .prd-parties > div:last-child { text-align: left; }
+  .prd-puzzle { align-self: center; transform: rotate(90deg); }
+}
+
+/* How It Works: icon legend + facts */
+.hiw-legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
+.hiw-legend-row { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; background: var(--card); border: var(--edge); border-radius: var(--r); box-shadow: var(--shadow-sm); }
+.hiw-legend-row h4 { font-size: .95rem; font-weight: 800; margin-bottom: 3px; }
+.hiw-legend-row p { color: var(--muted); font-size: .88rem; line-height: 1.5; }
+.hiw-legend-ico { flex: 0 0 64px; display: flex; justify-content: center; padding-top: 2px; }
+.hiw-legend-ico .deal-sq, .hiw-legend-ico .name-openp-ico { width: 30px; height: 30px; }
+.hiw-legend-ico .deal-sq svg, .hiw-legend-ico .name-openp-ico svg { width: 17px; height: 17px; }
+.hiw-swatch { display: inline-grid; place-items: center; width: 54px; height: 34px; border: var(--edge); border-radius: var(--r-sm); box-shadow: 2px 2px 0 var(--box-ink); }
+.hiw-swatch svg { width: 18px; height: 18px; }
+.hiw-swatch.is-partner { background: var(--brand); color: #fff; }
+.hiw-swatch.is-promo { background: var(--note); color: #1a1a1a; }
+.hiw-swatch.is-seal { background: var(--card); box-shadow: none; border: none; }
+.hiw-swatch.is-eye { background: var(--note); color: #1a1a1a; width: 34px; }
+.hiw-facts { margin: 0; padding: 14px 18px 14px 34px; background: var(--note-soft); border: var(--edge); border-radius: var(--r); display: flex; flex-direction: column; gap: 8px; }
+.hiw-facts li { line-height: 1.55; }

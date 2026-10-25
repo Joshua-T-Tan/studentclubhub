@@ -50,19 +50,6 @@ function verifiedSeal(size, disc, check) {
     petals + '<circle cx="12" cy="12" r="9.1" fill="' + disc + '"/>' +
     '<path d="M7.8 12.3l2.9 2.9 5.9-6.3" fill="none" stroke="' + check + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 }
-/* Partnership tag — the puzzle icon + "Partnership", shown on a card/banner ONLY
-   while an active partnership exists. It disappears (never greys out) when the
-   partnership is ended or its duration lapses. Partner name(s) are in the tooltip. */
-var _partneredWith = { club: {}, business: {} };
-function partneredWithBadge(kind, id) {
-  var names = _partneredWith[kind] && _partneredWith[kind][id];
-  if (!names) return '';
-  if (!Array.isArray(names)) names = [names];
-  if (!names.length) return '';
-  return '<span class="partnered-badge" title="Partnered with ' + escAttr(names.join(', ')) + '">' + ICON_PARTNER +
-    '<span>Partnership</span></span>';
-}
-
 /* ---------- Relationship helpers ---------- */
 function ownerOf(club) { return !!(currentUser && club && club.verifiedOwner && club.verifiedOwner === currentUser.memberId); }
 /* 24h "15:30" ↔ 12h "3:30 PM" (for the <input type=time> meeting dial) */
@@ -206,7 +193,7 @@ function clubHeroSlideshow(club, relBadge, slides) {
   var openP = club.partnershipOpen ? '<span class="open-partner-chip">' + ICON_PARTNER + ' Open to partnerships</span>' : '';
   var chips = recruitBadge(club.recruitment) + renderBadge(membersLabel(club.memberCount), 'gray') + (relBadge || '');
   var meta = '<span class="biz-cuisines">' + escHtml(club.category) + '  •  ' + escHtml(club.school) + (club.zip ? '  •  ' + escHtml(club.zip) : '') + '</span>' +
-    openP + (club.clubId ? '<span class="biz-idchip">#' + escHtml(club.clubId) + '</span>' : '') + partneredWithBadge('club', club.id);
+    openP + (typeof dealBannerChips === 'function' ? dealBannerChips('club', club) : '') + (club.clubId ? '<span class="biz-idchip">#' + escHtml(club.clubId) + '</span>' : '');
   var galleryN = (club.gallery || []).filter(Boolean).length;
   var paper = !!(slides[0] && slides[0].paper);
   return '<div class="biz-slideshow' + (paper ? ' is-paper' : '') + '" id="clubSlideshow">' +
@@ -283,7 +270,8 @@ function clubDetailsHTML(club) {
    Owners get a gray pencil on each section. */
 function clubLeftMainHTML(club) {
   var owner = canEditClub(club);
-  return (typeof partnershipDealBox === 'function' ? partnershipDealBox('club', club, owner) : '') +
+  // Partnership controls (hide / timer) belong to the President, like everything else about partnerships.
+  return (typeof partnershipDealBox === 'function' ? '<div class="deal-stack">' + partnershipDealBox('club', club, ownerOf(club)) + '</div>' : '') +
     secTitle(t('sec_about'), owner ? 'editClubAbout(\'' + club.id + '\')' : '') +
     '<div class="about-box">' + escHtml(club.desc || '') + '</div>' +
     galleryBoxHTML(club) +
@@ -684,7 +672,7 @@ function confirmTransfer(clubId) {
     var club = getClub(clubId); if (!club) return;
     var newOwner = club.roster.find(function (m) { return m.memberId === pickedId; }); if (!newOwner) return;
     newOwner.role = 'President'; club.verifiedOwner = newOwner.memberId;
-    (club.leaders || []).forEach(function (l) { if (l.role === 'President') { l.name = newOwner.name; l.email = club.email || l.email; } });
+    (club.leaders || []).forEach(function (l) { if (l.role === 'President') { l.name = newOwner.name; delete l.email; } });
     if (typeof postSystemChat === 'function') postSystemChat(clubId, newOwner.name + ' is now President; ' + currentUser.name + ' left the club.');
     // Old owner leaves
     var meIdx = club.roster.indexOf(myRosterEntry(club)); if (meIdx > -1) club.roster.splice(meIdx, 1);

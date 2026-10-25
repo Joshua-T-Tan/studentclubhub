@@ -10,21 +10,9 @@
    Loaded after business.js.
    ============================================================ */
 
-var _reachCtx = null, PARTNER_TYPES = ['Discount for members', 'Sponsorship / funding', 'Event collaboration', 'Other'];
+var _reachCtx = null;   // PARTNER_TYPES lives in partnerships.js
 function closeReach() { if (typeof closeOverlay === 'function') closeOverlay('bizOverlay'); }
 function _isEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s || ''); }
-
-/* ---------- Who currently leads a club (by verifiedOwner) ---------- */
-function _resolveClubOwner(club) {
-  var pid = (club && club.verifiedOwner) || '';
-  var pres = (club && club.roster || []).find(function (m) { return pid && m.memberId === pid; });
-  var base = { memberId: pid, name: pres ? pres.name : '' };
-  if (!pid) return Promise.resolve(base);
-  return sbFindProfileById(pid).then(function (p) {
-    if (p) base.name = base.name || p.name || '';
-    return base;
-  });
-}
 
 /* ---------- Reach Out: public email + partnership request form ---------- */
 function contactByEmail(targetType, id) { return openReachOut(targetType, id); }
@@ -39,20 +27,17 @@ function openReachOut(targetType, id) {
   var publicEmail = String(targetType === 'business' ? (obj.contact_email || '') : (obj.email || '')).trim();
   var isMine = targetType === 'business' ? (typeof isBizOwner === 'function' && isBizOwner(obj)) : (typeof ownerOf === 'function' && ownerOf(obj));
   var targetOpen = targetType === 'business' ? !!obj.partnership_open : !!obj.partnershipOpen;
-  // The recipient's login email is stored on the request for reference only (routing is by club/business).
-  var recip = targetType === 'club' ? _resolveClubOwner(obj) : Promise.resolve({});
-  recip.then(function (r) {
-    _reachCtx = {
-      targetType: targetType, id: String(id), name: obj.name, publicEmail: publicEmail, isMine: isMine, targetOpen: targetOpen,
-      targetRealId: targetType === 'business' ? (obj.public_id || '') : (obj.clubId || '')
-    };
-    var gather = isMine ? Promise.resolve([]) : _gatherMyEntities();
-    gather.then(function (mine) {
-      _reachCtx.mine = (mine || []).filter(function (e) { return !(e.type === targetType && e.id === String(id)); });
-      _renderReachOut();
-    });
+  _reachCtx = {
+    targetType: targetType, id: String(id), name: obj.name, publicEmail: publicEmail, isMine: isMine, targetOpen: targetOpen,
+    targetRealId: targetType === 'business' ? (obj.public_id || '') : (obj.clubId || '')
+  };
+  // "Send as": every club I'm President of and every business I own (except the one I'm looking at).
+  _gatherMyEntities().then(function (mine) {
+    _reachCtx.mine = (mine || []).filter(function (e) { return !(e.type === targetType && e.id === String(id)); });
+    _renderReachOut();
   });
 }
+function _entLabel(e) { return e.name + ' (' + (e.type === 'club' ? 'Club' : 'Business') + ')'; }
 function _renderReachOut() {
   var c = _reachCtx; if (!c) return;
   var contactBlock = '<div class="reach-contact"><div class="form-note" style="margin-bottom:6px">Contact ' + escHtml(c.name) + ' directly by email:</div>' +
@@ -60,65 +45,67 @@ function _renderReachOut() {
       ? '<a class="btn ghost block" href="mailto:' + escAttr(c.publicEmail) + '?subject=' + encodeURIComponent('Reaching out via Student Club Hub: ' + c.name) + '">' + svgIcon('mail', 16) + ' ' + escHtml(c.publicEmail) + '</a>'
       : '<p class="form-note">No public contact email is listed yet.</p>') + '</div>';
   var head = '<div class="reach-form"><div class="pr-section-h" style="margin-top:14px">Request a partnership</div>';
-  var openMine = (c.mine || []).filter(function (e) { return e.open; });
   var form;
-  if (c.isMine) {
+  if (c.isMine && !(c.mine || []).length) {
     form = '<p class="form-note" style="margin-top:14px">This is your own listing. Partnership requests from others appear under your Partnership Requests.</p>';
   } else if (!c.targetOpen) {
     form = head + '<p class="form-note">' + escHtml(c.name) + ' isn’t open to partnerships right now, so it can’t receive requests. You can still email them above.</p></div>';
   } else if (!c.mine || !c.mine.length) {
     form = head + '<p class="form-note">Only a club President or a business owner can send a partnership request. Register a club or business first, then come back.</p></div>';
-  } else if (!openMine.length) {
-    form = head + '<p class="form-note">Turn on <strong>Open to partnerships</strong> for your club or business first (gear icon on its banner → Page settings).</p></div>';
   } else {
-    var picker = openMine.length > 1
-      ? '<div class="field"><label>Partner as</label><select id="roFrom" class="select block-select">' + openMine.map(function (e) { return '<option value="' + e.type + ':' + escAttr(e.id) + '">' + escHtml(e.name) + ' (' + e.type + ')</option>'; }).join('') + '</select></div>'
-      : '<input type="hidden" id="roFrom" value="' + openMine[0].type + ':' + escAttr(openMine[0].id) + '">';
     var today = _todayStr();
     var typeOpts = PARTNER_TYPES.map(function (t) { return '<option>' + escHtml(t) + '</option>'; }).join('');
-    form = head + '<div id="roErr" class="auth-error hidden"></div>' + picker +
+    var fromOpts = c.mine.map(function (e) { return '<option value="' + e.type + ':' + escAttr(e.id) + '">' + escHtml(_entLabel(e)) + '</option>'; }).join('');
+    form = head + '<div id="roErr" class="auth-error hidden"></div>' +
+      '<div class="field"><label>Send as</label><select id="roFrom" class="select block-select">' + fromOpts + '</select>' +
+        '<div class="form-note" style="margin-top:4px">Which of your clubs or businesses this partnership is for.</div></div>' +
       '<div class="field"><label>Partnership type</label><select id="roType" class="select block-select">' + typeOpts + '</select></div>' +
       '<div class="two-col"><div class="field"><label>Starts</label><input id="roStart" type="date" min="' + today + '" value="' + today + '"></div>' +
         '<div class="field"><label>Ends</label><input id="roEnd" type="date" min="' + today + '"></div></div>' +
-      '<div class="field"><label>How it works <span class="form-note">(the deal / discount / what each side provides)</span></label>' +
+      '<div class="field"><label>The deal <span class="form-note">(what each side provides)</span></label>' +
         '<textarea id="roDesc" maxlength="400" placeholder="e.g. 10% off for club members, in exchange for a shout-out at our monthly events."></textarea></div>' +
       '<button id="roSend" class="btn primary block lg" onclick="submitReachOutRequest()">Send Request</button>' +
-      '<p class="form-note" style="margin-top:8px">They approve or reject it under their Partnership Requests. Once approved, a “Partnership” tag shows on both pages from the start date until the end date (either side can end it sooner).</p></div>';
+      '<p class="form-note" style="margin-top:8px">They can approve it, suggest changes, or turn it down under their Partnership Requests. Once approved, it shows on both pages from the start date until the end date (either side can end it sooner).</p></div>';
   }
   $('bizBody').innerHTML = '<div class="modal-pad"><div class="ro-head"><h3>Reach out to ' + escHtml(c.name) + '</h3>' +
     '<button class="icon-btn" onclick="closeReach()">✕</button></div>' + contactBlock + form + '</div>';
   openOverlay('bizOverlay');
+}
+/* Shared checks for a set of partnership terms (new request or counter-offer). */
+function _checkTerms(t, err) {
+  if (!t.start || !t.end) return err('Set a start and end date for the partnership.');
+  if (t.end < _todayStr()) return err('The end date can’t be in the past.');
+  if (t.end < t.start) return err('The end date must be on or after the start date.');
+  if (!t.deal) return err('Describe the deal: what each side provides.');
+  return true;
 }
 function submitReachOutRequest() {
   var c = _reachCtx; if (!c) return;
   var sel = $('roFrom'); if (!sel || !sel.value) return;
   var parts = sel.value.split(':'), fromType = parts[0], fromId = parts.slice(1).join(':');
   var fromEnt = (c.mine || []).find(function (e) { return e.type === fromType && e.id === fromId; });
-  var err = function (m) { var e = $('roErr'); if (e) { e.textContent = m; e.classList.remove('hidden'); } };
+  var err = function (m) { var e = $('roErr'); if (e) { e.textContent = m; e.classList.remove('hidden'); } return false; };
   if (!fromEnt) return err('Pick which club or business you’re partnering as.');
-  var ptype = ($('roType') && $('roType').value) || PARTNER_TYPES[0];
-  var start = ($('roStart') && $('roStart').value) || '', end = ($('roEnd') && $('roEnd').value) || '';
-  var desc = ($('roDesc') && $('roDesc').value || '').trim();
-  if (!start || !end) return err('Set a start and end date for the partnership.');
-  if (start < _todayStr()) return err('The start date can’t be in the past.');
-  if (end < start) return err('The end date must be on or after the start date.');
-  if (!desc) return err('Briefly describe how the partnership works.');
-  var dealText = ptype + ': ' + desc;
+  var t = { ptype: ($('roType') && $('roType').value) || PARTNER_TYPES[0], start: ($('roStart') && $('roStart').value) || '',
+    end: ($('roEnd') && $('roEnd').value) || '', deal: ($('roDesc') && $('roDesc').value || '').trim() };
+  if (_checkTerms(t, err) !== true) return;
+  if (t.start < _todayStr()) return err('The start date can’t be in the past.');
+  if (activePartnershipCount(fromType, fromId) >= PARTNER_LIMIT) return err(fromEnt.name + ' already has ' + PARTNER_LIMIT + ' active partnerships, the most at once. End one first.');
+  if (activePartnershipCount(c.targetType, c.id) >= PARTNER_LIMIT) return err(c.name + ' already has ' + PARTNER_LIMIT + ' active partnerships, the most at once.');
   authBusy2('roSend', true, 'Sending…');
-  // a = sender (pre-filled/confirmed), b = recipient. Mirrored so the tag + deal box render on approval.
+  // a = sender, b = recipient. Both sides share the same terms.
   var row = {
-    a_type: fromType, a_id: fromId, a_name: fromEnt.name,
-    a_real_id: fromEnt.publicId || '', a_partner_id: c.targetRealId || '', a_start: start, a_end: end, a_deal: dealText, a_agreed: true, a_confirmed: true,
-    b_type: c.targetType, b_id: c.id, b_name: c.name,
-    b_real_id: c.targetRealId || '', b_partner_id: fromEnt.publicId || '', b_start: start, b_end: end, b_deal: dealText,
-    status: 'pending'
+    a_type: fromType, a_id: fromId, a_name: fromEnt.name, a_real_id: fromEnt.publicId || '', a_partner_id: c.targetRealId || '',
+    b_type: c.targetType, b_id: c.id, b_name: c.name, b_real_id: c.targetRealId || '', b_partner_id: fromEnt.publicId || '',
+    ptype: t.ptype, a_deal: t.deal, b_deal: t.deal, a_start: t.start, b_start: t.start, a_end: t.end, b_end: t.end, status: 'pending'
   };
   var eF = encodeURIComponent(fromId), eT = encodeURIComponent(c.id);
-  sbRest('partner_agreements?status=in.(pending,launched)&or=(and(a_id.eq.' + eF + ',b_id.eq.' + eT + '),and(a_id.eq.' + eT + ',b_id.eq.' + eF + '))&select=id,status')
+  sbRest('partner_agreements?status=in.(pending,launched)&or=(and(a_id.eq.' + eF + ',b_id.eq.' + eT + '),and(a_id.eq.' + eT + ',b_id.eq.' + eF + '))&select=id,status,a_end,b_end')
     .then(function (dups) {
-      if (dups && dups.length) { authBusy2('roSend', false); toast(dups[0].status === 'launched' ? 'You’re already partnered with them.' : 'There’s already a pending request between you two.'); closeReach(); return; }
+      dups = (dups || []).filter(function (d) { return d.status === 'pending' || !_agrExpired(d); });
+      if (dups.length) { authBusy2('roSend', false); return err(dups[0].status === 'launched' ? 'You’re already partnered with them.' : 'There’s already an open request between you two. Find it in Partnership Requests.'); }
       return sbRest('partner_agreements', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(row) })
-        .then(function () { closeReach(); toast('Partnership request sent! They’ll approve or reject it.'); refreshUnread(); });
+        .then(function () { closeReach(); toast('Partnership request sent! They can approve it or suggest changes.'); refreshUnread(); });
     }).catch(function (ex) { authBusy2('roSend', false); err((ex && ex.message) || 'Could not send the request.'); });
 }
 
@@ -152,7 +139,7 @@ function sbFindProfileById(memberId) {
 /* ============================================================
    PARTNERSHIP REQUESTS VIEW  (reuses the #view-inbox shell)
    ============================================================ */
-function navInbox() { if (typeof closeMobileNav === 'function') closeMobileNav(); showView('inbox'); }
+function navInbox() { if (typeof closeMobileNav === 'function') closeMobileNav(); _prTab = 'requests'; showView('inbox'); }
 function renderInbox() {
   var el = $('inboxBody'); if (!el) return;
   if (!currentUser) {
@@ -161,64 +148,157 @@ function renderInbox() {
     return;
   }
   el.innerHTML = '<div class="page-head"><h1>Partnership Requests</h1>' +
-      '<p>Approve or reject partnership requests and manage your active partnerships. To contact a club or business, or to send them a request, use the <strong>Reach Out</strong> button on their page.</p></div>' +
+      '<p>Open a request to approve it, suggest changes, or turn it down. Changes go back and forth until one side’s version is approved. To contact a club or business, or send them a request, use the <strong>Reach Out</strong> button on their page.</p></div>' +
     '<div class="inbox-disclaimer"><strong>Important Note:</strong> Student Club Hub only helps you connect. Any partnership, sponsorship, discount, or agreement you arrange is strictly between you and the other party. We are not involved in it and take no responsibility or legal liability for it. Verify who you’re dealing with before committing to anything.</div>' +
-    '<div id="partnerAgrs" class="partner-reqs"><p class="form-note">Loading…</p></div>' +
-    '<div id="partnerEmpty" class="inbox-empty" style="padding:24px" hidden>No partnership requests right now. To start one, open a club or business that’s “Open to partnerships” and tap <strong>Reach Out</strong>.</div>';
+    '<div id="prTabs" class="cat-row pr-tabs"></div>' +
+    '<div id="partnerAgrs" class="partner-reqs"><p class="form-note">Loading…</p></div>';
   renderPendingAgreements();
 }
-function _agrDateRange(a) {
-  var s = a.a_start || a.b_start, e = a.a_end || a.b_end;
-  if (!s && !e) return '';
-  return (s ? _fmtAgrDate(s) : '') + (e ? ' – ' + _fmtAgrDate(e) : '');
-}
-/* Everything is keyed to the clubs/businesses I lead RIGHT NOW: requests to them,
-   requests they sent, and their live partnerships. A former president loses access;
-   the new one gains it. */
+function _agrDateRange(a) { var s = _agrStart(a), e = _agrEnd(a); return (s || e) ? (s ? _fmtAgrDate(s) : '') + (e ? ' – ' + _fmtAgrDate(e) : '') : ''; }
+function _agrDays(a) { var s = _agrStart(a), e = _agrEnd(a); if (!s || !e) return 0; return Math.round((new Date(e + 'T00:00:00') - new Date(s + 'T00:00:00')) / 86400000) + 1; }
+/* Everything is keyed to the clubs/businesses I lead RIGHT NOW. A former President loses
+   access; the new one gains it. Each row gets `mySides` (which side(s) I speak for) and `myTurn`. */
+var _prRows = {}, _prTab = 'requests', _prData = null;
 function _myPartnershipRows() {
   return _gatherMyEntities().then(function (mine) {
     var ids = (mine || []).map(function (e) { return e.id; });
-    if (!ids.length) return { incoming: [], outgoing: [], active: [], hasEntities: false };
-    var L = _idList(ids);
-    return Promise.all([
-      sbRest('partner_agreements?status=eq.pending&b_id=in.' + L + '&select=*&order=created_at.desc'),
-      sbRest('partner_agreements?status=eq.pending&a_id=in.' + L + '&select=*&order=created_at.desc'),
-      sbRest('partner_agreements?status=eq.launched&or=(a_id.in.' + L + ',b_id.in.' + L + ')&select=*&order=created_at.desc')
-    ]).then(function (res) {
-      return { incoming: res[0] || [], outgoing: res[1] || [], active: (res[2] || []).filter(function (a) { return !_agrExpired(a); }), hasEntities: true };
+    if (!ids.length) return { requests: [], active: [], past: [], hasEntities: false, turn: 0 };
+    var L = _idList(ids), own = {};
+    mine.forEach(function (e) { own[e.type + ':' + e.id] = true; });
+    return sbRest('partner_agreements?or=(a_id.in.' + L + ',b_id.in.' + L + ')&status=neq.draft&select=*&order=created_at.desc').then(function (rows) {
+      var out = { requests: [], active: [], past: [], hasEntities: true, turn: 0 };
+      (rows || []).forEach(function (a) {
+        a.mySides = ['a', 'b'].filter(function (s) { return own[a[s + '_type'] + ':' + a[s + '_id']]; });
+        if (!a.mySides.length) return;
+        a.myTurn = a.status === 'pending' && a.mySides.indexOf(a.awaiting || 'b') > -1;
+        _prRows[a.id] = a;
+        if (a.status === 'pending') { out.requests.push(a); if (a.myTurn) out.turn++; }
+        else if (a.status === 'launched' && !_agrExpired(a)) out.active.push(a);
+        else out.past.push(a);
+      });
+      out.requests.sort(function (x, y) { return (y.myTurn ? 1 : 0) - (x.myTurn ? 1 : 0); });   // my turn first
+      out.past.sort(function (x, y) { return String(y.decided_at || y.created_at).localeCompare(String(x.decided_at || x.created_at)); });
+      return out;
     });
   });
+}
+function prTab(k) { _prTab = k; _paintPrList(); }
+function _pastLabel(a) {
+  if (a.status === 'declined') return 'Turned down';
+  if (a.status === 'deleted') return 'Withdrawn';
+  var end = _agrEnd(a);
+  if (a.status === 'launched' || (end && a.decided_at && String(a.decided_at).slice(0, 10) > end)) return 'Completed';
+  return 'Ended early';
+}
+function _prStatusLine(a) {
+  if (a.status === 'pending') {
+    if (a.myTurn) return '<span class="pr-turn">Your turn: approve, suggest changes, or turn down</span>';
+    var other = a.awaiting === 'a' ? a.a_name : a.b_name;
+    return '<span>Waiting for ' + escHtml(other) + ' to respond</span>';
+  }
+  if (a.status === 'launched' && !_agrExpired(a)) return '<span>' + (_agrNotStarted(a) ? 'Approved. It goes live on the start date.' : 'Live now') + '</span>';
+  return '<span>' + _pastLabel(a) + '</span>' + (a.decided_at ? ' · <span>' + escHtml(_fmtAgrDate(String(a.decided_at).slice(0, 10))) + '</span>' : '');
+}
+function _prCard(a) {
+  var dates = _agrDateRange(a);
+  return '<div class="pr-card is-click' + (a.myTurn ? ' my-turn' : '') + '" role="button" tabindex="0" onclick="openPartnerRequest(\'' + a.id + '\')" onkeydown="if(event.key===\'Enter\')openPartnerRequest(\'' + a.id + '\')">' +
+    '<div class="pr-body">' + ICON_PARTNER + '<div class="pr-main"><div class="pr-names"><strong class="pr-name">' + escHtml(a.a_name) + '</strong> <span class="pr-arrow">→</span> <strong class="pr-name">' + escHtml(a.b_name) + '</strong></div>' +
+      '<div class="pr-line"><span class="pd-type">' + escHtml(a.ptype || 'Partnership') + '</span><span class="pr-deal">' + escHtml(a.a_deal || '') + '</span></div>' +
+      '<div class="form-note">' + (dates ? svgIcon('calendar', 13) + ' ' + escHtml(dates) + ' · ' : '') + _prStatusLine(a) + '</div></div></div>' +
+    '<span class="pr-open">Open ›</span></div>';
+}
+function _paintPrList() {
+  var el = $('partnerAgrs'), tabs = $('prTabs'), r = _prData; if (!el || !r) return;
+  var T = [['requests', 'Requests', r.requests.length], ['active', 'Active', r.active.length], ['past', 'Past', r.past.length]];
+  if (tabs) tabs.innerHTML = T.map(function (t) {
+    return '<button class="cat-pill' + (_prTab === t[0] ? ' active' : '') + '" onclick="prTab(\'' + t[0] + '\')"><span>' + t[1] + '</span> <span class="pr-count">' + t[2] + '</span>' +
+      (t[0] === 'requests' && r.turn ? '<span class="pr-dot" title="Waiting for you"></span>' : '') + '</button>';
+  }).join('');
+  var list = r[_prTab] || [];
+  if (!r.hasEntities) { el.innerHTML = '<div class="inbox-empty">Partnerships are made between clubs and businesses. Once you’re a club President or own a business, its requests show up here.</div>'; return; }
+  var empty = { requests: 'No open requests. To start one, open a club or business that’s “Open to partnerships” and tap <strong>Reach Out</strong>.',
+    active: 'No active partnerships right now.', past: 'Partnerships that ended, were turned down or withdrawn show up here.' }[_prTab];
+  el.innerHTML = list.length ? list.map(_prCard).join('') : '<div class="inbox-empty">' + empty + '</div>';
 }
 function renderPendingAgreements() {
   var el = $('partnerAgrs'); if (!el || !currentUser) return;
   _myPartnershipRows().then(function (r) {
-    var html = '';
-    if (r.incoming.length) html += '<div class="pr-section-h">Requests to approve</div>' + r.incoming.map(function (a) {
-      var dates = _agrDateRange(a);
-      return '<div class="pr-card"><div class="pr-body">' + ICON_PARTNER + '<div><strong>' + escHtml(a.a_name) + '</strong> wants to partner with <strong>' + escHtml(a.b_name) + '</strong>' +
-        '<div class="form-note">' + escHtml(a.a_deal || 'Partnership') + (dates ? ' · ' + svgIcon('calendar', 13) + ' ' + escHtml(dates) : '') + '</div></div></div>' +
-        '<div class="pr-actions"><button class="btn ghost sm-btn" onclick="rejectPartnerRequest(\'' + a.id + '\')">Reject</button>' +
-        '<button class="btn primary sm-btn" onclick="approvePartnerRequest(\'' + a.id + '\')">Approve</button></div></div>';
-    }).join('');
-    if (r.outgoing.length) html += '<div class="pr-section-h">Requests you sent</div>' + r.outgoing.map(function (a) {
-      return '<div class="pr-card"><div class="pr-body">' + ICON_PARTNER + '<div><strong>' + escHtml(a.a_name) + '</strong> × <strong>' + escHtml(a.b_name) + '</strong>' +
-        '<div class="form-note">Waiting for ' + escHtml(a.b_name) + ' to approve…</div></div></div>' +
-        '<div class="pr-actions"><button class="btn ghost sm-btn" onclick="cancelPartnerRequest(\'' + a.id + '\')">Cancel</button></div></div>';
-    }).join('');
-    if (r.active.length) html += '<div class="pr-section-h">Active partnerships</div>' + r.active.map(function (a) {
-      var dates = _agrDateRange(a), upcoming = _agrNotStarted(a);
-      return '<div class="pr-card"><div class="pr-body">' + ICON_PARTNER + '<div><strong>' + escHtml(a.a_name) + '</strong> × <strong>' + escHtml(a.b_name) + '</strong>' +
-        '<div class="form-note">' + (dates ? svgIcon('calendar', 13) + ' ' + escHtml(dates) + ' · ' : '') +
-          '<span>' + (upcoming ? 'Approved. The tag appears on the start date.' : 'The tag is removed automatically when it ends.') + '</span></div></div></div>' +
-        '<div class="pr-actions"><button class="btn danger sm-btn" onclick="endPartnership(\'' + a.id + '\')">End</button></div></div>';
-    }).join('');
-    el.innerHTML = html;
-    var empty = $('partnerEmpty'); if (empty) empty.hidden = !!html;
-    _unreadCount = r.incoming.length; paintFabBadge();
+    _prData = r; _paintPrList();
+    _unreadCount = r.turn; paintFabBadge();
   }).catch(function () { el.innerHTML = '<p class="form-note">Couldn’t load partnership requests. Check your connection and try again.</p>'; });
 }
 
-/* ---------- Floating Partnerships button + badge (= requests waiting for MY approval) ---------- */
+/* ---------- One request, opened: big text, history, and the actions for whoever's turn it is ---------- */
+function _prSideName(a, s) { return s === 'a' ? a.a_name : a.b_name; }
+function _prTerms(t) {
+  return '<div class="prd-terms"><span class="pd-type">' + escHtml(t.ptype || 'Partnership') + '</span>' +
+    '<p class="prd-deal">' + escHtml(t.deal || '') + '</p>' +
+    ((t.start || t.end) ? '<div class="form-note">' + svgIcon('calendar', 13) + ' ' + escHtml((t.start ? _fmtAgrDate(t.start) : '') + (t.end ? ' – ' + _fmtAgrDate(t.end) : '')) + '</div>' : '') + '</div>';
+}
+function openPartnerRequest(id) {
+  var a = _prRows[id]; if (!a) return;
+  var cur = { ptype: a.ptype, deal: a.a_deal, start: _agrStart(a), end: _agrEnd(a) };
+  var mySide = a.myTurn ? a.awaiting : a.mySides[0];
+  var title = a.status === 'pending' ? 'Partnership request' : (a.status === 'launched' && !_agrExpired(a)) ? 'Active partnership' : 'Past partnership';
+  var hist = (a.history || []).map(function (h, i) {
+    var when = h.at ? new Date(h.at).toLocaleDateString(siteLocale(), { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    var last = i === (a.history.length - 1);
+    return '<li class="prh-item' + (last ? ' is-current' : '') + '"><div class="prh-head"><strong class="pr-name">' + escHtml(_prSideName(a, h.by)) + '</strong> ' +
+      '<span>' + (i === 0 ? 'sent the request' : 'suggested changes') + '</span>' + (when ? ' <span class="form-note">· ' + escHtml(when) + '</span>' : '') +
+      (last && a.status === 'pending' ? ' <span class="prh-now">Current version</span>' : '') + '</div>' +
+      (last ? '' : _prTerms({ ptype: h.ptype, deal: h.deal, start: h.start, end: h.end })) + '</li>';
+  }).join('');
+  var days = _agrDays(a);
+  var actions = '';
+  if (a.status === 'pending' && a.myTurn) {
+    actions = '<div class="prd-actions"><button class="btn primary" onclick="approvePartnerRequest(\'' + a.id + '\',\'' + mySide + '\')">' + svgIcon('check', 16) + ' Approve</button>' +
+      '<button class="btn blue" onclick="openCounterForm(\'' + a.id + '\')">' + ICON_PEN + ' Suggest changes</button>' +
+      (mySide === 'a' ? '<button class="btn ghost" onclick="cancelPartnerRequest(\'' + a.id + '\')">Withdraw</button>'
+                      : '<button class="btn ghost" onclick="rejectPartnerRequest(\'' + a.id + '\')">Turn down</button>') + '</div>';
+  } else if (a.status === 'pending') {
+    actions = '<p class="form-note">Waiting for ' + escHtml(_prSideName(a, a.awaiting)) + ' to respond.</p><div class="prd-actions">' +
+      (a.mySides.indexOf('a') > -1 ? '<button class="btn ghost" onclick="cancelPartnerRequest(\'' + a.id + '\')">Withdraw request</button>'
+                                    : '<button class="btn ghost" onclick="rejectPartnerRequest(\'' + a.id + '\')">Turn down</button>') + '</div>';
+  } else if (a.status === 'launched' && !_agrExpired(a)) {
+    actions = '<p class="form-note">You can hide it or show a countdown timer from your club or business page.</p><div class="prd-actions"><button class="btn danger" onclick="endPartnership(\'' + a.id + '\')">End partnership</button></div>';
+  } else {
+    actions = '<p class="prd-past">' + _pastLabel(a) + (a.decided_at ? ' · ' + escHtml(_fmtAgrDate(String(a.decided_at).slice(0, 10))) : '') + '</p>';
+  }
+  $('bizBody').innerHTML = '<div class="modal-pad prd"><div class="ro-head"><h3>' + title + '</h3><button class="icon-btn" onclick="closeReach()">✕</button></div>' +
+    '<div class="prd-parties"><div><span class="form-note">From</span><strong class="pr-name">' + escHtml(a.a_name) + '</strong><span class="form-note">' + (a.a_type === 'club' ? 'Club' : 'Business') + '</span></div>' +
+      '<span class="prd-puzzle">' + ICON_PARTNER + '</span>' +
+      '<div><span class="form-note">To</span><strong class="pr-name">' + escHtml(a.b_name) + '</strong><span class="form-note">' + (a.b_type === 'club' ? 'Club' : 'Business') + '</span></div></div>' +
+    '<div class="prd-current">' + _prTerms(cur) + (days ? '<div class="form-note">' + (days === 1 ? '1 day' : days + ' days') + '</div>' : '') + '</div>' +
+    actions +
+    (hist ? '<div class="pr-section-h" style="margin-top:16px">History</div><ol class="prh">' + hist + '</ol>' : '') + '</div>';
+  openOverlay('bizOverlay');
+}
+function openCounterForm(id) {
+  var a = _prRows[id]; if (!a || !a.myTurn) return;
+  var today = _todayStr(), cur = a.ptype || PARTNER_TYPES[0];
+  var types = PARTNER_TYPES.slice(); if (types.indexOf(cur) === -1) types.unshift(cur);
+  $('bizBody').innerHTML = '<div class="modal-pad"><div class="ro-head"><h3>Suggest changes</h3><button class="icon-btn" onclick="closeReach()">✕</button></div>' +
+    '<p class="form-note" style="margin-bottom:10px">Change anything below. ' + escHtml(_prSideName(a, a.awaiting === 'a' ? 'b' : 'a')) + ' then approves your version or suggests their own.</p>' +
+    '<div id="roErr" class="auth-error hidden"></div>' +
+    '<div class="field"><label>Partnership type</label><select id="coType" class="select block-select">' + types.map(function (t) { return '<option' + (t === cur ? ' selected' : '') + '>' + escHtml(t) + '</option>'; }).join('') + '</select></div>' +
+    '<div class="two-col"><div class="field"><label>Starts</label><input id="coStart" type="date" value="' + escAttr(_agrStart(a) || today) + '"></div>' +
+      '<div class="field"><label>Ends</label><input id="coEnd" type="date" min="' + today + '" value="' + escAttr(_agrEnd(a) || '') + '"></div></div>' +
+    '<div class="field"><label>The deal <span class="form-note">(what each side provides)</span></label><textarea id="coDeal" maxlength="400">' + escHtml(a.a_deal || '') + '</textarea></div>' +
+    '<button id="coSend" class="btn primary block lg" onclick="submitCounter(\'' + a.id + '\')">Send changes</button>' +
+    '<button class="btn ghost block" style="margin-top:8px" onclick="openPartnerRequest(\'' + a.id + '\')">Back</button></div>';
+  openOverlay('bizOverlay');
+}
+function submitCounter(id) {
+  var a = _prRows[id]; if (!a || !a.myTurn) return;
+  var err = function (m) { var e = $('roErr'); if (e) { e.textContent = m; e.classList.remove('hidden'); } return false; };
+  var t = { ptype: $('coType').value, start: $('coStart').value, end: $('coEnd').value, deal: ($('coDeal').value || '').trim() };
+  if (_checkTerms(t, err) !== true) return;
+  if (t.ptype === a.ptype && t.deal === a.a_deal && t.start === _agrStart(a) && t.end === _agrEnd(a)) return err('Nothing changed yet. Edit the terms, or go back and approve them as they are.');
+  authBusy2('coSend', true, 'Sending…');
+  counterPartnerRequest(id, a.awaiting, t).catch(function (ex) { authBusy2('coSend', false); err(ex.message); });
+}
+
+/* ---------- Floating Partnerships button + badge (= requests where it's MY turn) ---------- */
 var _unreadCount = 0, _unreadTimer = null, _unreadInited = false;
 function paintFabBadge() {
   var b = $('inboxFabBadge'); if (!b) return;
@@ -227,7 +307,7 @@ function paintFabBadge() {
 }
 function refreshUnread() {
   if (!currentUser) { _unreadCount = 0; paintFabBadge(); return; }
-  _myPartnershipRows().then(function (r) { _unreadCount = r.incoming.length; paintFabBadge(); }).catch(function () {});
+  _myPartnershipRows().then(function (r) { _unreadCount = r.turn; paintFabBadge(); }).catch(function () {});
 }
 function updateInboxFab(viewName) {
   var fab = $('inboxFab'); if (!fab) return;

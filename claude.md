@@ -28,7 +28,7 @@ monetary features have been intentionally removed and must not be reintroduced.
   `clubs` (one JSONB blob per club), `club_members` (**the source of truth for
   rosters/roles/counts** — never trust a blob's `roster`), `club_chat`,
   `club_reviews`, `businesses`, `biz_reviews` (a DB trigger keeps
-  `businesses.rating/review_count` in sync), `partner_agreements`, `profiles`
+  `businesses.rating/review_count` in sync), `partner_agreements`, `business_promotions`, `profiles`
   (name + `private` flag, readable from other browsers), `site_reviews`,
   `reports`, `contact_messages`. Schema changes go in `supabase/*.sql`.
 - **One deliberate network exception: email OTP.** `scripts/supabase.js` calls
@@ -40,7 +40,7 @@ monetary features have been intentionally removed and must not be reintroduced.
   code — it was intentionally removed.
 - **Scripts load as plain classic scripts** (not ES modules), in a fixed order
   (`schools, qr, supabase, icons → auth → i18n-dom → directory → modal → reviews → profile → profile-types → pages →
-  hero-motion → business → messages → partnerships → editors`) so they share one
+  hero-motion → business → messages → partnerships → deals → editors → admin`) so they share one
   global scope. Files loaded before business.js must not call `sbRest` at load
   time — defer to `DOMContentLoaded`.
   Keep cross-file calls to clearly named global functions.
@@ -66,10 +66,11 @@ monetary features have been intentionally removed and must not be reintroduced.
 | `styles/theme.css` | The active "Paper" theme (red/yellow, graph paper, ink borders, hard shadows, Roboto). Loaded LAST; token-only re-skin. Remove its `<link>` to revert. |
 | `scripts/icons.js` | The drawn icon set (`svgIcon(name, size)`, line icons in one ink style) + doodles for blank banners: school supplies for clubs/About Us (`banner`, `page`, `card1-3`) and storefront items for businesses (`bizBanner`, `bizcard1-3`, via `cardDoodles(id, 'biz')`). Loaded before auth.js. |
 | `scripts/reviews.js` | Club reviews (members only, one per member) + homepage website reviews (static seeds + `site_reviews` table) and the shared review composer. Loaded right after modal.js. |
-| `scripts/business.js` | Local-business directory: `sbRest()`, cards, business page, deal visibility (`dealVisibleToPublic` / `dealVisibleTo` / owner status chip), reviews (one per member), hours (Pacific time, overnight spans), registration (login required), `#biz=<id>` links. |
-| `scripts/messages.js` | "Reach Out" popup (public contact email + partnership request form), profiles table sync, Partnership Requests inbox + FAB badge. |
-| `scripts/partnerships.js` | Partnership lifecycle (pending → launched/declined/deleted, launched → ended; every transition is status-guarded), the "Partnership" tag and deal boxes. Requests are addressed to the club/business id, not a person. |
-| `scripts/editors.js` | Per-section owner editors (gear/pencil popups) for clubs and businesses, incl. the President-only danger zone (hand off & leave, delete club) and Delete business. |
+| `scripts/business.js` | Local-business directory: `sbRest()`, cards, business page, deal filter + search (via deals.js), reviews (one per member), hours (Pacific time, overnight spans), registration (login required), `#biz=<id>` links. |
+| `scripts/messages.js` | "Reach Out" popup (public contact email + partnership request form with a **Send as** dropdown of every club you're President of / business you own), profiles table sync, Partnership Requests view (Requests / Active / Past tabs, a detail popup with the terms in large text + version history, Approve / Suggest changes / Turn down / Withdraw) + FAB badge (= requests where it's your turn). |
+| `scripts/partnerships.js` | Partnership lifecycle: pending (with `awaiting` = whose turn; counter-offers flip the turn and are logged in `history`) → launched / declined / deleted, launched → ended. Every transition is status- and turn-guarded; the DB trigger `trg_partner_guard` enforces turns, the 3-active limit, real names and "each side changes only its own hide/timer switch". Loads live partnerships into `_agreementFor`. Requests are addressed to the club/business id, not a person. |
+| `scripts/deals.js` | How deals look everywhere. **Partnership** = red box + puzzle piece; **promotion** (a business's own deal, `business_promotions`, up to 3 at once, all fields required except "How to redeem") = yellow note + black price tag. Card bottom box (visible partnership first, else a promotion), name-row squares (yellow puzzle = open to partnerships, red puzzle = partnered, ×2/×3 on hover; price tag = promotion), banner chips (count shown), on-page boxes with owner controls (timer, edit, hide, delete), the ticking countdown timer (only while live), and `refreshDealViews()`. Visitors see an item only while it is live and not hidden. |
+| `scripts/editors.js` | Per-section owner editors (gear/pencil popups) for clubs and businesses (incl. the promotion editor `editPromotion` / `savePromotion`), the President-only danger zone (hand off & leave, delete club) and Delete business. |
 | `scripts/admin.js` | Admin page (emails in the server's `admins` table): tabs for Reports (resolve/dismiss/reopen), Messages from the Contact Us box (mark handled, reply by email), Verification (approve/reject, remove seals) and private Invite codes; summary counts + a to-do badge on the header's Admin button. Loaded last. |
 | `scripts/hero-motion.js` | Canvas animation behind the homepage hero (10-second seamless loop). Loaded after pages.js. |
 
@@ -187,6 +188,8 @@ Schema + policies: `supabase/security_2026_10.sql` (and later `supabase/*.sql`).
   `BIZ_SELECT` (never `select=*`). Ownership comes from `my_business_ids()` /
   `member_business_ids()` (`isBizOwner` reads `_myBizIds`), the profile row is
   written by `save_my_profile()` and found by `claim_my_profile()`.
+- **Club records carry no emails.** A trigger strips `email` from `clubs.data.leaders[]` / `roster[]` on every write; the club's public contact address is `data.email`, which the President types in.
+- **Partnerships and promotions are enforced in the database** (`supabase/partnerships_v2_2026_10.sql`): only the side whose turn it is can approve or counter, names come from the real listings, at most 3 active partnerships per club/business and 3 running promotions per business, and hidden promotions aren't readable by visitors.
 - **Invite codes are private** (`invite_codes` table, admin-only); the site can
   only ask `check_invite_code`. Never put codes in the JS.
 - **Rollout switch:** `app_settings.legacy_writes` = `'on'` lets old anonymous

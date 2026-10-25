@@ -56,49 +56,49 @@ var SEED_CLUBS = [
     recruitment: 'Application Required', tags: ['robotics', 'coding', 'competition'],
     desc: 'Design, build, and program competition robots. Weekly builds, alumni-engineer mentorship, and a spring regional tournament.',
     meeting: 'Wednesdays @ 3:30 PM · Engineering Lab (Rm 214)', memberCount: 42, email: 'robotics@pvphs.edu',
-    leaders: [{ name: 'Priya Nair', role: 'President', email: 'priya.n@pvphs.edu' }, { name: 'Marcus Bell', role: 'Vice President', email: 'marcus.b@pvphs.edu' }] },
+    leaders: [{ name: 'Priya Nair', role: 'President' }, { name: 'Marcus Bell', role: 'Vice President' }] },
   { id: 'c-debate', name: 'Debate & Model UN', category: 'Humanities & Debate', focus: ['Academic Competition', 'Social Impact'],
     school: 'Palos Verdes Peninsula High School', district: 'Palos Verdes Peninsula Unified School District', zip: '90274',
     recruitment: 'Application Required', tags: ['debate', 'public speaking', 'model un'],
     desc: 'Sharpen argumentation and research through weekly practice rounds and travel to regional tournaments.',
     meeting: 'Mondays & Thursdays @ 3:15 PM · Rm 108', memberCount: 28, email: 'debate@pvphs.edu',
-    leaders: [{ name: 'Sofia Reyes', role: 'President', email: 'sofia.r@pvphs.edu' }] },
+    leaders: [{ name: 'Sofia Reyes', role: 'President' }] },
   { id: 'c-green', name: 'Green Earth Club', category: 'Community Service', focus: ['Community Service', 'Social Impact'],
     school: 'West High School', district: 'Torrance Unified School District', zip: '90503',
     recruitment: 'Open to All', tags: ['environment', 'volunteering', 'sustainability'],
     desc: 'Campus clean-ups, a native-plant garden, and community recycling drives. Everyone welcome, no experience needed.',
     meeting: 'Tuesdays @ 3:30 PM · Greenhouse', memberCount: 51, email: 'green@westhigh.edu',
-    leaders: [{ name: 'Noah Ibrahim', role: 'President', email: 'noah.i@westhigh.edu' }] },
+    leaders: [{ name: 'Noah Ibrahim', role: 'President' }] },
   { id: 'c-art', name: 'Visual Arts Collective', category: 'Arts, Media & Design', focus: ['Arts'],
     school: 'West High School', district: 'Torrance Unified School District', zip: '90503',
     recruitment: 'Open to All', tags: ['painting', 'design', 'photography'],
     desc: 'A studio community for painters, illustrators, and photographers. Monthly gallery shows and a shared supply library.',
     meeting: 'Fridays @ 3:00 PM · Art Studio', memberCount: 35, email: 'arts@westhigh.edu',
-    leaders: [{ name: 'Dylan Cho', role: 'President', email: 'dylan.c@westhigh.edu' }, { name: 'Ava Klein', role: 'Secretary', email: 'ava.k@westhigh.edu' }] },
+    leaders: [{ name: 'Dylan Cho', role: 'President' }, { name: 'Ava Klein', role: 'Secretary' }] },
   { id: 'c-biz', name: 'Young Entrepreneurs', category: 'Business & Entrepreneurship', focus: ['Academic Competition', 'Social Impact'],
     school: 'Redondo Union High School', district: 'Redondo Beach Unified School District', zip: '90277',
     recruitment: 'Open to All', tags: ['business', 'startups', 'pitching'],
     desc: 'Turn ideas into real projects with pitch nights, mentor sessions, and a startup showcase every spring.',
     meeting: 'Fridays @ 3:00 PM · Rm 301', memberCount: 24, email: 'ye@redondo.edu',
-    leaders: [{ name: 'Daniel Ruiz', role: 'President', email: 'daniel.r@redondo.edu' }] },
+    leaders: [{ name: 'Daniel Ruiz', role: 'President' }] },
   { id: 'c-med', name: 'Future Health Professionals', category: 'Health & Medicine', focus: ['STEM', 'Community Service'],
     school: 'Redondo Union High School', district: 'Redondo Beach Unified School District', zip: '90277',
     recruitment: 'Application Required', tags: ['medicine', 'biology', 'volunteering'],
     desc: 'Guest clinicians, CPR-certification workshops, and hospital volunteering for aspiring health professionals.',
     meeting: 'Wednesdays @ 3:00 PM · Bio Lab', memberCount: 33, email: 'fhp@redondo.edu',
-    leaders: [{ name: 'Grace Okafor', role: 'President', email: 'grace.o@redondo.edu' }] },
+    leaders: [{ name: 'Grace Okafor', role: 'President' }] },
   { id: 'c-code', name: 'Girls Who Code', category: 'STEM & Tech', focus: ['STEM', 'Social Impact'],
     school: 'Mira Costa High School', district: 'Manhattan Beach Unified School District', zip: '90266',
     recruitment: 'Open to All', tags: ['coding', 'web', 'community'],
     desc: 'A beginner-friendly space to learn web and app development through hands-on projects and peer mentorship.',
     meeting: 'Thursdays @ 3:30 PM · Computer Lab B', memberCount: 40, email: 'gwc@miracosta.edu',
-    leaders: [{ name: 'Hannah Lee', role: 'President', email: 'hannah.l@miracosta.edu' }] },
+    leaders: [{ name: 'Hannah Lee', role: 'President' }] },
   { id: 'c-track', name: 'Running & Fitness Club', category: 'Athletics & Recreation', focus: ['Athletics', 'Community Service'],
     school: 'Mira Costa High School', district: 'Manhattan Beach Unified School District', zip: '90266',
     recruitment: 'Open to All', tags: ['running', 'fitness', 'wellness'],
     desc: 'Group runs, beach workouts, and charity 5Ks for every fitness level. No tryouts, just show up.',
     meeting: 'Tuesdays & Fridays @ 3:15 PM · Track', memberCount: 46, email: 'run@miracosta.edu',
-    leaders: [{ name: 'Leo Park', role: 'President', email: 'leo.p@miracosta.edu' }] }
+    leaders: [{ name: 'Leo Park', role: 'President' }] }
 ];
 
 var CLUBS = [];
@@ -523,9 +523,9 @@ function renderCard(club) {
         '<button class="card-flag" title="Report this club" onclick="event.stopPropagation(); openReport(\'club\',\'' + club.id + '\',\'' + jsArg(club.name) + '\')">' + (typeof ICON_FLAG !== 'undefined' ? ICON_FLAG : '') + '</button>' +
         '<span class="cover-cat">' + escHtml(club.category) + '</span></div>' +
       '<div class="card-body">' +
-        (typeof partnershipBadge === 'function' ? partnershipBadge('club', club.id) : '') +
         '<div class="card-title" onclick="openClub(\'' + club.id + '\')"><h3>' + escHtml(club.name) + '</h3>' +
           (club.verified ? '<span class="name-verified-ico" title="Verified">' + verifiedSeal(16, '#e6b422', '#ffffff') + '</span>' : '') +
+          (typeof dealSquares === 'function' ? dealSquares('club', club) : '') +
           (typeof isClubMember === 'function' && isClubMember(club) ? '<span class="joined-chip">✓ ' + t('joined_label') + '</span>' : '') + '</div>' +
         '<div class="card-meta">' + escHtml(club.school) + (club.zip ? ' · ' + escHtml(club.zip) : '') + '</div>' +
         (club.clubId ? '<div class="card-idline"><span class="club-id-chip">#' + escHtml(club.clubId) + '</span></div>' : '') +
@@ -629,10 +629,10 @@ function publishClub() {
     recruitment: $('ccRecruit').value,
     desc: $('ccDesc').value.trim() || 'A new club on Student Club Hub.',
     meeting: 'Schedule TBD',   // meeting times + tags are added later from the club page (Details pencil)
-    email: $('ccEmail').value.trim() || currentUser.email,
+    email: $('ccEmail').value.trim(),   // the club's PUBLIC contact email (required above) — never the login email
     tags: [], memberCount: 1, banner: wizardBanner, gallery: wizardGallery.slice(),
     socials: collectCreateLinks(), chatAccess: 'all',
-    leaders: [{ name: currentUser.name, role: 'President', email: $('ccEmail').value.trim() || currentUser.email }],
+    leaders: [{ name: currentUser.name, role: 'President' }],   // no emails in the public club record
     roster: [{ name: currentUser.name, role: 'President', memberId: currentUser.memberId }],
     verifiedOwner: currentUser.memberId, inviteCode: $('ccInvite').value.trim().toUpperCase()
   };

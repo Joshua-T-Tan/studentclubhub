@@ -287,8 +287,8 @@ var HIW_GROUPS = [
   ]},
   { ico: ICON_BUSINESS, title: 'For Local Business Owners', steps: [
     { n: '01', t: 'List your business with “Register Your Business”', d: 'Go to Local Businesses and pick Register Your Business. Add your location, your website, and the clubs or causes you’d like to support.' },
-    { n: '02', t: 'Post deals in “My Business”', d: 'From My Business you can post discounts, promo codes or sponsorship offers. Club members and local supporters see them when they browse.' },
-    { n: '03', t: 'Team up with a club', d: 'Partner with clubs that need help with an event or a project. Students at nearby schools see your name, and your money stays in your own community.' }
+    { n: '02', t: 'Run promotions from your page', d: 'Open your business from My Business and tap “Add a promotion.” Pick a type (discount, buy one get one, coupon or promo code, free item, bundle, or your own), say who it’s for, and set start and end dates. You can run up to three at once.' },
+    { n: '03', t: 'Team up with a club', d: 'Partner with clubs that need help with an event or a project. Students at nearby schools see your name on the club’s page, and your money stays in your own community.' }
   ]},
   { ico: ICON_COMMUNITY, title: 'For Community Members &amp; Supporters', steps: [
     { n: '01', t: 'See what’s going on in “Browse Clubs”', d: 'Check out the projects, fundraisers and events high school students are running near you.' },
@@ -296,16 +296,48 @@ var HIW_GROUPS = [
     { n: '03', t: 'Join in', d: 'Join a club as a community member to get its sponsored deals. Shopping at those businesses keeps sponsorship money going to student projects.' }
   ]}
 ];
+/* Partnerships, step by step (shown after the three audience groups). */
+var HIW_PARTNER_STEPS = [
+  { n: '01', t: 'Send a request', d: 'Open a club or business that’s “Open to partnerships” and tap Reach Out. Choose which of your clubs or businesses it’s from, the type (discount for members, sponsorship, event collaboration or other), the dates, and the deal itself.' },
+  { n: '02', t: 'Go back and forth', d: 'The other side can approve it, suggest changes, or turn it down. If they suggest changes, it’s your turn to approve their version or reply with your own. Every version is kept in the request’s history.' },
+  { n: '03', t: 'Go live on both pages', d: 'Once one side’s version is approved, the partnership shows on both pages from the start date through the end date, with a red puzzle piece on each card and banner.' },
+  { n: '04', t: 'Finish or end it early', d: 'It ends by itself after the end date, or either side can end it sooner. Finished, withdrawn and turned-down requests stay under Partnership Requests → Past, with the exact deal and dates.' }
+];
+/* What each icon means (drawn with the same pieces the cards use). */
+function hiwLegendHTML() {
+  var P = typeof ICON_PARTNER !== 'undefined' ? ICON_PARTNER : '', T = typeof ICON_TAG !== 'undefined' ? ICON_TAG : '', C = typeof ICON_CLOCK_TICK !== 'undefined' ? ICON_CLOCK_TICK : '';
+  var rows = [
+    ['<span class="name-openp-ico">' + P + '</span>', 'Open to partnerships', 'This club or business is looking for partners. Tap Reach Out on its page to send a request.'],
+    ['<span class="deal-sq is-partner">' + P + '</span>', 'Partnered', 'It has an active partnership. On a directory card, point at the red puzzle to see how many (×2 or ×3).'],
+    ['<span class="deal-sq is-promo">' + T + '</span>', 'Promotion running', 'The business has its own deal running right now, with no partner involved.'],
+    ['<span class="deal-timer is-sample">' + C + '<span class="dt-txt">3d 04:12:09</span></span>', 'Countdown', 'Time left before a deal ends. Owners can turn it on or off for any live partnership or promotion.'],
+    ['<span class="hiw-swatch is-partner">' + P + '</span>', 'Red box', 'A partnership: the type, the deal, the partner’s name and the dates.'],
+    ['<span class="hiw-swatch is-promo">' + T + '</span>', 'Yellow note', 'A promotion: the type, who it’s for, the deal, how to redeem it (if listed) and the dates.'],
+    ['<span class="hiw-swatch is-seal">' + verifiedSeal(22, '#e6b422', '#ffffff') + '</span>', 'Verified', 'Student Club Hub confirmed this is the real, official page.'],
+    ['<span class="hiw-swatch is-eye">' + ICON_EYE_OFF + '</span>', 'Only visible to you', 'Owners can hide a partnership or promotion. Visitors don’t see it at all, and the owner sees this note.']
+  ];
+  return '<div class="hiw-group"><div class="hiw-group-head"><span class="hiw-group-ico">' + P + '</span><h2>What the icons mean</h2></div>' +
+    '<div class="hiw-legend">' + rows.map(function (r) {
+      return '<div class="hiw-legend-row"><span class="hiw-legend-ico">' + r[0] + '</span><div><h4>' + r[1] + '</h4><p>' + r[2] + '</p></div></div>';
+    }).join('') + '</div></div>';
+}
+function hiwStepsHTML(ico, title, steps) {
+  return '<div class="hiw-group"><div class="hiw-group-head"><span class="hiw-group-ico">' + ico + '</span><h2>' + title + '</h2></div><div class="hiw-steps">' +
+    steps.map(function (s) { return '<div class="hiw-step"><div class="hiw-num">' + s.n + '</div><div class="hiw-step-body"><h4>' + s.t + '</h4><p>' + s.d + '</p></div></div>'; }).join('') + '</div></div>';
+}
 function renderHowItWorks() {
   var el = $('howitworksBody'); if (!el) return;
-  var groups = HIW_GROUPS.map(function (g) {
-    var steps = g.steps.map(function (s) {
-      return '<div class="hiw-step"><div class="hiw-num">' + s.n + '</div>' +
-        '<div class="hiw-step-body"><h4>' + s.t + '</h4><p>' + s.d + '</p></div></div>';
-    }).join('');
-    return '<div class="hiw-group"><div class="hiw-group-head"><span class="hiw-group-ico">' + g.ico + '</span>' +
-      '<h2>' + g.title + '</h2></div><div class="hiw-steps">' + steps + '</div></div>';
-  }).join('');
+  var groups = HIW_GROUPS.map(function (g) { return hiwStepsHTML(g.ico, g.title, g.steps); }).join('') +
+    hiwStepsHTML(typeof ICON_PARTNER !== 'undefined' ? ICON_PARTNER : '', 'Partnerships, step by step', HIW_PARTNER_STEPS) +
+    hiwLegendHTML() +
+    '<div class="hiw-group"><div class="hiw-group-head"><span class="hiw-group-ico">' + svgIcon('clipboard', 26) + '</span><h2>Good to know</h2></div>' +
+      '<ul class="hiw-facts">' +
+        '<li>A club or business can have up to <strong>three active partnerships</strong>, and a business can run up to <strong>three promotions</strong> at once.</li>' +
+        '<li>On a directory card, a visible partnership is shown first. If it’s hidden, the business’s promotion shows instead.</li>' +
+        '<li>Partnerships are sent and approved by a club’s President or a business’s owner, on behalf of the club or business. When leadership changes, the new leader takes them over.</li>' +
+        '<li>Hiding a partnership only hides it on your own page and card. The other side decides for theirs.</li>' +
+        '<li>Promotions and partnerships appear on their start date and disappear after their end date, automatically.</li>' +
+      '</ul></div>';
   el.innerHTML = pageBanner('About Us', 'How It Works') +
     '<div class="container narrow"><div class="prose">' +
       '<div class="prose-logo">' + schLogo(96) + '</div>' + groups +
@@ -324,7 +356,7 @@ var FAQ_ITEMS = [
   { q: 'How do students join or start a club on Student Club Hub?',
     a: 'Search the directory by zip code, school or district, then open a club to save it, join it or contact its leaders. To start your own, sign in and use “Register a Club.” Add your meeting details, photos and social links, and it shows up in the directory right away.' },
   { q: 'How do local businesses partner with student clubs and post exclusive deals?',
-    a: 'Sign in, then register your shop from the Local Businesses menu. It goes live right away. Use the pencil icons on your page to add a student deal, hours, photos and links. To team up with a club, open a club that’s “open to partnerships” and tap Reach Out.' },
+    a: 'Sign in, then register your shop from the Local Businesses menu. It goes live right away. On your page, tap “Add a promotion” to post a deal (up to three at once), and use the pencil icons for hours, photos and links. To team up with a club, open a club that’s “open to partnerships” and tap Reach Out.' },
   { q: 'How do community members access local business perks?',
     a: 'Browse the shops in the Local Businesses directory and use the deals listed on each one. Every purchase helps the businesses that back student projects.' },
   { q: 'Is Student Club Hub free to use for schools and clubs?',
@@ -334,9 +366,9 @@ var FAQ_ITEMS = [
   { q: 'What does the gold “Verified” seal mean?',
     a: 'A club’s President or a business owner can request the seal in Page settings. Student Club Hub reviews each request and adds the gold seal once it confirms the page is the real, official one. It shows the page is legitimate, not that we endorse the club, business or any deal. Always confirm who you’re dealing with before agreeing to anything important.' },
   { q: 'How do clubs and businesses form a partnership on the platform?',
-    a: 'A club President or business owner opens the other side’s page (it has to be “open to partnerships”) and taps Reach Out. They choose a partnership type, describe it, and set start and end dates. The other side approves or rejects it under Partnership Requests. Once it’s approved, a “Partnership” tag shows on both banners from the start date through the end date, and either side can end it early. Nothing about the deal itself (discounts, terms, money) is handled or guaranteed by Student Club Hub.' },
+    a: 'A club President or business owner opens the other side’s page (it has to be “open to partnerships”) and taps Reach Out. They choose which of their own clubs or businesses it’s from, the partnership type, the deal, and the start and end dates. Under Partnership Requests, the other side can approve it, suggest changes, or turn it down, and changes go back and forth until one side’s version is approved. It then shows on both pages from the start date through the end date, and either side can end it early. Nothing about the deal itself (discounts, terms, money) is handled or guaranteed by Student Club Hub.' },
   { q: 'What’s the difference between “open to partnerships” and being “partnered”?',
-    a: '“Open to partnerships” is a badge a club or business turns on to say they’re looking to collaborate — it’s a standing invitation anyone can respond to. A “Partnership” tag means two specific groups have a confirmed, approved partnership. They’re independent: you can show both at once.' },
+    a: '“Open to partnerships” (a yellow square with a black puzzle piece) is a setting a club or business turns on to say they’re looking to collaborate. It’s a standing invitation. Being partnered (a red square with a puzzle piece) means two specific groups have an approved partnership running right now. A listing can be open to new partners and partnered at the same time.' },
   { q: 'What is the ID shown on a club or business page for?',
     a: 'Every club and business gets a short unique ID (for example, #HQ3YN7). It’s a quick, unambiguous way to refer to or search for a specific listing — handy when two groups share a similar name, or when a leader wants to point someone straight to their page.' },
   { q: 'How do I contact a club or business?',
@@ -345,10 +377,14 @@ var FAQ_ITEMS = [
     a: 'It’s a straight swap of spots. The member you promote becomes the new President, and you take over their previous role — for example, if you make your Treasurer the President, you become the Treasurer. A club always has exactly one President, so leadership transfers rather than duplicates.' },
   { q: 'Who can edit a club or business page, and what can they change?',
     a: 'Only a club’s officers (President, Vice President, Secretary, Treasurer) or a business’s owner can edit its page, and the editing controls (gray pencil and gear icons) are visible only to them. They can update the banner slideshow, title, category, hours, description, links, images, and whether the group is public or private or open to partnerships — right from the profile, without a separate dashboard.' },
-  { q: 'What’s the difference between a deal/discount and a partnership?',
-    a: 'They’re two separate things. A deal (or discount) is an open offer a business lists on its page, for example “15% off with code HI.” Depending on who it’s set for, anyone or any student can use it. A partnership is an approved arrangement between a specific business and a specific club, and it shows a “Partnership” tag on both pages. A business might run a public discount, partner with a particular club, or both. The deal itself says who it’s for.' },
-  { q: 'Can a business hide its current deal without deleting it?',
-    a: 'Yes. An owner can tap the eye icon on their deal to hide it from visitors while keeping it saved for themselves, which is useful when a promotion is paused. While it’s hidden, the owner sees an “Only visible to you” note. Hiding a deal doesn’t affect any “Partnership” tag; it only hides that offer.' }
+  { q: 'What’s the difference between a promotion and a partnership?',
+    a: 'A promotion (a yellow note with a black price tag) is a business’s own offer with no partner, for example “15% off with code HI.” It says who it’s for: students only, or everyone. A partnership (a red box with a puzzle piece) is an approved arrangement between two specific clubs or businesses, and it shows on both of their pages. A business can run promotions, have partnerships, or both. On its directory card, a visible partnership is shown first.' },
+  { q: 'Can I hide a promotion or partnership without deleting it?',
+    a: 'Yes. Owners tap the eye icon on it to hide it from visitors while keeping it saved, which is useful when a deal is paused. Visitors don’t see it anywhere, and the owner sees an “Only visible to you” note. For a partnership, each side decides for its own page.' },
+  { q: 'How many promotions and partnerships can I have?',
+    a: 'A business can run up to three promotions at once, and any club or business can have up to three active partnerships at once. Once one ends (or you delete or end it), you can add another.' },
+  { q: 'What is the countdown timer?',
+    a: 'Owners can turn on a ticking countdown for any partnership or promotion that’s running. It shows the time left until the end date on the page and on the directory card, and it disappears once the deal is over. Tap the clock button on the deal to turn it on or off.' }
 ];
 var faqOpen = -1;
 function renderFaq() {

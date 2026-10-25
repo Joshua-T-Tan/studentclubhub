@@ -21,27 +21,9 @@ var BIZ_CAT_META = {
   'Printing & Supplies':  { icon: svgIcon('printer', 22), grad: 'linear-gradient(140deg,#4fb3c9,#007ea7)' },
   'Entertainment':        { icon: svgIcon('music', 22), grad: 'linear-gradient(140deg,#1ba3d1,#005f7d)' }
 };
-var PERK_TYPES = { discount: 'Student Discount', addon: 'Free Add-On', sponsorship: 'Club Sponsorship' };
-var PERK_FILTER_LABELS = { discount: 'Student discounts (% off)', addon: 'Free add-ons & freebies', sponsorship: 'Club sponsorships & grants' };
-/* ---- Deal visibility: ONE rule used by the card, page, search and filters ----
-   Visitors see a deal only if it has text, the owner hasn't hidden it, and its end
-   date hasn't passed. The owner always sees their own deal, with a status label. */
-function _dealToday() { return (typeof _todayStr === 'function') ? _todayStr() : new Date().toISOString().slice(0, 10); }
-function dealHasText(b) { return !!(b && b.perk_description && String(b.perk_description).trim()); }
-function dealExpired(b) { return !!(b && b.perk_end && String(b.perk_end) < _dealToday()); }
-function dealNotStarted(b) { return !!(b && b.perk_start && String(b.perk_start) > _dealToday()); }
-function dealVisibleToPublic(b) { return dealHasText(b) && !b.deal_hidden && !dealExpired(b) && !dealNotStarted(b); }
-function dealVisibleTo(b) { return dealHasText(b) && (dealVisibleToPublic(b) || (typeof isBizOwner === 'function' && isBizOwner(b))); }
-/* Owner-only status chip: why a deal is (or isn't) public right now. */
-/* Owner-only visibility chip. `compact` (directory cards) shows just the icon, with the full text as a tooltip. */
-function dealStatusChip(b, compact) {
-  var st = b.deal_hidden ? { cls: 'is-private', ico: ICON_EYE_OFF, txt: 'Only visible to you' }
-    : dealExpired(b) ? { cls: 'is-private', ico: svgIcon('calendar', 13), txt: 'Expired, hidden from visitors' }
-    : dealNotStarted(b) ? { cls: 'is-private', ico: svgIcon('calendar', 13), txt: 'Scheduled, starts ' + _fmtPerkDate(b.perk_start) }
-    : { cls: 'is-public', ico: ICON_EYE, txt: 'Visible to everyone' };
-  if (compact) return '<span class="deal-vis ' + st.cls + ' is-compact" title="' + escAttr(st.txt) + '" aria-label="' + escAttr(st.txt) + '">' + st.ico + '</span>';
-  return '<span class="deal-vis ' + st.cls + '">' + st.ico + ' ' + escHtml(st.txt) + '</span>';
-}
+/* Deals (partnerships + promotions) are drawn by deals.js: dealSquares, cardDealBox, dealBannerChips, partnershipDealBox, promotionBoxes. */
+var DEAL_FILTERS = [['All', 'All deals'], ['partner', 'Has a partnership'], ['promo', 'Any promotion'], ['discount', 'Discounts'],
+  ['bogo', 'Buy one, get one'], ['coupon', 'Coupons / promo codes'], ['freebie', 'Free items & add-ons'], ['bundle', 'Bundle deals']];
 function bizCatMeta(c) { return BIZ_CAT_META[c] || { icon: svgIcon('store', 22), grad: 'linear-gradient(140deg,#0a6f96,#003249)' }; }
 
 var _bizCache = null, _bizError = null;
@@ -88,6 +70,7 @@ function refreshMyBizIds() {
   return sbRpc('my_business_ids').then(function (ids) {
     var before = _myBizIds.join(); _myBizIds = (ids || []).map(String);
     if (before !== _myBizIds.join()) {   // ownership just loaded/changed: refresh what's on screen
+      if (typeof loadPromotions === 'function') loadPromotions();   // owners can also see their own hidden promotions
       if (typeof currentBiz !== 'undefined' && currentBiz && $('view-business') && !$('view-business').classList.contains('hidden')) renderBusinessPage(currentBiz);
       if ($('view-shops') && !$('view-shops').classList.contains('hidden') && typeof renderShops === 'function') renderShops();
     }
@@ -121,7 +104,7 @@ function renderBusinesses(kind) {
   if (kind === 'register') return renderBusinessRegister(el);
   if (kind === 'my') return renderMyBusiness(el);
   var savedOnly = (kind === 'saved');
-  var crumb = savedOnly ? 'Saved Businesses' : 'Browse Local Businesses';
+  var crumb = savedOnly ? 'Saved Businesses' : 'Browse Businesses';
   var sub = savedOnly ? 'The local partners you’ve saved for quick access.'
     : 'Discover local business discounts, sponsorships, and student perks from shops near you.';
   el.innerHTML =
@@ -138,8 +121,8 @@ function businessFilterBar() {
   var pills = ['All'].concat(BIZ_CATEGORIES).map(function (c) {
     return '<button class="cat-pill' + (bizState.cat === c ? ' active' : '') + '" onclick="setBizFilter(\'cat\',\'' + jsArg(c) + '\')">' + escHtml(c) + '</button>';
   }).join('');
-  var perkOpts = '<option value="All">All perk types</option>' + Object.keys(PERK_FILTER_LABELS).map(function (k) {
-    return '<option value="' + k + '"' + (bizState.perk === k ? ' selected' : '') + '>' + PERK_FILTER_LABELS[k] + '</option>';
+  var perkOpts = DEAL_FILTERS.map(function (o) {
+    return '<option value="' + o[0] + '"' + (bizState.perk === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
   }).join('');
   var sortOpts = [
     ['az', 'Alphabetical (A → Z)'], ['za', 'Reverse Alphabetical (Z → A)'],
@@ -149,7 +132,7 @@ function businessFilterBar() {
     return '<option value="' + o[0] + '"' + (bizState.sort === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
   }).join('');
   return '<div class="toolbar"><div class="search"><span class="ico">⌕</span>' +
-      '<input type="text" placeholder="Search by business name, city, zip code, or student discount..." value="' + escAttr(bizState.q) + '" oninput="setBizFilter(\'q\',this.value)"></div>' +
+      '<input type="text" placeholder="Search by business name, city, zip code, or deal..." value="' + escAttr(bizState.q) + '" oninput="setBizFilter(\'q\',this.value)"></div>' +
       '<select class="select" onchange="setBizFilter(\'perk\',this.value)">' + perkOpts + '</select>' +
       '<select class="select" onchange="setBizFilter(\'sort\',this.value)">' + sortOpts + '</select></div>' +
     '<div class="cat-row">' + pills + '</div>';
@@ -157,17 +140,25 @@ function businessFilterBar() {
 /* The rating a visitor can actually see (0 when the owner turned reviews off). */
 function _shownRating(b) { return b.reviews_enabled === false ? 0 : (+b.rating || 0); }
 function setBizFilter(k, v) { bizState[k] = v; if (k === 'q' && $('bizGrid')) paintBusinessGrid(false); else renderShops(); }
+/* Deals finished loading: redraw just the cards (the search box keeps its focus). */
+var _bizGridSaved = false;
+function repaintBizCards() {
+  if ($('bizGrid') && _bizCache) paintBusinessGrid(_bizGridSaved);
+  var my = $('myBizList'); if (my && my.querySelector('.biz-card')) my.innerHTML = Object.keys(_bizOwned).map(function (k) { return _bizOwned[k]; })
+    .sort(function (a, b) { return String(b.created_at || '').localeCompare(String(a.created_at || '')); }).map(businessCard).join('');
+}
 function paintBusinessGrid(savedOnly) {
   var g = $('bizGrid'); if (!g) return;
+  _bizGridSaved = !!savedOnly;
   var list = (_bizCache || []).slice();
   if (savedOnly) { var s = loadSavedBiz(); list = list.filter(function (b) { return s.indexOf(b.id) !== -1; }); }
   else {
     list = list.filter(function (b) { return !b.is_private; });   // private listings never show in public Browse
     if (bizState.cat !== 'All') list = list.filter(function (b) { return b.category === bizState.cat; });
-    if (bizState.perk !== 'All') list = list.filter(function (b) { return dealVisibleToPublic(b) && b.perk_type === bizState.perk; });
+    if (bizState.perk !== 'All') list = list.filter(function (b) { return bizMatchesDealFilter(b, bizState.perk); });
     var q = bizState.q.trim().toLowerCase();
     if (q) list = list.filter(function (b) {
-      return (b.name + ' ' + b.city + ' ' + b.zip + ' ' + (dealVisibleTo(b) ? b.perk_description : '') + ' ' + b.category).toLowerCase().indexOf(q) !== -1;
+      return (b.name + ' ' + b.city + ' ' + b.zip + ' ' + dealSearchText(b) + ' ' + b.category).toLowerCase().indexOf(q) !== -1;
     });
     var s = bizState.sort, az = function (a, b) { return (a.name || '').localeCompare(b.name || ''); };
     list.sort(function (a, b) {
@@ -199,14 +190,11 @@ function businessCard(b) {
     '<div class="card-body">' +
       '<div class="card-title" onclick="openBusiness(\'' + b.id + '\')"><h3>' + escHtml(b.name) + '</h3>' +
         (b.verified ? '<span class="name-verified-ico" title="Verified">' + verifiedSeal(17, '#e6b422', '#ffffff') + '</span>' : '') +
-        (b.partnership_open ? '<span class="name-openp-ico" title="Open to partnerships">' + ICON_PARTNER + '</span>' : '') +
+        dealSquares('business', b) +
       '</div>' +
       '<div class="card-meta">' + svgIcon('pin', 14) + ' ' + escHtml(b.city) + ', CA ' + escHtml(b.zip) + '</div>' +
       (b.public_id ? '<div class="card-idline"><span class="club-id-chip">#' + escHtml(b.public_id) + '</span></div>' : '') +
-      (dealVisibleTo(b)
-        ? '<div class="perk-box perk-2row' + (dealVisibleToPublic(b) ? '' : ' is-private') + '"><span class="perk-tag">' + escHtml(PERK_TYPES[b.perk_type] || 'Perk') + '</span>' +
-            (dealVisibleToPublic(b) ? '' : ' ' + dealStatusChip(b, true)) + '<p>' + escHtml(b.perk_description) + '</p></div>'
-        : '') +   // no deal, or a hidden/expired one: no box at all (the card keeps its height; the buttons stay on the bottom edge)
+      cardDealBox(b) +   // partnership first, else a promotion; nothing at all when neither is showing
       '<div class="card-foot">' +
         '<button class="fav-btn ' + (saved ? 'on' : '') + '" onclick="toggleBizSave(\'' + b.id + '\')">' + bookmarkSvg(saved) + (saved ? 'Saved' : 'Save Business') + '</button>' +
         '<button class="btn primary" onclick="openBusiness(\'' + b.id + '\')">View Details</button>' +
@@ -260,7 +248,6 @@ function bizSlides(b) {
   if (g.length) return g.map(function (u) { return { img: u }; });
   return [{ paper: true }];   // nothing uploaded → a blank sheet of paper with school doodles
 }
-function _fmtPerkDate(s) { try { return new Date(s + 'T00:00:00').toLocaleDateString(siteLocale(), { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return s; } }
 function renderBusinessPage(b) {
   var slides = bizSlides(b), saved = isBizSaved(b.id), owner = isBizOwner(b);
   var cuisines = (b.cuisines || []).length ? (b.cuisines || []).join('  •  ') : b.category;
@@ -292,43 +279,13 @@ function renderBusinessPage(b) {
           '<span class="biz-cuisines">' + escHtml(cuisines) + '</span>' +
           (b.verified ? '<span class="biz-verified" tabindex="0">' + (slides[0] && slides[0].paper ? verifiedSeal(18, '#e6b422', '#ffffff') : verifiedSeal(18, '#ffffff', '#b8860b')) + '<span class="bv-label">Verified</span></span>' : '') +
           (b.partnership_open ? '<span class="open-partner-chip">' + ICON_PARTNER + ' Open to partnerships</span>' : '') +
+          dealBannerChips('business', b) +
           (b.public_id ? '<span class="biz-idchip">#' + escHtml(b.public_id) + '</span>' : '') +
-          partneredWithBadge('business', b.id) +
         '</div>' +
       '</div>' +
     '</div>';
 
   var actions = '';   // top reach/share/save action bar removed — those live on the banner / sidebar now
-
-  var perk;
-  var hasPerk = !!(b.perk_description && b.perk_description.trim());
-  var dealPen = owner ? '<button class="deal-eye" title="Edit deal" onclick="editBizPerk(\'' + b.id + '\')">' + ICON_PEN + '</button>' : '';
-  if (!hasPerk) {
-    // No perk set yet (charter-first) — owner gets an actionable prompt; visitors see nothing.
-    perk = owner
-      ? '<div class="perk-box big deal-hidden" style="cursor:pointer" onclick="editBizPerk(\'' + b.id + '\')">' + ICON_PEN + '<span class="form-note">No deal yet — tap to add one so people can see your offer.</span></div>'
-      : '';
-  } else if (!dealVisibleTo(b)) {
-    perk = '';   // hidden or expired → visitors see nothing
-  } else {
-    // The owner always sees the full deal + all three controls, with a status chip.
-    var audLabel = (b.perk_audience === 'everyone') ? 'Everyone' : 'Students';
-    var dl = [];
-    if (b.perk_start) dl.push('from ' + _fmtPerkDate(b.perk_start));
-    if (b.perk_end) dl.push('through ' + _fmtPerkDate(b.perk_end));
-    var dateLine = dl.length ? '<p class="form-note" style="margin-top:4px">' + svgIcon('calendar', 14) + ' Valid ' + dl.join(' ') + '</p>' : '';
-    perk = '<div class="perk-box big' + (dealVisibleToPublic(b) ? '' : ' is-private') + '">' +
-      (owner ? '<div class="deal-ctrls">' + dealPen +
-        (b.deal_hidden
-          ? '<button class="deal-eye" title="Show this deal to visitors again" onclick="toggleDealHidden(\'' + b.id + '\')">' + ICON_EYE_OFF + '</button>'
-          : '<button class="deal-eye" title="Hide this deal from visitors" onclick="toggleDealHidden(\'' + b.id + '\')">' + ICON_EYE + '</button>') +
-        '<button class="deal-eye danger" title="Delete deal" onclick="deleteBizPerk(\'' + b.id + '\')">' + ICON_TRASH + '</button></div>' : '') +
-      '<span class="perk-tag">' + escHtml(PERK_TYPES[b.perk_type] || 'Perk') + '</span> <span class="perk-aud">' + escHtml(audLabel) + '</span>' +
-      (owner ? ' ' + dealStatusChip(b) : '') +
-      '<p style="margin-top:6px"><strong>' + escHtml(b.perk_description) + '</strong></p>' +
-      (b.redemption_instructions ? '<p class="form-note" style="margin-top:6px">How to redeem: ' + escHtml(b.redemption_instructions) + '</p>' : '') +
-      dateLine + '</div>';
-  }
 
   // Combined media (uploaded slideshow photos + gallery) for the Photos & Videos section
   _bizGalleryMedia = (b.photos || []).concat(b.gallery || []);
@@ -351,8 +308,7 @@ function renderBusinessPage(b) {
       '<p class="biz-about' + (b.about ? '' : ' placeholder') + '">' + escHtml(b.about || 'Tell everyone about your business — tap the pencil to add a description.') + '</p>'
     : '';
   var main = '<div class="biz-main">' +
-    perk +
-    (typeof partnershipDealBox === 'function' ? partnershipDealBox('business', b, owner) : '') +
+    '<div class="deal-stack">' + partnershipDealBox('business', b, owner) + promotionBoxes(b, owner) + '</div>' +
     aboutBlock +
     galleryBlock +
     bizLinksHTML(b) +
@@ -485,18 +441,6 @@ function shareBusiness(id) {
       '<p class="form-note" style="text-align:center;margin-top:6px">Scan to open</p></div>';
   openOverlay('shareOverlay');
 }
-/* Deal visibility toggle (owner only). Hidden = visitors don't see the offer;
-   the "Partnered with" banner up top is unaffected. */
-function toggleDealHidden(id) {
-  var b = currentBiz || _bizOwned[id] || (_bizCache || []).find(function (x) { return x.id === id; });
-  if (!b || !isBizOwner(b)) return;
-  var nv = !b.deal_hidden; b.deal_hidden = nv;
-  if (b === currentBiz) renderBusinessPage(b);
-  sbUpdateBusiness(id, { deal_hidden: nv })
-    .then(function () { _bizCache = null; toast(nv ? 'Deal hidden from visitors.' : 'Deal is visible again.'); })
-    .catch(function (ex) { b.deal_hidden = !nv; if (b === currentBiz) renderBusinessPage(b); toast(ex.message); });
-}
-
 /* Media lightbox + full "View all" gallery page (reuses the club lightbox/gallery-page shells) */
 var _bizGalleryMedia = [];
 function openBizLightbox(arr, i) {
@@ -639,7 +583,7 @@ function renderBusinessRegister(el) {
   var catOpts = '<option value="">Select a category…</option>' + BIZ_CATEGORIES.map(function (c) { return '<option>' + escHtml(c) + '</option>'; }).join('');
   el.innerHTML =
     '<div class="page-head centered"><span class="hero-kicker">Local Businesses</span><h1>Register Your Business</h1>' +
-      '<p>Add the basics now — then add your student perk, hours, photos, and links from your page. Your listing goes live right away.</p></div>' +
+      '<p>Add the basics now — then add promotions, hours, photos, and links from your page. Your listing goes live right away.</p></div>' +
     '<div class="form-card" style="margin:0 auto 40px" id="bizForm">' +
       '<div id="bizFormErr" class="auth-error hidden"></div>' +
       field2('bizName', 'Business name *', 'text', 'e.g. Boba Time') +
@@ -647,7 +591,7 @@ function renderBusinessRegister(el) {
       field2('bizAddr', 'Street address', 'text', '123 Main St') +
       '<div class="two-col">' + field2('bizCity', 'City *', 'text', 'Palos Verdes') + field2('bizZip', 'Zip code *', 'text', '90274') + '</div>' +
       '<div class="two-col">' + field2('bizPhone', 'Phone number *', 'tel', '(310) 555-0123') + field2('bizEmail', 'Business contact email *', 'email', 'owner@business.com') + '</div>' +
-      '<p class="form-note" style="margin:2px 0 14px">Everything else — your student perk, hours, photos, links, and partnership settings — you add afterward using the gear and pencil icons on your business page.</p>' +
+      '<p class="form-note" style="margin:2px 0 14px">Everything else — promotions, hours, photos, links, and partnership settings — you add afterward using the gear and pencil icons on your business page.</p>' +
       '<button id="bizSubmit" class="btn primary block lg" onclick="submitBusiness()">List My Business</button>' +
     '</div>';
 }
@@ -680,7 +624,7 @@ function submitBusiness() {
     $('shopsBody').innerHTML =
       '<div class="soon-card" style="margin-top:40px"><div class="soon-ico">' + svgIcon('check', 34) + '</div>' +
         '<h2>Your business is live!</h2>' +
-        '<p><strong>' + escHtml(name) + '</strong> is now in the directory. Open it from My Business to add your deal, hours, and photos.</p>' +
+        '<p><strong>' + escHtml(name) + '</strong> is now in the directory. Open it from My Business to add a promotion, hours, and photos.</p>' +
         '<div class="soon-actions"><button class="btn primary" onclick="navShop(\'my\')">Go to My Business</button>' +
           '<button class="btn blue" onclick="navShop(\'register\')">Register Another</button></div></div>';
   }).catch(function (e) { authBusy2('bizSubmit', false); bizErr(e.message); });
@@ -728,7 +672,7 @@ function renderMyBusiness(el) {
         '<button class="btn blue" onclick="navShop(\'register\')">Register a Business</button></div></div>';
     return;
   }
-  el.innerHTML = '<div class="page-head centered"><h1>My Business</h1><p>Edit your storefront, perks, hours, and partnership settings.</p></div>' +
+  el.innerHTML = '<div class="page-head centered"><h1>My Business</h1><p>Edit your storefront, promotions, hours, and partnership settings.</p></div>' +
     '<div id="myBizList" class="grid"><p class="form-note" style="grid-column:1/-1;text-align:center;padding:40px">Loading your listings…</p></div>';
   refreshMyBizIds().then(function (ids) {
     return ids.length ? sbRest('businesses?id=in.(' + ids.map(encodeURIComponent).join(',') + ')&select=' + BIZ_SELECT + '&order=created_at.desc') : [];
