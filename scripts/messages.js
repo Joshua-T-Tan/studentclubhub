@@ -142,6 +142,7 @@ function sbFindProfileById(memberId) {
 function navInbox() { if (typeof closeMobileNav === 'function') closeMobileNav(); _prTab = 'requests'; showView('inbox'); }
 function renderInbox() {
   var el = $('inboxBody'); if (!el) return;
+  _prFresh = {};
   if (!currentUser) {
     el.innerHTML = '<div class="page-head centered"><h1>Partnership Requests</h1><p>Sign in to see your partnership requests.</p></div>' +
       '<div class="soon-card"><div class="soon-ico">' + svgIcon('lock', 34) + '</div><h2>Sign in required</h2><div class="soon-actions"><button class="btn primary" onclick="openAuth(\'login\')">Log In</button></div></div>';
@@ -162,7 +163,7 @@ var _prRows = {}, _prTab = 'requests', _prData = null;
 function _myPartnershipRows() {
   return _gatherMyEntities().then(function (mine) {
     var ids = (mine || []).map(function (e) { return e.id; });
-    if (!ids.length) return { requests: [], active: [], past: [], hasEntities: false, turn: 0 };
+    if (!ids.length) return { requests: [], active: [], past: [], news: [], hasEntities: false, turn: 0 };
     var L = _idList(ids), own = {};
     mine.forEach(function (e) { own[e.type + ':' + e.id] = true; });
     return sbRest('partner_agreements?or=(a_id.in.' + L + ',b_id.in.' + L + ')&status=neq.draft&select=*&order=created_at.desc').then(function (rows) {
@@ -171,12 +172,14 @@ function _myPartnershipRows() {
         a.mySides = ['a', 'b'].filter(function (s) { return own[a[s + '_type'] + ':' + a[s + '_id']]; });
         if (!a.mySides.length) return;
         a.myTurn = a.status === 'pending' && a.mySides.indexOf(a.awaiting || 'b') > -1;
+        a.newsKey = _prNewsKey(a);
         _prRows[a.id] = a;
         if (a.status === 'pending') { out.requests.push(a); if (a.myTurn) out.turn++; }
         else if (a.status === 'launched' && !_agrExpired(a)) out.active.push(a);
         else out.past.push(a);
       });
       out.requests.sort(function (x, y) { return (y.myTurn ? 1 : 0) - (x.myTurn ? 1 : 0); });   // my turn first
+      out.news = (rows || []).filter(function (a) { return a.newsKey; });
       out.past.sort(function (x, y) { return String(y.decided_at || y.created_at).localeCompare(String(x.decided_at || x.created_at)); });
       return out;
     });
@@ -205,14 +208,14 @@ function _prCard(a) {
     '<div class="pr-body">' + ICON_PARTNER + '<div class="pr-main"><div class="pr-names"><strong class="pr-name">' + escHtml(a.a_name) + '</strong> <span class="pr-arrow">→</span> <strong class="pr-name">' + escHtml(a.b_name) + '</strong></div>' +
       '<div class="pr-line"><span class="pd-type">' + escHtml(a.ptype || 'Partnership') + '</span><span class="pr-deal">' + escHtml(a.a_deal || '') + '</span></div>' +
       '<div class="form-note">' + (dates ? svgIcon('calendar', 13) + ' ' + escHtml(dates) + ' · ' : '') + _prStatusLine(a) + '</div></div></div>' +
-    '<span class="pr-open">Open ›</span></div>';
+    (_prFresh[a.id] ? '<span class="pr-new">New</span>' : '') + '<span class="pr-open">Open ›</span></div>';
 }
 function _paintPrList() {
   var el = $('partnerAgrs'), tabs = $('prTabs'), r = _prData; if (!el || !r) return;
   var T = [['requests', 'Requests', r.requests.length], ['active', 'Active', r.active.length], ['past', 'Past', r.past.length]];
   if (tabs) tabs.innerHTML = T.map(function (t) {
     return '<button class="cat-pill' + (_prTab === t[0] ? ' active' : '') + '" onclick="prTab(\'' + t[0] + '\')"><span>' + t[1] + '</span> <span class="pr-count">' + t[2] + '</span>' +
-      (t[0] === 'requests' && r.turn ? '<span class="pr-dot" title="Waiting for you"></span>' : '') + '</button>';
+      (r[t[0]].some(function (a) { return _prFresh[a.id]; }) ? '<span class="pr-dot" title="New"></span>' : '') + '</button>';
   }).join('');
   var list = r[_prTab] || [];
   if (!r.hasEntities) { el.innerHTML = '<div class="inbox-empty">Partnerships are made between clubs and businesses. Once you’re a club President or own a business, its requests show up here.</div>'; return; }
@@ -223,8 +226,11 @@ function _paintPrList() {
 function renderPendingAgreements() {
   var el = $('partnerAgrs'); if (!el || !currentUser) return;
   _myPartnershipRows().then(function (r) {
+    var seen = _prSeen();
+    r.news.forEach(function (a) { if (!seen[a.newsKey]) _prFresh[a.id] = true; });   // labelled "New" for the rest of this visit
+    _prMarkSeen(r.news);
     _prData = r; _paintPrList();
-    _unreadCount = r.turn; paintFabBadge();
+    _unreadCount = 0; paintFabBadge();
   }).catch(function () { el.innerHTML = '<p class="form-note">Couldn’t load partnership requests. Check your connection and try again.</p>'; });
 }
 
@@ -298,22 +304,57 @@ function submitCounter(id) {
   counterPartnerRequest(id, a.awaiting, t).catch(function (ex) { authBusy2('coSend', false); err(ex.message); });
 }
 
-/* ---------- Floating Partnerships button + badge (= requests where it's MY turn) ---------- */
-var _unreadCount = 0, _unreadTimer = null, _unreadInited = false;
+/* ---------- Floating Partnerships button + badge ----------
+   The badge counts things the OTHER side did that you haven't looked at yet, like unread
+   messages: a new request or counter-offer waiting for you, your request approved or turned
+   down, or a request to you withdrawn. Opening Partnership Requests clears it. Seen items are
+   remembered per account in localStorage (sch_pr_seen:<email>), keyed by request + version,
+   so a new counter-offer on the same request shows up again. */
+var _unreadCount = 0, _unreadTimer = null, _unreadInited = false, _prFresh = {};
+var PR_POLL_MS = 20000;
+/* A key for the latest thing the other side did on this row, or '' if the last move was mine. */
+function _prNewsKey(a) {
+  var mine = a.mySides || [], v = a.id + ':' + a.status + ':' + (a.history || []).length;
+  var recent = !a.decided_at || (Date.now() - new Date(a.decided_at).getTime()) < 30 * 86400000;
+  if (a.status === 'pending') return a.myTurn ? v : '';
+  if (!recent) return '';
+  if (a.status === 'launched') return mine.indexOf(a.awaiting || 'b') === -1 ? v : '';   // they approved
+  if (a.status === 'declined') return mine.indexOf('b') === -1 ? v : '';                  // they turned it down
+  if (a.status === 'deleted') return mine.indexOf('a') === -1 ? v : '';                   // they withdrew
+  return '';
+}
+function _prSeenKey() { return 'sch_pr_seen:' + ((currentUser && currentUser.email) || '').toLowerCase(); }
+function _prSeen() { try { return JSON.parse(localStorage.getItem(_prSeenKey())) || null; } catch (e) { return null; } }
+function _prMarkSeen(news) {
+  var map = {}; (news || []).forEach(function (a) { map[a.newsKey] = 1; });   // keep only what still exists
+  try { localStorage.setItem(_prSeenKey(), JSON.stringify(map)); } catch (e) {}
+}
+function _prUnseenCount(news) {
+  var seen = _prSeen();
+  if (!seen) {   // first time on this browser: don't flood with old decisions, only what's waiting for you
+    seen = {}; news.forEach(function (a) { if (a.status !== 'pending') seen[a.newsKey] = 1; });
+    try { localStorage.setItem(_prSeenKey(), JSON.stringify(seen)); } catch (e) {}
+  }
+  return news.filter(function (a) { return !seen[a.newsKey]; }).length;
+}
 function paintFabBadge() {
   var b = $('inboxFabBadge'); if (!b) return;
   if (currentUser && _unreadCount > 0) { b.textContent = _unreadCount > 99 ? '99+' : _unreadCount; b.hidden = false; }
   else b.hidden = true;
 }
+function _inboxOpen() { return !!($('view-inbox') && !$('view-inbox').classList.contains('hidden')); }
 function refreshUnread() {
   if (!currentUser) { _unreadCount = 0; paintFabBadge(); return; }
-  _myPartnershipRows().then(function (r) { _unreadCount = r.turn; paintFabBadge(); }).catch(function () {});
+  if (_inboxOpen()) { renderPendingAgreements(); return; }   // looking at the list: update it in place (and keep the badge clear)
+  _myPartnershipRows().then(function (r) { _unreadCount = _prUnseenCount(r.news); paintFabBadge(); }).catch(function () {});
 }
 function updateInboxFab(viewName) {
   var fab = $('inboxFab'); if (!fab) return;
   var view = viewName || (typeof currentViewName === 'function' ? currentViewName() : '');
   fab.hidden = !(currentUser && view !== 'inbox');
   paintFabBadge();
-  if (currentUser && !_unreadInited) { _unreadInited = true; refreshUnread(); if (_unreadTimer) clearInterval(_unreadTimer); _unreadTimer = setInterval(refreshUnread, 45000); }
+  if (currentUser && !_unreadInited) { _unreadInited = true; refreshUnread(); if (_unreadTimer) clearInterval(_unreadTimer); _unreadTimer = setInterval(function () { if (!document.hidden) refreshUnread(); }, PR_POLL_MS); }
   if (!currentUser) { _unreadInited = false; _unreadCount = 0; if (_unreadTimer) { clearInterval(_unreadTimer); _unreadTimer = null; } }
 }
+/* Coming back to the tab: check right away instead of waiting for the next poll. */
+document.addEventListener('visibilitychange', function () { if (!document.hidden && currentUser) refreshUnread(); });

@@ -932,7 +932,8 @@ UI_PHRASES["ja"] = {
 "How many promotions and partnerships can I have?": "プロモーションとパートナーシップはいくつまで持てますか？",
 "A business can run up to three promotions at once, and any club or business can have up to three active partnerships at once. Once one ends (or you delete or end it), you can add another.": "お店は同時に3件までプロモーションを実施でき、クラブやお店は同時に3件まで有効なパートナーシップを持てます。1件が終了すれば（または削除・終了すれば）、新しく追加できます。",
 "What is the countdown timer?": "カウントダウンタイマーとは何ですか？",
-"Owners can turn on a ticking countdown for any partnership or promotion that’s running. It shows the time left until the end date on the page and on the directory card, and it disappears once the deal is over. Tap the clock button on the deal to turn it on or off.": "オーナーは、実施中のパートナーシップやプロモーションに、時を刻むカウントダウンを表示できます。ページと一覧のカードに終了日までの残り時間が表示され、特典が終わると消えます。特典の時計ボタンをタップしてオン・オフを切り替えます。"
+"Owners can turn on a ticking countdown for any partnership or promotion that’s running. It shows the time left until the end date on the page and on the directory card, and it disappears once the deal is over. Tap the clock button on the deal to turn it on or off.": "オーナーは、実施中のパートナーシップやプロモーションに、時を刻むカウントダウンを表示できます。ページと一覧のカードに終了日までの残り時間が表示され、特典が終わると消えます。特典の時計ボタンをタップしてオン・オフを切り替えます。",
+"New": "新着"
 };
 UI_HTML["ja"] = {
 "<strong>Important Note:</strong> Student Club Hub only helps you connect. Any partnership, sponsorship, discount, or agreement you arrange is strictly between you and the other party. We are not involved in it and take no responsibility or legal liability for it. Verify who you’re dealing with before committing to anything.": "<strong>重要：</strong>Student Club Hub はつながるお手伝いをするだけです。あなたが取り決めるパートナーシップ、スポンサー、割引、合意はすべて、あなたと相手との間のものです。当サイトはこれに関与せず、一切の責任および法的責任を負いません。何かを約束する前に、相手が誰かを確認してください。",

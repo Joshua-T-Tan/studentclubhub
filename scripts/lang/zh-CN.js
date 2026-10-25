@@ -932,7 +932,8 @@ UI_PHRASES["zh-CN"] = {
 "How many promotions and partnerships can I have?": "我可以有多少个促销和合作？",
 "A business can run up to three promotions at once, and any club or business can have up to three active partnerships at once. Once one ends (or you delete or end it), you can add another.": "一个商家最多可以同时进行三个促销，任何社团或商家最多可以同时有三项进行中的合作。当其中一个结束（或你将其删除或结束）后，就可以再添加。",
 "What is the countdown timer?": "倒计时是什么？",
-"Owners can turn on a ticking countdown for any partnership or promotion that’s running. It shows the time left until the end date on the page and on the directory card, and it disappears once the deal is over. Tap the clock button on the deal to turn it on or off.": "负责人可以为任何正在进行的合作或促销开启实时倒计时。它会在页面和目录卡片上显示距离结束日期的剩余时间，优惠结束后自动消失。点击优惠上的时钟按钮即可开启或关闭。"
+"Owners can turn on a ticking countdown for any partnership or promotion that’s running. It shows the time left until the end date on the page and on the directory card, and it disappears once the deal is over. Tap the clock button on the deal to turn it on or off.": "负责人可以为任何正在进行的合作或促销开启实时倒计时。它会在页面和目录卡片上显示距离结束日期的剩余时间，优惠结束后自动消失。点击优惠上的时钟按钮即可开启或关闭。",
+"New": "新"
 };
 UI_HTML["zh-CN"] = {
 "<strong>Important Note:</strong> Student Club Hub only helps you connect. Any partnership, sponsorship, discount, or agreement you arrange is strictly between you and the other party. We are not involved in it and take no responsibility or legal liability for it. Verify who you’re dealing with before committing to anything.": "<strong>重要提示：</strong>Student Club Hub 只负责帮你们建立联系。你所安排的任何合作、赞助、折扣或协议，都仅限于你与对方之间。我们不参与其中，也不承担任何责任或法律责任。在做出任何承诺之前，请先核实对方的身份。",

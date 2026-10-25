@@ -675,3 +675,7 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 .hiw-swatch.is-eye { background: var(--note); color: #1a1a1a; width: 34px; }
 .hiw-facts { margin: 0; padding: 14px 18px 14px 34px; background: var(--note-soft); border: var(--edge); border-radius: var(--r); display: flex; flex-direction: column; gap: 8px; }
 .hiw-facts li { line-height: 1.55; }
+
+/* "New" on a request you haven't seen yet (shown for the rest of that visit) */
+.pr-new { flex: 0 0 auto; padding: 2px 7px; font-size: .68rem; font-weight: 900; text-transform: uppercase; letter-spacing: .03em;
+  background: var(--brand); color: #fff; border: var(--edge); border-radius: var(--r-sm); }
