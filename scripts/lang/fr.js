@@ -953,7 +953,21 @@ UI_PHRASES["fr"] = {
 "Delete report": "Supprimer le signalement",
 "Delete message": "Supprimer le message",
 "Delete this code?": "Supprimer ce code ?",
-"Couldn’t update the code (it may have just been used).": "Impossible de mettre à jour le code (il vient peut-être d’être utilisé)."
+"Couldn’t update the code (it may have just been used).": "Impossible de mettre à jour le code (il vient peut-être d’être utilisé).",
+"This club was deleted.": "Ce club a été supprimé.",
+"Edit your message": "Modifier ton message",
+"Type something first.": "Écris quelque chose d’abord.",
+"Only officers can post in this club’s chat right now.": "Pour l’instant, seuls les responsables peuvent écrire dans le chat de ce club.",
+"Only club officers can post notices.": "Seuls les responsables du club peuvent publier des avis.",
+"To make someone President, use “Make President” (it hands the club over).": "Pour nommer quelqu’un président, utilise « Nommer président » (cela lui confie le club).",
+"Only the President can hand off the club.": "Seul le président peut transmettre le club.",
+"Pick another member to be President.": "Choisis un autre membre comme président.",
+"That person isn’t a member of this club anymore.": "Cette personne n’est plus membre de ce club.",
+"Couldn’t hand off the club. Try again.": "Impossible de transmettre le club. Réessaie.",
+"That member’s account can’t be made President.": "Le compte de ce membre ne peut pas devenir président.",
+"Couldn’t edit that message.": "Impossible de modifier ce message.",
+"Couldn’t delete that message.": "Impossible de supprimer ce message.",
+"Couldn’t save the reply. Only club officers can reply.": "Impossible d’enregistrer la réponse. Seuls les responsables du club peuvent répondre."
 };
 UI_HTML["fr"] = {
 "<strong>Important Note:</strong> Student Club Hub only helps you connect. Any partnership, sponsorship, discount, or agreement you arrange is strictly between you and the other party. We are not involved in it and take no responsibility or legal liability for it. Verify who you’re dealing with before committing to anything.": "<strong>Remarque importante :</strong> Student Club Hub t’aide seulement à te mettre en relation. Tout partenariat, sponsoring, réduction ou accord que tu conclus concerne uniquement toi et l’autre partie. Nous n’y sommes pas impliqués et déclinons toute responsabilité, y compris juridique, à cet égard. Vérifie à qui tu as affaire avant de t’engager.",
@@ -980,6 +994,10 @@ UI_HTML["fr"] = {
 "Give an unused code to a club’s leader so they can publish their club. Each code works <strong>once</strong>: after a club is created with it, nobody can use it again. Only admins can see this list.": "Donne un code non utilisé au responsable d’un club pour qu’il puisse publier son club. Chaque code ne fonctionne <strong>qu’une fois</strong> : une fois un club créé avec, personne ne peut le réutiliser. Seuls les administrateurs voient cette liste."
 };
 UI_PATTERNS["fr"] = [
+[
+"^(.+) is now President\\.$",
+"$1 est maintenant président."
+],
 [
 "^Ended early by (.+)$",
 "Terminée plus tôt par $1"

@@ -1,5 +1,5 @@
 -- ============================================================
--- Club roles hardening (2026-10-26, migration club_roles_hardening)
+-- Club roles hardening (applied 2026-10-26 as migration club_roles_hardening)
 --   * exactly one President per club (unique index) + transfer_presidency() does the
 --     whole hand-off in one transaction (roles, owner, leaders, chat notice)
 --   * chat: officers-only chat / announcements / system notices are enforced here,

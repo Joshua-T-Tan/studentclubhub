@@ -56,6 +56,24 @@ function reportUserFlag(memberId, name, where) {
   return '<button class="mini-flag" title="Report this user" aria-label="Report this user" onclick="event.stopPropagation(); openReport(\'user\',\'' + jsArg(memberId) + '\',\'' + jsArg(name || '') + '\',\'' + jsArg(where || '') + '\')">' + ICON_FLAG + '</button>';
 }
 
+/* Ask for a line of text in the site's own pop-up (the browser's prompt() is blocked in many
+   in-app browsers, e.g. Instagram's). onOk(text) gets the trimmed text; empty text isn't accepted. */
+var _askTextCb = null;
+function askText(title, initial, okLabel, onOk, placeholder) {
+  _askTextCb = onOk;
+  $('bizBody').innerHTML = '<div class="modal-pad edit-modal"><div class="ro-head"><h3>' + escHtml(title) + '</h3><button class="icon-btn" onclick="closeReach()">✕</button></div>' +
+    '<div id="emErr" class="auth-error hidden"></div>' +
+    '<div class="field"><textarea id="askTextInput" maxlength="1000" placeholder="' + escAttr(placeholder || '') + '">' + escHtml(initial || '') + '</textarea></div>' +
+    '<button id="emSave" class="btn primary block lg" onclick="_askTextSubmit()">' + escHtml(okLabel || 'Save') + '</button></div>';
+  openOverlay('bizOverlay');
+  setTimeout(function () { var i = $('askTextInput'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 50);
+}
+function _askTextSubmit() {
+  var v = ($('askTextInput') && $('askTextInput').value || '').trim();
+  if (!v) { var e = $('emErr'); if (e) { e.textContent = 'Type something first.'; e.classList.remove('hidden'); } return; }
+  var cb = _askTextCb; _askTextCb = null; closeReach(); if (typeof cb === 'function') cb(v);
+}
+
 /* ---------- Relationship helpers ---------- */
 function ownerOf(club) { return !!(currentUser && club && club.verifiedOwner && club.verifiedOwner === currentUser.memberId); }
 /* 24h "15:30" ↔ 12h "3:30 PM" (for the <input type=time> meeting dial) */
@@ -126,7 +144,15 @@ function openClub(clubId) {
 }
 function _syncOpenClub(clubId) {
   if (typeof refetchClub !== 'function') return;
-  var done = function () { if (currentClubId === clubId) renderClub(); };
+  var done = function () {
+    if (currentClubId !== clubId) return;
+    var c = getClub(clubId);
+    if (!c && currentViewName() === 'club') { toast('This club was deleted.'); backFromClub(); return; }
+    if (c && isBanned(c) && currentViewName() === 'club') {   // banned while looking at the page
+      toast('You have been banned from this club and can no longer view it.'); backFromClub(); return;
+    }
+    renderClub();
+  };
   refetchClub(clubId, function () {
     var afterChat = function () { if (typeof loadClubReviews === 'function') loadClubReviews(clubId, done); else done(); };
     var afterMembers = function () { if (typeof loadClubChat === 'function') loadClubChat(clubId, afterChat); else afterChat(); };
@@ -508,10 +534,10 @@ function _findChatMsg(clubId, id) { return (_clubChat[clubId] || []).find(functi
 function editChat(clubId, id) {
   var m = _findChatMsg(clubId, id); if (!m) return;
   var own = !!(currentUser && m.memberId && m.memberId === currentUser.memberId); if (!own) return;
-  var next = window.prompt('Edit your message:', m.text); if (next == null) return;
-  next = next.trim(); if (!next) return;
+  askText('Edit your message', m.text, 'Save', function (next) {
   sbRest('club_chat?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ text: next, edited: true }) })
     .then(function (rows) { if (!rows || !rows.length) throw new Error('Couldn’t edit that message.'); loadClubChat(clubId, renderClub); }).catch(function (ex) { toast(ex.message); });
+  });
 }
 function deleteChat(clubId, id) {
   var m = _findChatMsg(clubId, id); if (!m) return;
@@ -623,8 +649,13 @@ function bannedLabel(key) {
 /* Manage → Banned Users section (with Unban) */
 function bannedSectionHTML(club) {
   var banned = club.banned_members || [];
+  // Names come from the public profiles (a banned member is no longer on the roster).
+  var ids = banned.filter(function (k) { return /^#/.test(k); });
+  if (ids.length && typeof sbRest === 'function') sbRest('profiles?member_id=in.' + _idList(ids) + '&select=member_id,name').then(function (rows) {
+    (rows || []).forEach(function (p) { document.querySelectorAll('[data-banned="' + p.member_id + '"]').forEach(function (el) { el.textContent = p.name + ' · ' + p.member_id; }); });
+  }).catch(function () {});
   var rows = banned.length ? banned.map(function (key, i) {
-    return '<div class="roster-row"><div class="who"><div class="n">' + escHtml(bannedLabel(key)) + '</div></div>' +
+    return '<div class="roster-row"><div class="who"><div class="n" data-banned="' + escAttr(key) + '">' + escHtml(bannedLabel(key)) + '</div></div>' +
       '<button class="btn ghost sm-btn" onclick="unbanMember(\'' + club.id + '\',' + i + ')">' + t('mod_unban_label') + '</button></div>';
   }).join('') : '<p class="form-note">' + t('mod_no_banned') + '</p>';
   return '<div class="section-title">' + t('mod_banned_h') + '</div><div class="roster">' + rows + '</div>';
@@ -736,7 +767,7 @@ function toggleJoin(clubId) {
     club.roster = club.roster || [];
     if (!myRosterEntry(club)) club.roster.push({ name: currentUser.name, role: 'Member', memberId: currentUser.memberId });
     club.memberCount = (club.memberCount || 0) + 1;
-    persistUser(); saveUserClubs(club);
+    persistUser(); cacheClubsLocally();   // the roster lives in club_members; members can't (and needn't) save the club record
     if (typeof sbAddMember === 'function') sbAddMember(clubId, { memberId: currentUser.memberId, email: currentUser.email, name: currentUser.name, role: 'Member' }).then(function () { if (typeof loadClubMembers === 'function') loadClubMembers(clubId, afterMembershipChange); });
     afterMembershipChange();
     toast('You joined ' + club.name + '!');
@@ -745,7 +776,7 @@ function toggleJoin(clubId) {
       currentUser.joined.splice(currentUser.joined.indexOf(clubId), 1);
       var e = myRosterEntry(club); if (e) club.roster.splice(club.roster.indexOf(e), 1);
       club.memberCount = Math.max(0, (club.memberCount || 1) - 1);
-      persistUser(); saveUserClubs(club);
+      persistUser(); cacheClubsLocally();
       if (typeof sbRemoveMember === 'function') sbRemoveMember(clubId, currentUser.memberId).then(function () { if (typeof loadClubMembers === 'function') loadClubMembers(clubId, afterMembershipChange); });
       afterMembershipChange();
       toast('You left ' + club.name + '.');

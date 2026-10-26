@@ -165,11 +165,14 @@ function deriveClubId(seed) {
 }
 /* Local cache (best-effort) + a field-level server save. Pass the club that changed; otherwise the
    open club (currentClubId) is used. */
-function saveUserClubs(club) {
+/* The local copy is only a cache (it can overflow with big media); the server copy is what counts. */
+function cacheClubsLocally() {
   var seedIds = SEED_CLUBS.map(function (c) { return c.id; });
   var userClubs = CLUBS.filter(function (c) { return seedIds.indexOf(c.id) === -1; });
-  // The local copy is only a cache (it can overflow with big media); the server copy is what counts.
   try { localStorage.setItem(LS.clubs, JSON.stringify(userClubs)); } catch (e) {}
+}
+function saveUserClubs(club) {
+  cacheClubsLocally();
   var c = club || (typeof currentClubId !== 'undefined' && currentClubId ? getClub(currentClubId) : null);
   if (c) sbSaveClub(c);
   return true;
@@ -182,10 +185,12 @@ function saveUserClubs(club) {
 var _clubBase = {};
 var CLUB_LOCAL_KEYS = ['roster', 'memberCount'];
 function _rememberClubBase(d) { if (d && d.id) _clubBase[d.id] = JSON.parse(JSON.stringify(d)); }
+function _isBlank(v) { return v == null || v === '' || v === false || (Array.isArray(v) && !v.length); }
 function _clubDiff(club) {
   var base = _clubBase[club.id] || {}, patch = {}, remove = [], n = 0;
   Object.keys(club).forEach(function (k) {
     if (CLUB_LOCAL_KEYS.indexOf(k) > -1 || club[k] === undefined) return;
+    if (base[k] === undefined && _isBlank(club[k])) return;   // a default filled in on load (e.g. banned_members: []) isn't a change
     if (JSON.stringify(club[k]) !== JSON.stringify(base[k])) { patch[k] = club[k]; n++; }
   });
   Object.keys(base).forEach(function (k) { if (CLUB_LOCAL_KEYS.indexOf(k) === -1 && !(k in club)) { remove.push(k); n++; } });
@@ -326,8 +331,13 @@ function reconcileMyMemberships(cb) {
 function refetchClub(id, cb) {
   if (typeof sbRest !== 'function') { if (typeof cb === 'function') cb(); return; }
   sbRest('clubs?id=eq.' + encodeURIComponent(id) + '&select=data').then(function (rows) {
-    var d = rows && rows[0] && rows[0].data;
-    if (d) { _rememberClubBase(d); normalizeClub(d, 0); var i = CLUBS.findIndex(function (c) { return c.id === id; }); if (i > -1) CLUBS[i] = d; else CLUBS.push(d); }
+    var d = rows && rows[0] && rows[0].data, i = CLUBS.findIndex(function (c) { return c.id === id; });
+    if (d) { _rememberClubBase(d); normalizeClub(d, 0); if (i > -1) CLUBS[i] = d; else CLUBS.push(d); }
+    else if (Array.isArray(rows) && i > -1) {   // the server has no such club any more: it was deleted
+      CLUBS.splice(i, 1); delete _clubBase[id];
+      if (currentUser && currentUser.joined) { var j = currentUser.joined.indexOf(id); if (j > -1) { currentUser.joined.splice(j, 1); if (typeof persistUser === 'function') persistUser(); } }
+      cacheClubsLocally(); if (typeof applyFilters === 'function') applyFilters();
+    }
     if (typeof cb === 'function') cb();
   }).catch(function () { if (typeof cb === 'function') cb(); });
 }

@@ -965,7 +965,21 @@ UI_PHRASES["ja"] = {
 "Delete report": "報告を削除",
 "Delete message": "メッセージを削除",
 "Delete this code?": "このコードを削除しますか？",
-"Couldn’t update the code (it may have just been used).": "コードを更新できませんでした（使用されたばかりかもしれません）。"
+"Couldn’t update the code (it may have just been used).": "コードを更新できませんでした（使用されたばかりかもしれません）。",
+"This club was deleted.": "このクラブは削除されました。",
+"Edit your message": "メッセージを編集",
+"Type something first.": "先に入力してください。",
+"Only officers can post in this club’s chat right now.": "現在このクラブのチャットに投稿できるのは役員だけです。",
+"Only club officers can post notices.": "お知らせを投稿できるのはクラブの役員だけです。",
+"To make someone President, use “Make President” (it hands the club over).": "誰かを会長にするには「会長にする」を使ってください（クラブが引き継がれます）。",
+"Only the President can hand off the club.": "クラブを引き継げるのは会長だけです。",
+"Pick another member to be President.": "会長にする別のメンバーを選んでください。",
+"That person isn’t a member of this club anymore.": "その人はもうこのクラブのメンバーではありません。",
+"Couldn’t hand off the club. Try again.": "クラブを引き継げませんでした。もう一度お試しください。",
+"That member’s account can’t be made President.": "そのメンバーのアカウントは会長にできません。",
+"Couldn’t edit that message.": "そのメッセージを編集できませんでした。",
+"Couldn’t delete that message.": "そのメッセージを削除できませんでした。",
+"Couldn’t save the reply. Only club officers can reply.": "返信を保存できませんでした。返信できるのはクラブの役員だけです。"
 };
 UI_HTML["ja"] = {
 "<strong>Important Note:</strong> Student Club Hub only helps you connect. Any partnership, sponsorship, discount, or agreement you arrange is strictly between you and the other party. We are not involved in it and take no responsibility or legal liability for it. Verify who you’re dealing with before committing to anything.": "<strong>重要：</strong>Student Club Hub はつながるお手伝いをするだけです。あなたが取り決めるパートナーシップ、スポンサー、割引、合意はすべて、あなたと相手との間のものです。当サイトはこれに関与せず、一切の責任および法的責任を負いません。何かを約束する前に、相手が誰かを確認してください。",
@@ -992,6 +1006,10 @@ UI_HTML["ja"] = {
 "Give an unused code to a club’s leader so they can publish their club. Each code works <strong>once</strong>: after a club is created with it, nobody can use it again. Only admins can see this list.": "未使用のコードをクラブのリーダーに渡すと、クラブを公開できます。各コードは<strong>1回だけ</strong>使えます。クラブが作成されると、そのコードは二度と使えません。この一覧は管理者だけが見られます。"
 };
 UI_PATTERNS["ja"] = [
+[
+"^(.+) is now President\\.$",
+"$1 が会長になりました。"
+],
 [
 "^Ended early by (.+)$",
 "$1が早期終了"

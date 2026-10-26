@@ -965,7 +965,21 @@ UI_PHRASES["zh-TW"] = {
 "Delete report": "刪除檢舉",
 "Delete message": "刪除訊息",
 "Delete this code?": "刪除這個邀請碼？",
-"Couldn’t update the code (it may have just been used).": "無法更新邀請碼（可能剛剛被使用）。"
+"Couldn’t update the code (it may have just been used).": "無法更新邀請碼（可能剛剛被使用）。",
+"This club was deleted.": "此社團已被刪除。",
+"Edit your message": "編輯你的訊息",
+"Type something first.": "請先輸入內容。",
+"Only officers can post in this club’s chat right now.": "目前只有幹部可以在這個社團的聊天中發言。",
+"Only club officers can post notices.": "只有社團幹部可以發布通知。",
+"To make someone President, use “Make President” (it hands the club over).": "要讓某人成為主席，請使用「設為主席」（會把社團交給對方）。",
+"Only the President can hand off the club.": "只有主席可以移交社團。",
+"Pick another member to be President.": "請選擇另一位成員擔任主席。",
+"That person isn’t a member of this club anymore.": "此人已不是這個社團的成員。",
+"Couldn’t hand off the club. Try again.": "無法移交社團，請再試一次。",
+"That member’s account can’t be made President.": "該成員的帳戶無法設為主席。",
+"Couldn’t edit that message.": "無法編輯這則訊息。",
+"Couldn’t delete that message.": "無法刪除這則訊息。",
+"Couldn’t save the reply. Only club officers can reply.": "無法儲存回覆。只有社團幹部可以回覆。"
 };
 UI_HTML["zh-TW"] = {
 "<strong>Important Note:</strong> Student Club Hub only helps you connect. Any partnership, sponsorship, discount, or agreement you arrange is strictly between you and the other party. We are not involved in it and take no responsibility or legal liability for it. Verify who you’re dealing with before committing to anything.": "<strong>重要提醒：</strong>Student Club Hub 只協助你們建立聯繫。你所安排的任何合作、贊助、折扣或協議，都僅限於你與對方之間。我們不參與其中，也不承擔任何責任或法律責任。在做出任何承諾前，請先確認對方的身分。",
@@ -992,6 +1006,10 @@ UI_HTML["zh-TW"] = {
 "Give an unused code to a club’s leader so they can publish their club. Each code works <strong>once</strong>: after a club is created with it, nobody can use it again. Only admins can see this list.": "把未使用的邀請碼交給社團負責人，他們就能發布社團。每個邀請碼只能用<strong>一次</strong>：用它建立社團後，任何人都不能再用。只有管理員能看到這個列表。"
 };
 UI_PATTERNS["zh-TW"] = [
+[
+"^(.+) is now President\\.$",
+"$1 現在是主席。"
+],
 [
 "^Ended early by (.+)$",
 "由$1提前結束"

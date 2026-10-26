@@ -71,7 +71,8 @@ function loadClubReviews(clubId, cb) {
 }
 function _saveReviewReplies(clubId, reviewId, replies) {
   var rv = _findReview(clubId, reviewId); if (rv) rv.replies = replies;
-  return sbRest('club_reviews?id=eq.' + reviewId, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ replies: replies }) });
+  return sbRest('club_reviews?id=eq.' + reviewId, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ replies: replies }) })
+    .then(function (rows) { if (!rows || !rows.length) throw new Error('Couldn’t save the reply. Only club officers can reply.'); return rows; });
 }
 function _findReview(clubId, id) { return (_clubReviews[clubId] || []).find(function (r) { return r.id === id; }); }
 function clubRatingSummary(clubId) {
@@ -138,11 +139,11 @@ function canReplyReview(club) { return ownerOf(club) || isOfficerRole(roleInClub
 function replyReview(clubId, reviewId) {
   var club = getClub(clubId); if (!club || !canReplyReview(club)) return;
   var r = _findReview(clubId, reviewId); if (!r) return;
-  var text = window.prompt(t('rv_reply_prompt')); if (text == null) return;
-  text = text.trim(); if (!text) return;
-  var replies = (r.replies || []).slice();
-  replies.push({ name: currentUser.name, role: roleInClub(club) || 'Officer', text: text, ts: Date.now() });
-  _saveReviewReplies(clubId, reviewId, replies).then(function () { refreshClubModalState(); toast(t('rv_reply_done')); }).catch(function (ex) { toast(ex.message); });
+  askText(t('rv_reply_prompt'), '', t('rv_reply'), function (text) {
+    var replies = (r.replies || []).slice();
+    replies.push({ name: currentUser.name, role: roleInClub(club) || 'Officer', text: text, ts: Date.now() });
+    _saveReviewReplies(clubId, reviewId, replies).then(function () { refreshClubModalState(); toast(t('rv_reply_done')); }).catch(function (ex) { toast(ex.message); });
+  });
 }
 function deleteReviewReply(clubId, reviewId, j) {
   var club = getClub(clubId); if (!club) return;

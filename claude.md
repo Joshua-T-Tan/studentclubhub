@@ -175,7 +175,7 @@ Schema + policies: `supabase/security_2026_10.sql` (and later `supabase/*.sql`).
 
 - **Real accounts + row-level security.** Reads are public (it's a directory);
   writes need a signed-in user and are checked in the database, not the browser:
-  Presidents manage their club (roles, bans, hand-off, delete via `delete_club`),
+  Presidents manage their club (roles, bans, hand-off via `transfer_presidency` — exactly one President per club, enforced by a unique index — delete via `delete_club`),
   officers edit club content, owners edit their business, authors edit their own
   reviews/chat, only business owners write owner replies. `my_member_id()` maps
   the session to a member ID through `profiles.user_id`.
@@ -191,6 +191,7 @@ Schema + policies: `supabase/security_2026_10.sql` (and later `supabase/*.sql`).
   `BIZ_SELECT` (never `select=*`). Ownership comes from `my_business_ids()` /
   `member_business_ids()` (`isBizOwner` reads `_myBizIds`), the profile row is
   written by `save_my_profile()` and found by `claim_my_profile()`.
+- **Club chat rules live in the database** (`supabase/club_roles_2026_10.sql`): officers-only chat, announcements and system notices are checked by a trigger, and the sender's / reviewer's / member's name always comes from their account. Joining or leaving only touches `club_members` (members can't save the club record). Use the site's `askText()` pop-up, not `window.prompt()` (blocked in in-app browsers).
 - **Club records carry no emails.** A trigger strips `email` from `clubs.data.leaders[]` / `roster[]` on every write; the club's public contact address is `data.email`, which the President types in.
 - **Partnerships and promotions are enforced in the database** (`supabase/partnerships_v2_2026_10.sql`): only the side whose turn it is can approve or counter, names come from the real listings, at most 3 active partnerships per club/business and 3 running promotions per business, and hidden promotions aren't readable by visitors.
 - **Invite codes are private and single use** (`invite_codes` table, admin-only); the site can
