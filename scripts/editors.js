@@ -65,7 +65,8 @@ function editClubBanner(id) {
     '<div class="field"><label>Banner image</label><div id="emBannerPrev"></div>' +
       '<label class="uploader"><input type="file" accept="image/*" hidden onchange="emClubBannerUpload(\'' + id + '\',event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Upload banner image</label></div>' +
     _toggleRow('emPrivate', 'Private club', 'Hidden from public Browse unless someone has your link.', c.recruitment === 'Private') +
-    _toggleRow('emPartner', 'Open to partnerships', 'Shows an “Open to partnerships” badge on your banner.', !!c.partnershipOpen) +
+    // Partnerships are the President's call (they send and approve them), so only they see this switch.
+    (ownerOf(c) ? _toggleRow('emPartner', 'Open to partnerships', 'Shows an “Open to partnerships” badge on your banner.', !!c.partnershipOpen) : '') +
     (ownerOf(c) ? _verifyRowHTML(c.verified, 'club', id) +
       '<div class="danger-zone"><div class="tr-title">President only</div>' +
         '<button type="button" class="btn ghost" onclick="closeReach();leaveClubFlow(\'' + id + '\')">Hand off presidency &amp; leave</button>' +
@@ -124,7 +125,7 @@ function _applyClubBannerForm(c) {
   var name = _emVal('emTitle'); if (name) c.name = name;
   if ($('emCat')) c.category = $('emCat').value;
   c.recruitment = ($('emPrivate') && $('emPrivate').checked) ? 'Private' : 'Public';
-  c.partnershipOpen = !!($('emPartner') && $('emPartner').checked);
+  if ($('emPartner')) c.partnershipOpen = !!$('emPartner').checked;   // officers don't see the switch: leave it as is
   if (_emClubBanner !== undefined) c.banner = _emClubBanner;
 }
 function saveClubBanner(id) {

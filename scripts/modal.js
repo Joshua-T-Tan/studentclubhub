@@ -451,7 +451,7 @@ function chatHTML(club) {
   var feed = all.length ? all.map(function (m) {
     if (m.system) return '<div class="chat-system">' + svgIcon('bell', 14) + ' <strong>System Notification</strong>: ' + escHtml(m.text) + '</div>';
     if (m.deleted) return '<div class="chat-msg"><div class="avatar sm">·</div><div class="cm-body deleted"><em>This message was deleted</em></div></div>';
-    var own = currentUser && ((m.memberId && m.memberId === currentUser.memberId) || m.who === currentUser.name);
+    var own = !!(currentUser && m.memberId && m.memberId === currentUser.memberId);
     var ctrls = own ? '<span class="cm-ctrls"><button onclick="editChat(\'' + club.id + '\',\'' + m.id + '\')">Edit</button>' +
       '<button onclick="deleteChat(\'' + club.id + '\',\'' + m.id + '\')">Delete</button></span>' : '';
     return '<div class="chat-msg ' + (m.announce ? 'announce' : '') + '">' + avatarHTML(m.who, 'sm') +
@@ -507,18 +507,18 @@ function postChat(clubId) {
 function _findChatMsg(clubId, id) { return (_clubChat[clubId] || []).find(function (m) { return m.id === id; }); }
 function editChat(clubId, id) {
   var m = _findChatMsg(clubId, id); if (!m) return;
-  var own = currentUser && ((m.memberId && m.memberId === currentUser.memberId) || m.who === currentUser.name); if (!own) return;
+  var own = !!(currentUser && m.memberId && m.memberId === currentUser.memberId); if (!own) return;
   var next = window.prompt('Edit your message:', m.text); if (next == null) return;
   next = next.trim(); if (!next) return;
-  sbRest('club_chat?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ text: next, edited: true }) })
-    .then(function () { loadClubChat(clubId, renderClub); }).catch(function (ex) { toast(ex.message); });
+  sbRest('club_chat?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ text: next, edited: true }) })
+    .then(function (rows) { if (!rows || !rows.length) throw new Error('Couldn’t edit that message.'); loadClubChat(clubId, renderClub); }).catch(function (ex) { toast(ex.message); });
 }
 function deleteChat(clubId, id) {
   var m = _findChatMsg(clubId, id); if (!m) return;
-  var own = currentUser && ((m.memberId && m.memberId === currentUser.memberId) || m.who === currentUser.name); if (!own) return;
+  var own = !!(currentUser && m.memberId && m.memberId === currentUser.memberId); if (!own) return;
   openConfirm('Delete message?', 'This message will be removed for everyone.', svgIcon('trash', 26), function () {
-    sbRest('club_chat?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ deleted: true, text: '' }) })
-      .then(function () { loadClubChat(clubId, renderClub); }).catch(function (ex) { toast(ex.message); });
+    sbRest('club_chat?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ deleted: true, text: '' }) })
+      .then(function (rows) { if (!rows || !rows.length) throw new Error('Couldn’t delete that message.'); loadClubChat(clubId, renderClub); }).catch(function (ex) { toast(ex.message); });
   });
 }
 function fmtTime(ts) { try { return new Date(ts).toLocaleTimeString(siteLocale(), { hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } }
@@ -553,14 +553,11 @@ function requestRoleChange(clubId, idx, newRole) {
     // even if a later step errored, the panel is already gone).
     if (typeof closeReach === 'function') closeReach();
     if (newRole === 'President') {
-      // Swap: they take your spot (President); you take their old role.
-      var theirOldRole = m.role;
-      m.role = 'President'; club.verifiedOwner = m.memberId || null;
-      if (meEntry) meEntry.role = theirOldRole;
-      if (!ownerOf(club)) currentClubTab = 'about';
-      postSystemChat(club.id, m.name + ' is now President; ' + presName + ' is now ' + theirOldRole + '.');
-      saveUserClubs(club);
-      if (typeof sbSetMemberRole === 'function') { sbSetMemberRole(club.id, m.memberId, 'President'); if (meEntry && meEntry.memberId) sbSetMemberRole(club.id, meEntry.memberId, theirOldRole); }
+      // Swap: they take your spot (President); you take their old role. One server call does all of it
+      // at once (roles, the club's owner, the chat notice), so it can never end with two Presidents or none.
+      if (!m.memberId) { toast('That member’s account can’t be made President.'); return; }
+      _presidencyChange(club.id, m.memberId, false).then(function () { toast(m.name + ' is now President.'); }).catch(function () {});
+      return;
     } else {
       m.role = newRole; postSystemChat(club.id, m.name + ' has been appointed as ' + newRole + ' by ' + presName + '.');
       saveUserClubs(club); if (typeof sbSetMemberRole === 'function') sbSetMemberRole(club.id, m.memberId, newRole);
@@ -573,7 +570,7 @@ function requestRoleChange(clubId, idx, newRole) {
 /* Automated bot notification posted into the club chat on leadership changes */
 function postSystemChat(clubId, text) {
   if (typeof sbRest !== 'function') return;
-  sbRest('club_chat', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ club_id: clubId, sender_name: 'System', system: true, text: text }) })
+  sbRest('club_chat', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ club_id: clubId, sender_id: currentUser && currentUser.memberId, sender_name: 'System', system: true, text: text }) })
     .then(function () { if (currentClubId === clubId) loadClubChat(clubId, function () { if (currentClubId === clubId) renderClub(); }); }).catch(function () {});
 }
 function removeMember(clubId, i) {
@@ -591,7 +588,7 @@ function banMember(clubId, i) {
   var m = c.roster[i], name = m.name;
   openConfirm(t('mod_ban_h'), t('mod_ban_pre') + name + t('mod_ban_post'), svgIcon('ban', 26), function () {
     c.banned_members = c.banned_members || [];
-    var key = (m.memberId || emailForMember(c, m) || name);
+    var key = m.memberId || name;   // member ID (never an email: the club record is public)
     if (c.banned_members.indexOf(key) === -1) c.banned_members.push(key);
     c.roster.splice(i, 1); c.memberCount = Math.max(0, (c.memberCount || 1) - 1);
     // Immediately revoke the banned member's membership in their own account record
@@ -673,21 +670,43 @@ function confirmTransfer(clubId) {
   var pickedId = picked.value, name = picked.getAttribute('data-name') || '';
   closeTransfer();
   openConfirm('Transfer to ' + name + '?', 'They become President and you’ll leave the club. This can’t be undone here.', svgIcon('crown', 26), function () {
-    var club = getClub(clubId); if (!club) return;
-    var newOwner = club.roster.find(function (m) { return m.memberId === pickedId; }); if (!newOwner) return;
-    newOwner.role = 'President'; club.verifiedOwner = newOwner.memberId;
-    (club.leaders || []).forEach(function (l) { if (l.role === 'President') { l.name = newOwner.name; delete l.email; } });
-    if (typeof postSystemChat === 'function') postSystemChat(clubId, newOwner.name + ' is now President; ' + currentUser.name + ' left the club.');
-    // Old owner leaves
-    var meIdx = club.roster.indexOf(myRosterEntry(club)); if (meIdx > -1) club.roster.splice(meIdx, 1);
-    var j = currentUser.joined.indexOf(clubId); if (j > -1) currentUser.joined.splice(j, 1);
-    club.memberCount = Math.max(0, (club.memberCount || 1) - 1);
-    persistUser(); saveUserClubs(club);
-    if (typeof sbSetMemberRole === 'function' && newOwner.memberId) sbSetMemberRole(clubId, newOwner.memberId, 'President');
-    if (typeof sbRemoveMember === 'function') sbRemoveMember(clubId, currentUser.memberId);
-    toast('Ownership transferred to ' + name + '.');
-    showView('myclubs');
+    _presidencyChange(clubId, pickedId, true).then(function () {
+      var j = currentUser.joined.indexOf(clubId); if (j > -1) { currentUser.joined.splice(j, 1); persistUser(); }
+      toast('Ownership transferred to ' + name + '.');
+      showView('myclubs');
+    }).catch(function () {});
   });
+}
+/* Fallback hand-off. Order matters: promote them while I'm still President, move the club's owner,
+   post the notice while I'm still a member, and only then step down / leave. */
+function _presidencyStepByStep(clubId, memberId, leave) {
+  var club = getClub(clubId), m = club && (club.roster || []).find(function (x) { return x.memberId === memberId; });
+  if (!club || !m) return Promise.reject(new Error('That person isn’t a member of this club anymore.'));
+  var me = currentUser.memberId, myName = currentUser.name;
+  var theirOld = (m.role && m.role !== 'President') ? m.role : 'Member';
+  return sbSetMemberRole(clubId, memberId, 'President').then(function (rows) {
+    if (!rows) throw new Error('Couldn’t hand off the club. Try again.');
+    club.verifiedOwner = memberId;
+    (club.leaders || []).forEach(function (l) { if (l.role === 'President') { l.name = m.name; delete l.email; } });
+    return sbSaveClub(club);
+  }).then(function () {
+    postSystemChat(clubId, m.name + ' is now President; ' + myName + (leave ? ' left the club.' : ' is now ' + theirOld + '.'));
+    return leave ? sbRemoveMember(clubId, me) : sbSetMemberRole(clubId, me, theirOld);
+  });
+}
+/* Hand the presidency to another member (the server swaps roles, updates the club and posts the
+   chat notice in one go). leave = the old President leaves the club instead of taking their role. */
+function _presidencyChange(clubId, memberId, leave) {
+  return sbRpc('transfer_presidency', { p_club: clubId, p_member: memberId, p_leave: !!leave }).catch(function (ex) {
+    // Database without transfer_presidency yet: do the same steps one at a time, in a safe order.
+    if (ex && (ex.code === 'PGRST202' || ex.status === 404)) return _presidencyStepByStep(clubId, memberId, leave);
+    throw ex;
+  }).then(function () {
+    currentClubTab = 'about';
+    return new Promise(function (done) {
+      refetchClub(clubId, function () { loadClubMembers(clubId, function () { loadClubChat(clubId, function () { if (currentClubId === clubId) renderClub(); afterMembershipChange(); done(); }); }); });
+    });
+  }, function (ex) { toast(ex.message); throw ex; });
 }
 function deleteClub(clubId) {
   var club = getClub(clubId); if (!club || !ownerOf(club)) return;
@@ -711,7 +730,7 @@ function toggleJoin(clubId) {
   var joined = currentUser.joined.indexOf(clubId) !== -1;
   if (!joined) {
     if (isBanned(club)) { return toast('You have been banned from this club and cannot rejoin.'); }
-    currentUser.joined.push(clubId);
+    currentUser.joined.push(clubId); if (typeof _justJoined !== 'undefined') _justJoined[clubId] = Date.now();
     // Joining a saved club removes it from Saved automatically
     var fi = currentUser.favorites.indexOf(clubId); if (fi > -1) currentUser.favorites.splice(fi, 1);
     club.roster = club.roster || [];

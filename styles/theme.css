@@ -504,8 +504,12 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 .adm-row.is-off { opacity: .6; }
 .adm-row-note { color: var(--muted); font-size: .85rem; flex: 1; min-width: 120px; }
 .adm-code { font-family: ui-monospace, Menlo, monospace; font-weight: 700; font-size: .95rem; }
-.adm-newcode { display: flex; gap: 8px; margin-bottom: 10px; }
-.adm-newcode input { flex: 1; }
+.adm-newcode { display: flex; gap: 8px; margin-bottom: 10px; align-items: stretch; }
+/* Same look as the site's form fields (it isn't inside a .field), text vertically centred */
+.adm-newcode input { flex: 1; min-width: 0; box-sizing: border-box; height: 40px; padding: 0 12px; line-height: normal;
+  background: var(--card); color: var(--ink); border: var(--edge); border-radius: var(--r-sm); font-size: .92rem; }
+.adm-newcode input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-50); }
+.adm-newcode .btn { height: 40px; white-space: nowrap; }
 @media (max-width: 640px) { .adm-tiles { grid-template-columns: repeat(2, 1fr); } }
 
 /* ---------- Settings → Profile: "Show me as" switcher (Student / Business owner / Community member) ---------- */

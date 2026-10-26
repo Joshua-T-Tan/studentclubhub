@@ -243,27 +243,26 @@ function _openClubFromQuery() {
 }
 /* ---------- Club members (roster) sync — Step 2 ---------- */
 function _memberToRosterEntry(r) { return { name: r.name, role: r.role, memberId: r.member_id }; }
+var _justJoined = {};   // clubId -> time I joined here (the server may not list me for a moment)
 function _applyMembers(club, rows) {
   if (!club) return;
   club.roster = (rows || []).map(_memberToRosterEntry);
   club.memberCount = club.roster.length;
+  // Removed or banned on another screen? Then I'm not a member any more (and vice versa).
+  if (currentUser && currentUser.memberId && Array.isArray(currentUser.joined)) {
+    var listed = club.roster.some(function (m) { return m.memberId === currentUser.memberId; });
+    var j = currentUser.joined.indexOf(club.id), fresh = _justJoined[club.id] && (Date.now() - _justJoined[club.id] < 10000);
+    if (listed && j === -1) { currentUser.joined.push(club.id); if (typeof persistUser === 'function') persistUser(); }
+    else if (!listed && j > -1 && !fresh && club.verifiedOwner !== currentUser.memberId) { currentUser.joined.splice(j, 1); if (typeof persistUser === 'function') persistUser(); }
+  }
 }
-/* Fetch a club's members; if the table is empty for it but the blob has a roster,
-   migrate that roster into the table once (so existing clubs seed their members). */
+/* Fetch a club's members (club_members is the source of truth for rosters and roles). */
 function loadClubMembers(clubId, cb) {
   if (typeof sbRest !== 'function') { if (typeof cb === 'function') cb(); return; }
   sbRest('club_members?club_id=eq.' + encodeURIComponent(clubId) + '&select=*&order=joined_at.asc').then(function (rows) {
     var club = getClub(clubId);
-    if ((!rows || !rows.length) && club && (club.roster || []).length) {
-      var seedRows = club.roster.map(function (m, i) {
-        return { club_id: clubId, member_id: m.memberId || ('seed-' + clubId + '-' + i), name: m.name, role: m.role || 'Member' };
-      });
-      sbRest('club_members?on_conflict=club_id,member_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=representation' }, body: JSON.stringify(seedRows) })
-        .then(function (ins) { _applyMembers(club, ins || seedRows); if (typeof cb === 'function') cb(); })
-        .catch(function () { if (typeof cb === 'function') cb(); });
-      return;
-    }
-    if (club) _applyMembers(club, rows);
+    // An empty list is the truth too (sample clubs with no real members keep their demo roster for display only).
+    if (club && (rows && rows.length || !(club.roster || []).some(function (m) { return !m.memberId; }))) _applyMembers(club, rows);
     if (typeof cb === 'function') cb();
   }).catch(function () { if (typeof cb === 'function') cb(); });
 }
