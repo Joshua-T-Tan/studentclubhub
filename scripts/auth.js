@@ -470,7 +470,7 @@ function toast(msg, ms) {
   window._toastT = setTimeout(function () { t.classList.remove('show'); }, ms || 2600);
 }
 
-var VIEWS = ['main', 'browse', 'myclubs', 'saved', 'profile', 'settings', 'club', 'create', 'philosophy', 'shops', 'faq', 'howitworks', 'business', 'inbox', 'contact', 'admin'];
+var VIEWS = ['main', 'browse', 'myclubs', 'saved', 'profile', 'settings', 'club', 'create', 'philosophy', 'shops', 'faq', 'howitworks', 'business', 'inbox', 'contact', 'admin', 'terms', 'privacy'];
 function showView(name) {
   VIEWS.forEach(function (v) {
     var el = $('view-' + v); if (el) el.classList.toggle('hidden', v !== name);
@@ -922,6 +922,7 @@ function requireAuth(cb) {
    ============================================================ */
 function renderAuthArea() {
   if (typeof updateInboxFab === 'function') updateInboxFab();
+  if (currentUser && typeof checkLegalGate === 'function') setTimeout(checkLegalGate, 0);   // one-time Terms / Privacy agreement
   var area = $('authArea'); if (!area) return;
   if (!currentUser) {
     area.innerHTML =

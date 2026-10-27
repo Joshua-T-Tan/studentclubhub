@@ -225,7 +225,7 @@ function clubHeroSlideshow(club, relBadge, slides) {
   var openP = club.partnershipOpen ? '<span class="open-partner-chip">' + ICON_PARTNER + ' Open to partnerships</span>' : '';
   // One row, like the business banner (zip + member count live further down the page)
   var meta = '<span class="biz-cuisines">' + escHtml(club.category) + '  •  ' + escHtml(club.school) + '</span>' +
-    recruitBadge(club.recruitment) + openP + (typeof dealBannerChips === 'function' ? dealBannerChips('club', club) : '') +
+    (isSampleClub(club) ? sampleChip() : '') + recruitBadge(club.recruitment) + openP + (typeof dealBannerChips === 'function' ? dealBannerChips('club', club) : '') +
     (club.clubId ? '<span class="biz-idchip">#' + escHtml(club.clubId) + '</span>' : '') + (relBadge || '');
   var galleryN = (club.gallery || []).filter(Boolean).length;
   var paper = !!(slides[0] && slides[0].paper);
@@ -272,7 +272,13 @@ function clubHeadHTML(club, relBadge) {
     tags + '</div>';
 }
 /* Action buttons (Join/Leave · Contact · Save · Share) - live in the LEFT main column now */
+function sampleNoteHTML(kind) {
+  return '<div class="sample-note">' + svgIcon('warning', 16) + '<span>' + (kind === 'club'
+    ? 'This is a sample club. It shows what a club page looks like, but it isn’t a real club, so you can’t join it or contact its leaders.'
+    : 'This is a sample business. It shows what a business page looks like, but it isn’t a real business, so its deals can’t be used and it can’t receive partnership requests.') + '</span></div>';
+}
 function clubActionsHTML(club) {
+  if (isSampleClub(club)) return sampleNoteHTML('club');
   var owner = ownerOf(club), member = isClubMember(club), b = '';
   if (!owner && !member) b += '<button class="btn join" onclick="toggleJoin(\'' + club.id + '\')">' + t('club_join') + '</button>';
   if (member && !owner) b += '<button class="btn ghost" onclick="toggleJoin(\'' + club.id + '\')">' + t('club_leave') + '</button>';
@@ -361,7 +367,7 @@ function closeGalleryPage() {
 }
 /* RIGHT column: Officers & Members (top) then a large Chat & Announcements (bottom) */
 function clubRightColHTML(club) {
-  var reach = !ownerOf(club) ? '<div class="sidebar-card"><div class="section-title" style="margin-top:0">Partner with this club</div>' +
+  var reach = (!ownerOf(club) && !isSampleClub(club)) ? '<div class="sidebar-card"><div class="section-title" style="margin-top:0">Partner with this club</div>' +
     '<p class="form-note" style="margin-bottom:10px">Businesses and other clubs can reach out about sponsorships, collabs or events. You’ll see the club’s email and can send a partnership request.</p>' +
     '<button class="btn blue block" onclick="contactByEmail(\'club\',\'' + club.id + '\')">' + ICON_PARTNER + ' Reach Out by Email</button></div>' : '';
   return reach + '<div class="sidebar-card side-roster">' + rosterHTML(club) + '</div>' +
@@ -757,6 +763,7 @@ function deleteClub(clubId) {
 function toggleJoin(clubId) {
   if (!currentUser) { pendingAuthAction = function () { toggleJoin(clubId); }; openAuth('login'); return; }
   var club = getClub(clubId); if (!club) return;
+  if (isSampleClub(club)) { return toast('This is a sample club. It isn’t a real club, so it can’t be joined.'); }
   if (ownerOf(club)) { return leaveClubFlow(clubId); }     // owners must designate a new President first
   var joined = currentUser.joined.indexOf(clubId) !== -1;
   if (!joined) {

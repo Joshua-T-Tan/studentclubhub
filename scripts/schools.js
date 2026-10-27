@@ -135,15 +135,35 @@ function districtForSchool(name) {
   var s = SCHOOLS.find(function (x) { return x.n === name; });
   return s ? s.d : '';
 }
-/* Options HTML for a School <select>; `sel` is the currently-selected school name. */
+/* ---- "Other" choices, site-wide: picking Other shows a box to type your own answer (30 characters max).
+   A saved answer that isn't in the list shows up as Other + the typed text. ---- */
+var OTHER_LEN = 30;
+function isCustomChoice(val, list) { return !!val && val !== 'Other' && list.indexOf(val) === -1; }
+function otherBoxHTML(id, show, val, ph) {
+  return '<input id="' + id + '" class="other-box' + (show ? '' : ' hidden') + '" type="text" maxlength="' + OTHER_LEN + '" value="' +
+    String(val || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;') + '" placeholder="' + (ph || 'Type your own (30 characters max)') + '">';
+}
+function toggleOtherBox(sel, boxId) {
+  var b = document.getElementById(boxId); if (!b || !sel) return;
+  var on = sel.value === 'Other'; b.classList.toggle('hidden', !on); if (on) b.focus();
+}
+/* The chosen value: the typed answer when "Other" is picked, otherwise the option itself. */
+function pickOrOther(selectId, boxId) {
+  var s = document.getElementById(selectId), v = (s && s.value) || '';
+  if (v !== 'Other') return v;
+  var b = document.getElementById(boxId); return ((b && b.value) || '').trim().slice(0, OTHER_LEN);
+}
+/* Options HTML for a School <select>; `sel` is the currently-selected school name (a typed-in school selects "Other"). */
 function schoolOptionsHTML(sel) {
+  var names = SCHOOLS.map(function (s) { return s.n; }), other = sel === 'Other' || isCustomChoice(sel, names);
   return '<option value="">Select your school…</option>' +
     SCHOOLS.map(function (s) { return '<option' + (s.n === sel ? ' selected' : '') + '>' + s.n + '</option>'; }).join('') +
-    '<option value="Other"' + (sel === 'Other' ? ' selected' : '') + '>Other / Not listed</option>';
+    '<option value="Other"' + (other ? ' selected' : '') + '>Other / Not listed</option>';
 }
 function districtOptionsHTML(sel) {
+  var other = sel === 'Other' || isCustomChoice(sel, DISTRICTS);
   return '<option value="">Select a district…</option>' +
     DISTRICTS.map(function (d) { return '<option' + (d === sel ? ' selected' : '') + '>' + d + '</option>'; }).join('') +
-    '<option value="Other"' + (sel === 'Other' ? ' selected' : '') + '>Other</option>';
+    '<option value="Other"' + (other ? ' selected' : '') + '>Other</option>';
 }
 

@@ -131,7 +131,11 @@ function _ptFieldsHTML(type) {
   var v = _ptDraft[type] || {}, bio = v.bio || '', len = bio.length;
   var two = PROFILE_TYPES[type].fields.map(function (f) {
     var val = v[f.k] || '', input;
-    if (f.kind === 'school') input = '<select id="pt_' + f.k + '" class="select block-select">' + (typeof schoolOptionsHTML === 'function' ? schoolOptionsHTML(val) : '<option>' + escHtml(val) + '</option>') + '</select>';
+    if (f.kind === 'school') {
+      var customSchool = isCustomChoice(val, SCHOOLS.map(function (s) { return s.n; }));
+      input = '<select id="pt_' + f.k + '" class="select block-select" onchange="toggleOtherBox(this,\'pt_' + f.k + 'Other\')">' + schoolOptionsHTML(val) + '</select>' +
+        otherBoxHTML('pt_' + f.k + 'Other', customSchool || val === 'Other', customSchool ? val : '', 'Type your school (30 characters max)');
+    }
     else if (f.kind === 'year') input = '<input id="pt_' + f.k + '" type="number" min="1950" max="2100" value="' + escAttr(val) + '" placeholder="' + escAttr(f.ph) + '">';
     else input = '<input id="pt_' + f.k + '" type="text" maxlength="80" value="' + escAttr(val) + '" placeholder="' + escAttr(t(f.ph)) + '">';
     return '<div class="field"><label>' + escHtml(t(f.label)) + '</label>' + input + '</div>';
@@ -145,7 +149,7 @@ function _ptFieldsHTML(type) {
 function _ptCapture() {
   if (!_ptDraft || !_ptTab || !$('setBio')) return;
   var v = _ptDraft[_ptTab] = _ptDraft[_ptTab] || {};
-  PROFILE_TYPES[_ptTab].fields.forEach(function (f) { var el = $('pt_' + f.k); if (el) v[f.k] = (el.value || '').trim(); });
+  PROFILE_TYPES[_ptTab].fields.forEach(function (f) { var el = $('pt_' + f.k); if (el) v[f.k] = f.kind === 'school' ? pickOrOther('pt_' + f.k, 'pt_' + f.k + 'Other') : (el.value || '').trim(); });
   v.headline = ($('setHeadline').value || '').trim();
   v.bio = ($('setBio').value || '').slice(0, 200).trim();
 }

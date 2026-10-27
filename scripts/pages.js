@@ -56,7 +56,7 @@ function closeMobileNav() { var nav = $('mainNav'); if (nav) nav.classList.remov
 /* Route helpers used by the dropdown items */
 function navGo(view) { closeMobileNav(); showView(view); }
 function navGoAuth(view) { closeMobileNav(); requireAuth(function () { showView(view); }); }
-function navShop(kind) { closeMobileNav(); openShops(kind); }
+function navShop(kind) { closeMobileNav(); if (kind === 'register' && typeof _bizDraftEditing !== 'undefined') _bizDraftEditing = null; openShops(kind); }   // the menu always starts a fresh form
 function navFaq() { closeMobileNav(); showView('faq'); }
 function navHowItWorks() { closeMobileNav(); showView('howitworks'); }
 /* Highlight the dropdown trigger whose group owns the active view */
@@ -228,7 +228,8 @@ function openReport(type, id, name, context) {
     '<button class="icon-btn" onclick="closeReach()">✕</button></div>' +
     '<p class="form-note" style="margin-bottom:12px">Reporting <strong>' + escHtml(name) + '</strong>. Our team reviews every report, and the other party won’t see who reported them.</p>' +
     '<div id="rpErr" class="auth-error hidden"></div>' +
-    '<div class="field"><label>Reason</label><select id="rpReason" class="select block-select">' + reasons + '</select></div>' +
+    '<div class="field"><label>Reason</label><select id="rpReason" class="select block-select" onchange="toggleOtherBox(this,\'rpReasonOther\')">' + reasons + '</select>' +
+      otherBoxHTML('rpReasonOther', false, '', 'Type the reason (30 characters max)') + '</div>' +
     (type === 'user' ? '<div class="field"><label>Where did this happen? *</label><input id="rpWhere" type="text" maxlength="120" placeholder="e.g. Biology Club chat, a review on Harbor Lanes" value="' + escAttr(context || '') + '"></div>' : '') +
     '<div class="field"><label>What happened? <span class="form-note">(optional, but it helps)</span></label>' +
       '<textarea id="rpDetails" maxlength="800" placeholder="Describe the problem…"></textarea></div>' +
@@ -237,7 +238,8 @@ function openReport(type, id, name, context) {
 }
 function submitReport() {
   var c = _reportCtx; if (!c) return;
-  var reason = ($('rpReason') && $('rpReason').value) || '';
+  var reason = pickOrOther('rpReason', 'rpReasonOther');
+  if (!reason && $('rpReason') && $('rpReason').value === 'Other') { var e0 = $('rpErr'); if (e0) { e0.textContent = 'Type the reason for the report.'; e0.classList.remove('hidden'); } return; }
   var details = ($('rpDetails') && $('rpDetails').value || '').trim();
   var err = function (m) { var e = $('rpErr'); if (e) { e.textContent = m; e.classList.remove('hidden'); } };
   if (!reason) return err('Pick a reason for the report.');
@@ -307,6 +309,9 @@ var HIW_PARTNER_STEPS = [
   { n: '03', t: 'Go live on both pages', d: 'Once one side’s version is approved, the partnership shows on both pages from the start date through the end date, with a red puzzle piece on each card and banner.' },
   { n: '04', t: 'Finish or end it early', d: 'It ends by itself after the end date, or either side can end it sooner. Finished, withdrawn and turned-down requests stay under Partnership Requests → Past, with the exact deal and dates.' }
 ];
+/* The outline puzzle drawn on the bottom-right Partnership Requests button (same art as index.html). */
+var FAB_PUZZLE = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+  '<path d="M20.5 11H19V7a2 2 0 0 0-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4a2 2 0 0 0-2 2v3.8h1.5a2.2 2.2 0 1 1 0 4.4H2V19a2 2 0 0 0 2 2h3.8v-1.5a2.2 2.2 0 1 1 4.4 0V21H17a2 2 0 0 0 2-2v-4h1.5a2.5 2.5 0 0 0 0-5z"/></svg>';
 /* What each icon means (drawn with the same pieces the cards use). */
 function hiwLegendHTML() {
   var P = typeof ICON_PARTNER !== 'undefined' ? ICON_PARTNER : '', T = typeof ICON_TAG !== 'undefined' ? ICON_TAG : '', C = typeof ICON_CLOCK_TICK !== 'undefined' ? ICON_CLOCK_TICK : '';
@@ -315,8 +320,9 @@ function hiwLegendHTML() {
     ['<span class="deal-sq is-partner">' + P + '</span>', 'Partnered', 'It has an active partnership. On a directory card, point at the red puzzle to see how many (×2 or ×3).'],
     ['<span class="deal-sq is-promo">' + T + '</span>', 'Promotion running', 'The business has its own deal running right now, with no partner involved.'],
     ['<span class="deal-timer is-sample">' + C + '<span class="dt-txt">3d 04:12:09</span></span>', 'Countdown', 'Time left before a deal ends. Owners can turn it on or off for any live partnership or promotion.'],
-    ['<span class="hiw-swatch is-partner">' + P + '</span>', 'Red box', 'A partnership: the type, the deal, the partner’s name and the dates.'],
-    ['<span class="hiw-swatch is-promo">' + T + '</span>', 'Yellow note', 'A promotion: the type, who it’s for, the deal, how to redeem it (if listed) and the dates.'],
+    ['<span class="hiw-fab" aria-hidden="true">' + FAB_PUZZLE + '</span>', 'Partnership Requests button', 'The red button in the bottom-right corner opens your partnership requests. A red number on it means something new is waiting for you.'],
+    ['<span class="hiw-swatch is-partner hiw-card">' + P + '<i></i><i></i></span>', 'Red partnership box', 'On a club or business page: a partnership, with the type, the deal, the partner’s name and the dates.'],
+    ['<span class="hiw-swatch is-promo hiw-card">' + T + '<i></i><i></i></span>', 'Yellow promotion note', 'On a business page: a promotion, with the type, who it’s for, the deal, how to redeem it (if listed) and the dates.'],
     ['<span class="hiw-swatch is-seal">' + verifiedSeal(22, '#e6b422', '#ffffff') + '</span>', 'Verified', 'Student Club Hub confirmed this is the real, official page.'],
     ['<span class="hiw-swatch is-eye">' + ICON_EYE_OFF + '</span>', 'Only visible to you', 'Owners can hide a partnership or promotion. Visitors don’t see it at all, and the owner sees this note.']
   ];

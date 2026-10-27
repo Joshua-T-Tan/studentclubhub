@@ -379,9 +379,12 @@ function validateLinkInput(el) {
 }
 
 /* ---------- Main-page stats ---------- */
+/* Sample clubs show what a club page looks like; they aren't real, so they never count in stats or Top Clubs. */
+function isSampleClub(c) { return !!(c && c.sample); }
+function sampleChip() { return '<span class="sample-chip" title="A sample listing, not a real club or business">Sample</span>'; }
 function renderStats() {
   var row = $('statsRow'); if (!row) return;
-  var pub = CLUBS.filter(function (c) { return c.recruitment !== 'Private'; });
+  var pub = CLUBS.filter(function (c) { return c.recruitment !== 'Private' && !isSampleClub(c); });
   var students = pub.reduce(function (s, c) { return s + (c.memberCount || 0); }, 0);
   var schools = new Set(pub.map(function (c) { return c.school; })).size;
   row.innerHTML = stat(students.toLocaleString() + '+', 'Students connected') +
@@ -393,13 +396,16 @@ function stat(n, label) { return '<div class="stat"><div class="n">' + n + '</di
 var _tcIndex = 0, _tcTimer = null, _tcTop = [];
 function renderTopClubs() {
   var row = $('topClubs'); if (!row) return;
-  _tcTop = CLUBS.filter(function (c) { return c.recruitment !== 'Private' && !(typeof isBanned === 'function' && isBanned(c)); }).sort(function (a, b) { return (b.memberCount || 0) - (a.memberCount || 0); }).slice(0, 3);
+  var listed = CLUBS.filter(function (c) { return c.recruitment !== 'Private' && !(typeof isBanned === 'function' && isBanned(c)); });
+  var real = listed.filter(function (c) { return !isSampleClub(c); });
+  // Most members first (live counts from club_members). Samples only fill in while there are no real clubs yet.
+  _tcTop = (real.length ? real : listed).sort(function (a, b) { return (b.memberCount || 0) - (a.memberCount || 0); }).slice(0, 3);
   row.className = 'tc-slideshow';
   if (!_tcTop.length) { row.innerHTML = ''; return; }
   var slides = _tcTop.map(function (c, i) {
     return '<div class="tc-slide' + (i === 0 ? ' active' : '') + '" style="' + coverStyle(c) + '">' +
       '<div class="tc-scrim"></div><div class="tc-body">' +
-        '<div class="chips">' + recruitBadge(c.recruitment) + renderBadge(membersLabel(c.memberCount), 'gray') + '</div>' +
+        '<div class="chips">' + (isSampleClub(c) ? sampleChip() : '') + recruitBadge(c.recruitment) + renderBadge(membersLabel(c.memberCount), 'gray') + '</div>' +
         '<h3>' + escHtml(c.name) + '</h3>' +
         '<div class="tc-meta">' + escHtml(c.category) + ' · ' + escHtml(c.school) + (c.zip ? ' · ' + escHtml(c.zip) : '') + '</div>' +
         '<button class="btn primary" onclick="openClub(\'' + c.id + '\')">' + t('card_view') + '</button>' +
@@ -539,7 +545,7 @@ function renderCard(club) {
         '<div class="card-meta">' + escHtml(club.school) + (club.zip ? ' · ' + escHtml(club.zip) : '') + '</div>' +
         (club.clubId ? '<div class="card-idline"><span class="club-id-chip">#' + escHtml(club.clubId) + '</span></div>' : '') +
         '<p class="card-desc">' + escHtml(club.desc) + '</p>' +
-        '<div class="chips">' + recruitBadge(club.recruitment) + renderBadge(membersLabel(club.memberCount), 'gray') + '</div>' +
+        '<div class="chips">' + (isSampleClub(club) ? sampleChip() : '') + recruitBadge(club.recruitment) + renderBadge(membersLabel(club.memberCount), 'gray') + '</div>' +
         '<div class="card-foot">' + foot + '</div>' +
       '</div>' +
     '</article>'
@@ -605,8 +611,8 @@ function validateCreate() {
     var ok = isValidInvite(invite);
     if (invite) { msg.className = 'form-note ' + (ok ? 'ok' : 'bad'); msg.innerHTML = ok ? '✓ Verified. You can publish this club.' : '✗ That invite code isn’t recognized.'; }
     else { msg.className = 'form-note'; msg.innerHTML = 'Enter the club leader invite code from your school or from Student Club Hub.'; }
-    var ready = $('ccName').value.trim() && createCategoryValue() && $('ccSchool').value.trim() &&
-      $('ccDistrict').value.trim() && $('ccZip').value.trim() && $('ccEmail').value.trim() && ok;
+    var ready = $('ccName').value.trim() && createCategoryValue() && pickOrOther('ccSchool', 'ccSchoolOther') &&
+      pickOrOther('ccDistrict', 'ccDistrictOther') && $('ccZip').value.trim() && $('ccEmail').value.trim() && ok;
     $('ccPublish').disabled = !ready;
   };
   paint();
@@ -618,13 +624,13 @@ function validateCreate() {
 function onSchoolPick(schoolId, districtId) {
   var v = $(schoolId).value;
   if (v && v !== 'Other' && typeof districtForSchool === 'function') {
-    var d = districtForSchool(v); if (d) $(districtId).value = d;
+    var d = districtForSchool(v); if (d) { $(districtId).value = d; toggleOtherBox($(districtId), districtId + 'Other'); }
   }
 }
 function publishClub() {
   if (!currentUser) { pendingAuthAction = publishClub; return openAuth('login'); }
   var name = $('ccName').value.trim(), cat = createCategoryValue(),
-      school = $('ccSchool').value.trim(), district = $('ccDistrict').value.trim();
+      school = pickOrOther('ccSchool', 'ccSchoolOther'), district = pickOrOther('ccDistrict', 'ccDistrictOther');
   if (!isValidInvite($('ccInvite').value)) return toast('Enter a valid club leader invite code to publish.');
   if (!name || !cat || !school || !district) return toast('Please complete all required fields, including school district.');
   if (!$('ccZip').value.trim() || !$('ccEmail').value.trim()) return toast('Zip code and leader contact email are required.');
@@ -703,7 +709,8 @@ function collectCreateLinks() {
   return Array.prototype.map.call(document.querySelectorAll('#ccLinks .mg-link'), function (el) { return el.value.trim(); }).filter(isValidLink).slice(0, 8);
 }
 function resetCreateForm() {
-  ['ccName','ccDesc','ccEmail','ccSchool','ccDistrict','ccZip','ccOther','ccInvite'].forEach(function (id) { $(id).value = ''; });
+  ['ccName','ccDesc','ccEmail','ccSchool','ccDistrict','ccZip','ccOther','ccInvite','ccSchoolOther','ccDistrictOther'].forEach(function (id) { if ($(id)) $(id).value = ''; });
+  ['ccSchoolOther','ccDistrictOther'].forEach(function (id) { if ($(id)) $(id).classList.add('hidden'); });
   $('ccCategory').value = ''; $('ccOtherWrap').classList.add('hidden'); $('ccPublish').disabled = true;
   wizardBanner = ''; wizardGallery = []; paintBannerPreview(); paintGalleryPreview();
   seedCreateLinks(['']); editingDraftId = null; validateCreate();
@@ -730,6 +737,7 @@ function saveDraft() {
     id: editingDraftId || 'd-' + Date.now().toString(36),
     name: $('ccName').value.trim(), category: $('ccCategory').value, other: $('ccOther').value.trim(),
     recruitment: $('ccRecruit').value, school: $('ccSchool').value.trim(), district: $('ccDistrict').value.trim(),
+    schoolOther: ($('ccSchoolOther') && $('ccSchoolOther').value.trim()) || '', districtOther: ($('ccDistrictOther') && $('ccDistrictOther').value.trim()) || '',
     zip: $('ccZip').value.trim(), email: $('ccEmail').value.trim(), desc: $('ccDesc').value.trim(),
     invite: $('ccInvite').value.trim(),
     banner: wizardBanner, gallery: wizardGallery.slice(), links: collectCreateLinks(), saved: Date.now()
@@ -750,6 +758,8 @@ function resumeDraft(id) {
   $('ccOtherWrap').classList.toggle('hidden', d.category !== 'Other');
   $('ccRecruit').value = (d.recruitment === 'Private' || d.recruitment === 'Application Required') ? 'Private' : 'Public';
   $('ccSchool').value = d.school || ''; $('ccDistrict').value = d.district || ''; $('ccZip').value = d.zip || '';
+  if ($('ccSchoolOther')) { $('ccSchoolOther').value = d.schoolOther || ''; $('ccSchoolOther').classList.toggle('hidden', d.school !== 'Other'); }
+  if ($('ccDistrictOther')) { $('ccDistrictOther').value = d.districtOther || ''; $('ccDistrictOther').classList.toggle('hidden', d.district !== 'Other'); }
   $('ccEmail').value = d.email || ''; $('ccDesc').value = d.desc || '';
   $('ccInvite').value = d.invite || '';
   wizardBanner = d.banner || ''; wizardGallery = (d.gallery || []).slice();

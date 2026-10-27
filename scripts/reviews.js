@@ -109,7 +109,7 @@ function reviewsSectionHTML(club) {
   }
   var sum = clubRatingSummary(club.id), list = clubReviews(club.id).slice().reverse();
   var member = isClubMember(club);
-  var btn = member ? '<button class="btn primary" onclick="openWriteReview(\'' + club.id + '\')">' + t('write_review') + '</button>'
+  var btn = isSampleClub(club) ? '' : member ? '<button class="btn primary" onclick="openWriteReview(\'' + club.id + '\')">' + t('write_review') + '</button>'
     : '<span class="form-note">Join this club to leave a review</span>';
   var header = '<div class="reviews-head"><div><div class="section-title" style="margin:0">' + t('sec_reviews') + '</div>' +
     (sum.count ? '<div class="rating-line">' + starRow(sum.avg) + '<strong>' + sum.avg.toFixed(1) + '</strong><span class="form-note">· ' + sum.count + ' review' + (sum.count === 1 ? '' : 's') + '</span></div>' : '<div class="form-note">No reviews yet.</div>') + '</div>' + btn + '</div>';

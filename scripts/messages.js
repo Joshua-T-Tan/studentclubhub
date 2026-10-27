@@ -23,6 +23,7 @@ function openReachOut(targetType, id) {
     ? (typeof _findBizAnywhere === 'function' ? _findBizAnywhere(id) : null)
     : (typeof getClub === 'function' ? getClub(id) : null);
   if (!obj) { toast('Couldn’t find that listing.'); return; }
+  if (obj.is_sample || obj.sample) { toast('This is a sample listing, so it can’t be contacted.'); return; }
   // PUBLIC contact address only — never fall back to anyone's private login email.
   var publicEmail = String(targetType === 'business' ? (obj.contact_email || '') : (obj.email || '')).trim();
   var isMine = targetType === 'business' ? (typeof isBizOwner === 'function' && isBizOwner(obj)) : (typeof ownerOf === 'function' && ownerOf(obj));
@@ -59,7 +60,8 @@ function _renderReachOut() {
     form = head + '<div id="roErr" class="auth-error hidden"></div>' +
       '<div class="field"><label>Send as</label><select id="roFrom" class="select block-select">' + fromOpts + '</select>' +
         '<div class="form-note" style="margin-top:4px">Which of your clubs or businesses this partnership is for.</div></div>' +
-      '<div class="field"><label>Partnership type</label><select id="roType" class="select block-select">' + typeOpts + '</select></div>' +
+      '<div class="field"><label>Partnership type</label><select id="roType" class="select block-select" onchange="toggleOtherBox(this,\'roTypeOther\')">' + typeOpts + '</select>' +
+        otherBoxHTML('roTypeOther', false, '', 'Type the partnership type (30 characters max)') + '</div>' +
       '<div class="two-col"><div class="field"><label>Starts</label><input id="roStart" type="date" min="' + today + '" value="' + today + '"></div>' +
         '<div class="field"><label>Ends</label><input id="roEnd" type="date" min="' + today + '"></div></div>' +
       '<div class="field"><label>The deal <span class="form-note">(what each side provides)</span></label>' +
@@ -86,8 +88,9 @@ function submitReachOutRequest() {
   var fromEnt = (c.mine || []).find(function (e) { return e.type === fromType && e.id === fromId; });
   var err = function (m) { var e = $('roErr'); if (e) { e.textContent = m; e.classList.remove('hidden'); } return false; };
   if (!fromEnt) return err('Pick which club or business you’re partnering as.');
-  var t = { ptype: ($('roType') && $('roType').value) || PARTNER_TYPES[0], start: ($('roStart') && $('roStart').value) || '',
+  var t = { ptype: pickOrOther('roType', 'roTypeOther') || ($('roType') && $('roType').value === 'Other' ? '' : PARTNER_TYPES[0]), start: ($('roStart') && $('roStart').value) || '',
     end: ($('roEnd') && $('roEnd').value) || '', deal: ($('roDesc') && $('roDesc').value || '').trim() };
+  if (!t.ptype) return err('Type the partnership type.');
   if (_checkTerms(t, err) !== true) return;
   if (t.start < _todayStr()) return err('The start date can’t be in the past.');
   if (activePartnershipCount(fromType, fromId) >= PARTNER_LIMIT) return err(fromEnt.name + ' already has ' + PARTNER_LIMIT + ' active partnerships, the most at once. End one first.');
@@ -351,11 +354,13 @@ function openPartnerRequest(id) {
 function openCounterForm(id) {
   var a = _prRows[id]; if (!a || !a.myTurn) return;
   var today = _todayStr(), cur = a.ptype || PARTNER_TYPES[0];
-  var types = PARTNER_TYPES.slice(); if (types.indexOf(cur) === -1) types.unshift(cur);
+  var types = PARTNER_TYPES.slice(), custom = isCustomChoice(cur, types);
   $('bizBody').innerHTML = '<div class="modal-pad" data-pr-id="' + a.id + '" data-pr-v="' + _prVersion(a) + '"><div class="ro-head"><h3>Suggest changes</h3><button class="icon-btn" onclick="closeReach()">✕</button></div>' +
     '<p class="form-note" style="margin-bottom:10px">Change anything below. ' + escHtml(_prSideName(a, a.awaiting === 'a' ? 'b' : 'a')) + ' then approves your version or suggests their own.</p>' +
     '<div id="roErr" class="auth-error hidden"></div>' +
-    '<div class="field"><label>Partnership type</label><select id="coType" class="select block-select">' + types.map(function (t) { return '<option' + (t === cur ? ' selected' : '') + '>' + escHtml(t) + '</option>'; }).join('') + '</select></div>' +
+    '<div class="field"><label>Partnership type</label><select id="coType" class="select block-select" onchange="toggleOtherBox(this,\'coTypeOther\')">' +
+      types.map(function (t) { return '<option' + (t === cur || (custom && t === 'Other') ? ' selected' : '') + '>' + escHtml(t) + '</option>'; }).join('') + '</select>' +
+      otherBoxHTML('coTypeOther', custom || cur === 'Other', custom ? cur : '', 'Type the partnership type (30 characters max)') + '</div>' +
     '<div class="two-col"><div class="field"><label>Starts</label><input id="coStart" type="date" value="' + escAttr(_agrStart(a) || today) + '"></div>' +
       '<div class="field"><label>Ends</label><input id="coEnd" type="date" min="' + today + '" value="' + escAttr(_agrEnd(a) || '') + '"></div></div>' +
     '<div class="field"><label>The deal <span class="form-note">(what each side provides)</span></label><textarea id="coDeal" maxlength="400">' + escHtml(a.a_deal || '') + '</textarea></div>' +
@@ -366,7 +371,8 @@ function openCounterForm(id) {
 function submitCounter(id) {
   var a = _prRows[id]; if (!a || !a.myTurn) return;
   var err = function (m) { var e = $('roErr'); if (e) { e.textContent = m; e.classList.remove('hidden'); } return false; };
-  var t = { ptype: $('coType').value, start: $('coStart').value, end: $('coEnd').value, deal: ($('coDeal').value || '').trim() };
+  var t = { ptype: pickOrOther('coType', 'coTypeOther'), start: $('coStart').value, end: $('coEnd').value, deal: ($('coDeal').value || '').trim() };
+  if (!t.ptype) return err('Type the partnership type.');
   if (_checkTerms(t, err) !== true) return;
   if (t.ptype === a.ptype && t.deal === a.a_deal && t.start === _agrStart(a) && t.end === _agrEnd(a)) return err('Nothing changed yet. Edit the terms, or go back and approve them as they are.');
   authBusy2('coSend', true, 'Sending…');

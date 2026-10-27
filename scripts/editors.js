@@ -47,10 +47,14 @@ function _timeOpts(sel) {
    CLUB EDITORS  (localStorage → saveUserClubs + renderClub)
    ================================================================== */
 function _club(id) { var c = getClub(id); return (c && canEditClub(c)) ? c : null; }
-function _clubCatOpts(sel) {
-  var cats = (typeof CATEGORIES !== 'undefined' ? CATEGORIES : []).map(function (x) { return typeof x === 'string' ? x : (x.name || x.label || x.id || ''); }).filter(Boolean);
-  if (sel && cats.indexOf(sel) < 0) cats.unshift(sel);
-  return cats.map(function (x) { return '<option' + (x === sel ? ' selected' : '') + '>' + escHtml(x) + '</option>'; }).join('');
+function _clubCats() { return (typeof CATEGORIES !== 'undefined' ? CATEGORIES : []).map(function (x) { return typeof x === 'string' ? x : (x.name || x.label || x.id || ''); }).filter(function (x) { return x && x !== 'Other'; }); }
+/* Category <select> + its "Other" box (a custom category shows as Other with the text filled in). */
+function _catSelectHTML(id, list, sel) {
+  var custom = isCustomChoice(sel, list);
+  return '<select id="' + id + '" class="select block-select" onchange="toggleOtherBox(this,\'' + id + 'Other\')">' +
+    list.map(function (x) { return '<option' + (x === sel ? ' selected' : '') + '>' + escHtml(x) + '</option>'; }).join('') +
+    '<option value="Other"' + (custom || sel === 'Other' ? ' selected' : '') + '>Other (type your own)</option></select>' +
+    otherBoxHTML(id + 'Other', custom || sel === 'Other', custom ? sel : '', 'Type your own category (30 characters max)');
 }
 function _clubSave(id, msg) { saveUserClubs(getClub(id)); closeReach(); if (typeof applyFilters === 'function') applyFilters(); if (typeof renderTopClubs === 'function') renderTopClubs(); renderClub(); if (msg) toast(msg); }
 
@@ -61,7 +65,7 @@ function editClubBanner(id) {
   _emClubBanner = undefined;
   var body =
     '<div class="field"><label>Club name</label><input id="emTitle" type="text" value="' + escAttr(c.name) + '"></div>' +
-    '<div class="field"><label>Club type</label><select id="emCat" class="select block-select">' + _clubCatOpts(c.category) + '</select></div>' +
+    '<div class="field"><label>Club type</label>' + _catSelectHTML('emCat', _clubCats(), c.category) + '</div>' +
     '<div class="field"><label>Banner image</label><div id="emBannerPrev"></div>' +
       '<label class="uploader"><input type="file" accept="image/*" hidden onchange="emClubBannerUpload(\'' + id + '\',event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Upload banner image</label></div>' +
     _toggleRow('emPrivate', 'Private club', 'Hidden from public Browse unless someone has your link.', c.recruitment === 'Private') +
@@ -123,7 +127,7 @@ function emClubBannerUpload(id, e) {
 function emClubBannerRemove(id) { _emClubBanner = ''; emPaintClubBanner(id); }
 function _applyClubBannerForm(c) {
   var name = _emVal('emTitle'); if (name) c.name = name;
-  if ($('emCat')) c.category = $('emCat').value;
+  if ($('emCat')) c.category = pickOrOther('emCat', 'emCatOther') || c.category;
   c.recruitment = ($('emPrivate') && $('emPrivate').checked) ? 'Private' : 'Public';
   if ($('emPartner')) c.partnershipOpen = !!$('emPartner').checked;   // officers don't see the switch: leave it as is
   if (_emClubBanner !== undefined) c.banner = _emClubBanner;
@@ -293,10 +297,9 @@ var _emBizPhotos = null, _emBizBanner;
 function editBizBanner(id) {
   var b = _biz(id); if (!b) return;
   _emBizPhotos = (b.photos || []).slice(); _emBizBanner = undefined;
-  var catOpts = BIZ_CATEGORIES.map(function (c) { return '<option' + (c === b.category ? ' selected' : '') + '>' + escHtml(c) + '</option>'; }).join('');
   var body =
     '<div class="field"><label>Business name</label><input id="emTitle" type="text" value="' + escAttr(b.name) + '"></div>' +
-    '<div class="field"><label>Category / type</label><select id="emCat" class="select block-select">' + catOpts + '</select></div>' +
+    '<div class="field"><label>Category / type</label>' + _catSelectHTML('emCat', BIZ_CATEGORIES, b.category) + '</div>' +
     '<div class="field"><label>Card banner <span class="form-note">(Browse thumbnail)</span></label><div id="emBizBannerPrev"></div>' +
       '<label class="uploader"><input type="file" accept="image/*" hidden onchange="emBizBannerUpload(\'' + id + '\',event)"><span class="up-ico">' + svgIcon('upload', 16) + '</span> Upload banner</label></div>' +
     '<div class="field"><label>Slideshow photos <span class="form-note">(top of your profile — up to 10)</span></label><div id="emBizPhotos" class="biz-photostrip"></div>' +
@@ -335,7 +338,7 @@ function emPaintBizBanner(id) {
   var src = (_emBizBanner !== undefined) ? _emBizBanner : (b && b.banner);
   el.innerHTML = src ? '<div class="eb-banner" style="background-image:url(' + escAttr(src) + ')"><button class="mini-x" onclick="emBizBannerRemove(\'' + id + '\')">✕</button></div>' : '<p class="form-note">No banner — a gradient block is used on your card.</p>';
 }
-function emBizBannerUpload(id, e) { var f = e.target.files[0]; e.target.value = ''; if (!f) return; toast('Uploading…'); sbUploadMedia(f, false).then(function (u) { _emBizBanner = u; emPaintBizBanner(id); }).catch(function (ex) { toast(ex.message); }); }
+function emBizBannerUpload(id, e) { var f = e.target.files[0]; e.target.value = ''; if (!f) return; toast('Uploading…'); sbUploadMedia(f, false, id).then(function (u) { _emBizBanner = u; emPaintBizBanner(id); }).catch(function (ex) { toast(ex.message); }); }
 function emBizBannerRemove(id) { _emBizBanner = ''; emPaintBizBanner(id); }
 function emPaintBizPhotos(id) {
   var el = $('emBizPhotos'); if (!el) return;
@@ -349,13 +352,13 @@ function emBizPhotosUpload(id, e) {
   files = files.slice(0, room); if (!files.length) return;
   toast('Uploading ' + files.length + (files.length === 1 ? ' photo…' : ' photos…'));
   files.reduce(function (p, f) {
-    return p.then(function () { return sbUploadMedia(f, false).then(function (u) { _emBizPhotos.push(u); emPaintBizPhotos(id); }).catch(function (ex) { toast(ex.message); }); });
+    return p.then(function () { return sbUploadMedia(f, false, id).then(function (u) { _emBizPhotos.push(u); emPaintBizPhotos(id); }).catch(function (ex) { toast(ex.message); }); });
   }, Promise.resolve());
 }
 function emBizPhotoRemove(id, i) { _emBizPhotos.splice(i, 1); emPaintBizPhotos(id); }
 function _bizBannerPatch(id) {
   var b = _biz(id) || {};
-  var patch = { name: _emVal('emTitle') || b.name, category: $('emCat') ? $('emCat').value : b.category,
+  var patch = { name: _emVal('emTitle') || b.name, category: ($('emCat') && pickOrOther('emCat', 'emCatOther')) || b.category,
     is_private: !!($('emPrivate') && $('emPrivate').checked), partnership_open: !!($('emPartner') && $('emPartner').checked), photos: _emBizPhotos || [] };
   if (_emBizBanner !== undefined) patch.banner = _emBizBanner || null;
   return patch;
@@ -375,7 +378,7 @@ function editPromotion(bizId, promoId) {
   var kinds = PROMO_KINDS.map(function (k) { return '<option value="' + k[0] + '"' + (k[0] === p.kind ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('');
   var body =
     '<div class="field"><label>Deal type *</label><select id="emKind" class="select block-select" onchange="var o=$(\'emKindOtherWrap\');if(o)o.hidden=this.value!==\'other\'">' + kinds + '</select></div>' +
-    '<div class="field" id="emKindOtherWrap"' + (p.kind === 'other' ? '' : ' hidden') + '><label>Name the deal type *</label><input id="emKindOther" type="text" maxlength="40" placeholder="e.g. Happy hour, Loyalty card" value="' + escAttr(p.kind_other || '') + '"></div>' +
+    '<div class="field" id="emKindOtherWrap"' + (p.kind === 'other' ? '' : ' hidden') + '><label>Name the deal type *</label><input id="emKindOther" type="text" maxlength="30" placeholder="e.g. Happy hour, Loyalty card" value="' + escAttr(p.kind_other || '') + '"></div>' +
     '<div class="field"><label>Who it’s for *</label><select id="emAud" class="select block-select">' +
       '<option value="student"' + (p.audience !== 'everyone' ? ' selected' : '') + '>Students only</option>' +
       '<option value="everyone"' + (p.audience === 'everyone' ? ' selected' : '') + '>Everyone</option></select></div>' +
@@ -502,7 +505,7 @@ function emBizGalleryUpload(id, e) {
   // Upload one at a time, then save the whole batch once — parallel saves used to overwrite each other.
   var added = [];
   files.reduce(function (p, f) {
-    return p.then(function () { return sbUploadMedia(f, true).then(function (u) { added.push(u); }).catch(function (ex) { toast(ex.message); }); });
+    return p.then(function () { return sbUploadMedia(f, true, id).then(function (u) { added.push(u); }).catch(function (ex) { toast(ex.message); }); });
   }, Promise.resolve()).then(function () {
     var cur = _biz(id); if (!added.length || !cur) return;
     return _bizSaveGallery(id, (cur.gallery || []).concat(added)).then(function () { toast('Gallery updated.'); });

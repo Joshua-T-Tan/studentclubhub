@@ -741,3 +741,44 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 .adm-made { display: block; font-size: .76rem; opacity: .85; }
 .adm-code-use { flex-basis: 100%; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: .88rem; padding-top: 6px; border-top: 1px dashed var(--line); }
 .adm-row.adm-code-row > .adm-del { margin-left: 0; }
+
+/* Sample listings (show what a page looks like; not real) */
+.sample-chip { display: inline-flex; align-items: center; padding: 2px 8px; font-size: .7rem; font-weight: 900; letter-spacing: .04em; text-transform: uppercase;
+  background: var(--card); color: var(--ink); border: 1.5px dashed var(--ink); border-radius: var(--r-sm); white-space: nowrap; flex: 0 0 auto; }
+.biz-slideshow:not(.is-paper) .sample-chip { background: rgba(255,255,255,.92); color: #1a1a1a; border-color: #1a1a1a; }
+.sample-note { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; margin: 2px 0 18px; background: var(--note-soft);
+  border: 1.5px dashed var(--line); border-radius: var(--r); color: var(--ink); font-size: .92rem; line-height: 1.5; }
+.sample-note svg { flex: 0 0 auto; margin-top: 2px; }
+/* "Other (type your own)" boxes under a dropdown */
+.other-box { display: block; width: 100%; margin-top: 8px; box-sizing: border-box; padding: 10px 12px; font-size: .92rem;
+  background: var(--card); color: var(--ink); border: var(--edge); border-radius: var(--r-sm); }
+.other-box.hidden { display: none; }
+/* How It Works legend: a small copy of the bottom-right Partnership Requests button, and mini deal boxes */
+.hiw-fab { display: inline-grid; place-items: center; width: 44px; height: 44px; background: var(--brand); color: #fff;
+  border-radius: var(--r); box-shadow: 0 6px 16px rgba(0,90,120,.36); }
+.hiw-swatch.hiw-card { width: 58px; height: 40px; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; align-items: center;
+  justify-items: start; gap: 3px 5px; padding: 6px 7px; box-sizing: border-box; }
+.hiw-swatch.hiw-card svg { width: 13px; height: 13px; grid-row: 1 / span 2; }
+.hiw-swatch.hiw-card i { display: block; height: 4px; width: 100%; border-radius: 2px; background: currentColor; opacity: .85; }
+.hiw-swatch.hiw-card i + i { width: 70%; opacity: .55; }
+
+/* Terms of Use / Privacy Policy pages + the one-time agreement */
+.legal-doc h3 { font-size: 1.05rem; margin: 22px 0 6px; }
+.legal-doc p, .legal-doc li { line-height: 1.65; color: var(--ink); }
+.legal-doc ul { padding-left: 22px; margin: 6px 0; display: flex; flex-direction: column; gap: 6px; }
+.legal-updated, .legal-lang-note { color: var(--muted); font-size: .88rem; }
+.legal-overlay { z-index: 9000; }
+.legal-modal { max-width: 460px; }
+.legal-logo { display: flex; justify-content: center; margin-bottom: 6px; }
+.legal-h { text-align: center; font-size: 1.3rem; font-weight: 900; margin-bottom: 6px; }
+.legal-check { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; margin-bottom: 8px; cursor: pointer;
+  background: var(--card); border: var(--edge); border-radius: var(--r-sm); line-height: 1.45; }
+.legal-check input { width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; accent-color: var(--brand); }
+.legal-scroll { max-height: 55vh; overflow-y: auto; padding-right: 6px; }
+.legal-scroll .legal-doc h3:first-of-type { margin-top: 8px; }
+.footer-link { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.footer-link:hover { color: var(--brand); }
+.legal-check span { flex: 1; }
+.legal-read { flex: 0 0 auto; align-self: center; padding: 3px 10px; font-size: .8rem; font-weight: 800; background: var(--note); color: #1a1a1a;
+  border: var(--edge); border-radius: var(--r-sm); cursor: pointer; }
+.legal-read:hover { background: var(--brand); color: #fff; }

@@ -61,7 +61,7 @@ function sbRest(path, opts) {
 /* Call a database function (POST /rest/v1/rpc/<name>). */
 function sbRpc(name, args) { return sbRest('rpc/' + name, { method: 'POST', body: JSON.stringify(args || {}) }); }
 /* Every public business column. owner_email is private: "do I own this?" comes from my_business_ids(). */
-var BIZ_SELECT = 'id,name,category,address,city,zip,perk_type,perk_description,redemption_instructions,contact_email,status,created_at,about,phone,website,cuisines,hours,photos,rating,review_count,partnership_open,banner,gallery,links,public_id,deal_hidden,is_private,perk_audience,perk_start,perk_end,verified,reviews_enabled';
+var BIZ_SELECT = 'id,name,category,address,city,zip,perk_type,perk_description,redemption_instructions,contact_email,status,created_at,about,phone,website,cuisines,hours,photos,rating,review_count,partnership_open,banner,gallery,links,public_id,deal_hidden,is_private,perk_audience,perk_start,perk_end,verified,reviews_enabled,is_sample';
 function sbFetchBusinesses() { return sbRest('businesses?status=eq.verified&select=' + BIZ_SELECT + '&order=created_at.desc'); }
 /* Which businesses the signed-in account owns (asked of the server, so nobody's email is ever sent to the browser). */
 var _myBizIds = [];
@@ -118,7 +118,7 @@ function renderBusinesses(kind) {
     .catch(function (e) { _bizError = e.message; var g = $('bizGrid'); if (g) g.innerHTML = '<p class="form-note" style="grid-column:1/-1;text-align:center;padding:40px">' + escHtml(e.message) + '</p>'; });
 }
 function businessFilterBar() {
-  var pills = ['All'].concat(BIZ_CATEGORIES).map(function (c) {
+  var pills = ['All'].concat(BIZ_CATEGORIES, ['Other']).map(function (c) {
     return '<button class="cat-pill' + (bizState.cat === c ? ' active' : '') + '" onclick="setBizFilter(\'cat\',\'' + jsArg(c) + '\')">' + escHtml(c) + '</button>';
   }).join('');
   var perkOpts = DEAL_FILTERS.map(function (o) {
@@ -154,7 +154,8 @@ function paintBusinessGrid(savedOnly) {
   if (savedOnly) { var s = loadSavedBiz(); list = list.filter(function (b) { return s.indexOf(b.id) !== -1; }); }
   else {
     list = list.filter(function (b) { return !b.is_private; });   // private listings never show in public Browse
-    if (bizState.cat !== 'All') list = list.filter(function (b) { return b.category === bizState.cat; });
+    if (bizState.cat === 'Other') list = list.filter(function (b) { return BIZ_CATEGORIES.indexOf(b.category) === -1; });   // typed-in categories
+    else if (bizState.cat !== 'All') list = list.filter(function (b) { return b.category === bizState.cat; });
     if (bizState.perk !== 'All') list = list.filter(function (b) { return bizMatchesDealFilter(b, bizState.perk); });
     var q = bizState.q.trim().toLowerCase();
     if (q) list = list.filter(function (b) {
@@ -190,6 +191,7 @@ function businessCard(b) {
     '<div class="card-body">' +
       '<div class="card-title" onclick="openBusiness(\'' + b.id + '\')"><h3>' + escHtml(b.name) + '</h3>' +
         (b.verified ? '<span class="name-verified-ico" title="Verified">' + verifiedSeal(17, '#e6b422', '#ffffff') + '</span>' : '') +
+        (b.is_sample ? sampleChip() : '') +
         dealSquares('business', b) +
       '</div>' +
       '<div class="card-meta">' + svgIcon('pin', 14) + ' ' + escHtml(b.city) + ', CA ' + escHtml(b.zip) + '</div>' +
@@ -278,6 +280,7 @@ function renderBusinessPage(b) {
         '<div class="biz-tagline">' +
           '<span class="biz-cuisines">' + escHtml(cuisines) + '</span>' +
           (b.verified ? '<span class="biz-verified" tabindex="0">' + (slides[0] && slides[0].paper ? verifiedSeal(18, '#e6b422', '#ffffff') : verifiedSeal(18, '#ffffff', '#b8860b')) + '<span class="bv-label">Verified</span></span>' : '') +
+          (b.is_sample ? sampleChip() : '') +
           (b.partnership_open ? '<span class="open-partner-chip">' + ICON_PARTNER + ' Open to partnerships</span>' : '') +
           dealBannerChips('business', b) +
           (b.public_id ? '<span class="biz-idchip">#' + escHtml(b.public_id) + '</span>' : '') +
@@ -307,7 +310,7 @@ function renderBusinessPage(b) {
     ? '<div class="section-title has-edit"><span>About the Business</span>' + (owner ? '<button class="sec-edit" title="Edit about" onclick="editBizAbout(\'' + b.id + '\')">' + ICON_PEN + '</button>' : '') + '</div>' +
       '<p class="biz-about' + (b.about ? '' : ' placeholder') + '">' + escHtml(b.about || 'Tell everyone about your business — tap the pencil to add a description.') + '</p>'
     : '';
-  var main = '<div class="biz-main">' +
+  var main = '<div class="biz-main">' + (b.is_sample ? sampleNoteHTML('business') : '') +
     '<div class="deal-stack">' + partnershipDealBox('business', b, owner) + promotionBoxes(b, owner) + '</div>' +
     aboutBlock +
     galleryBlock +
@@ -321,7 +324,7 @@ function renderBusinessPage(b) {
     (revEnabled
       ? ('<div class="reviews-head"><div><div class="section-title" style="margin:0">Ratings & Reviews</div>' +
           (b.review_count > 0 ? '<div class="rating-line">' + starRow(b.rating || 0) + '<strong>' + Number(b.rating || 0).toFixed(1) + '</strong><span class="form-note">· ' + b.review_count + ' review' + (b.review_count === 1 ? '' : 's') + '</span></div>' : '') +
-          '</div>' + (owner ? '' : '<button id="bizReviewBtn" class="btn primary" onclick="openBizReview(\'' + b.id + '\')">' + (_myBizReview(b.id) ? 'Edit Your Review' : 'Write a Review') + '</button>') + '</div>' +
+          '</div>' + (owner || b.is_sample ? '' : '<button id="bizReviewBtn" class="btn primary" onclick="openBizReview(\'' + b.id + '\')">' + (_myBizReview(b.id) ? 'Edit Your Review' : 'Write a Review') + '</button>') + '</div>' +
         '<div id="bizReviews"><p class="form-note">Loading reviews…</p></div>')
       : ('<div class="reviews-head"><div class="section-title" style="margin:0">Ratings & Reviews</div></div>' +
          '<p class="form-note" style="padding:10px 0">Reviews are turned off' + (owner ? ' — turn them back on above.' : ' for this business.') + '</p>')) +
@@ -338,9 +341,9 @@ function renderBusinessPage(b) {
       '<a class="btn ghost block" style="margin-top:10px" href="https://maps.google.com/?q=' + encodeURIComponent((b.address || '') + ' ' + b.city + ' ' + b.zip) + '" target="_blank" rel="noopener">' + svgIcon('directions', 16) + ' Get Directions</a>' +
       (b.phone ? '<a class="btn ghost block" style="margin-top:8px" href="tel:' + escAttr((b.phone || '').replace(/[^0-9+]/g, '')) + '">' + svgIcon('phone', 16) + ' Call</a>' : '') +
     '</div>' +
-    '<div class="sidebar-card"><div class="section-title" style="margin-top:0">Partner with this business</div>' +
+    (b.is_sample ? '' : '<div class="sidebar-card"><div class="section-title" style="margin-top:0">Partner with this business</div>' +
       '<p class="form-note" style="margin-bottom:10px">Club Presidents can reach out about sponsorships, discounts or events. You’ll see the business’s public email and can send a partnership request.</p>' +
-      '<button class="btn blue block" onclick="contactByEmail(\'business\',\'' + b.id + '\')">' + ICON_PARTNER + ' Reach Out by Email</button></div>' +
+      '<button class="btn blue block" onclick="contactByEmail(\'business\',\'' + b.id + '\')">' + ICON_PARTNER + ' Reach Out by Email</button></div>') +
   '</aside>';
 
   $('businessBody').innerHTML = hero +
@@ -571,64 +574,140 @@ function submitBizReview() {
 function closeBiz() { closeOverlay('bizOverlay'); }
 function closeBusiness() { closeOverlay('bizOverlay'); }
 
-/* ---------- Registration form ---------- */
+/* ---------- Registration form (same layout as "Register a Club") ----------
+   Publishing needs a single-use invite code (the database claims it). "Save as Draft" keeps the
+   form on this device (My Business → Drafts) without a code; "Cancel" goes back. */
+var _bizDraftEditing = null;
 function renderBusinessRegister(el) {
   // Ownership is tied to the logged-in account's email, so listing requires an account.
   if (!currentUser) {
-    el.innerHTML = '<div class="page-head centered"><span class="hero-kicker">Local Businesses</span><h1>Register Your Business</h1><p>Sign in first — your listing is managed from your account.</p></div>' +
+    el.innerHTML = '<div class="page-head centered"><h1>Register a Business</h1><p>Sign in first. Your listing is managed from your account.</p></div>' +
       '<div class="soon-card"><div class="soon-ico">' + svgIcon('lock', 34) + '</div><h2>Sign in required</h2>' +
       '<p>Log in or create an account, then come back here to list your business.</p>' +
       '<div class="soon-actions"><button class="btn primary" onclick="openAuth(\'login\')">Log In</button><button class="btn blue" onclick="openAuth(\'signup\')">Sign Up</button></div></div>';
     return;
   }
-  var catOpts = '<option value="">Select a category…</option>' + BIZ_CATEGORIES.map(function (c) { return '<option>' + escHtml(c) + '</option>'; }).join('');
+  var typed = $('bizForm') ? _bizFormData() : null;   // a re-render (e.g. language switch) keeps what was typed
+  var catOpts = '<option value="">Select…</option>' + BIZ_CATEGORIES.map(function (c) { return '<option>' + escHtml(c) + '</option>'; }).join('') +
+    '<option value="Other">Other (type your own)</option>';
   el.innerHTML =
-    '<div class="page-head centered"><span class="hero-kicker">Local Businesses</span><h1>Register Your Business</h1>' +
-      '<p>Add the basics now — then add promotions, hours, photos, and links from your page. Your listing goes live right away.</p></div>' +
-    '<div class="form-card" style="margin:0 auto 40px" id="bizForm">' +
+    '<div class="container narrow center-page">' +
+    '<div class="page-head" style="text-align:center"><h1>Register a Business</h1><p>Add promotions, hours, photos, and links to your page later.</p></div>' +
+    '<div class="form-card" id="bizForm">' +
       '<div id="bizFormErr" class="auth-error hidden"></div>' +
       field2('bizName', 'Business name *', 'text', 'e.g. Boba Time') +
-      '<div class="field"><label>Category / type *</label><select id="bizCat" class="select block-select">' + catOpts + '</select></div>' +
-      field2('bizAddr', 'Street address', 'text', '123 Main St') +
+      '<div class="two-col"><div class="field"><label>Category / type *</label><select id="bizCat" class="select block-select" onchange="onBizCatChange()">' + catOpts + '</select>' +
+        '<input id="bizCatOther" class="other-box hidden" type="text" maxlength="' + OTHER_LEN + '" placeholder="Type your own category (30 characters max)" oninput="validateBizForm()"></div>' +
+        field2('bizAddr', 'Street address', 'text', '123 Main St') + '</div>' +
       '<div class="two-col">' + field2('bizCity', 'City *', 'text', 'Palos Verdes') + field2('bizZip', 'Zip code *', 'text', '90274') + '</div>' +
       '<div class="two-col">' + field2('bizPhone', 'Phone number *', 'tel', '(310) 555-0123') + field2('bizEmail', 'Business contact email *', 'email', 'owner@business.com') + '</div>' +
-      '<p class="form-note" style="margin:2px 0 14px">Everything else — promotions, hours, photos, links, and partnership settings — you add afterward using the gear and pencil icons on your business page.</p>' +
-      '<button id="bizSubmit" class="btn primary block lg" onclick="submitBusiness()">List My Business</button>' +
-    '</div>';
+      '<div class="field invite-field"><label>Business invite code *</label>' +
+        '<input id="bizInvite" type="text" placeholder="e.g. SCH-AB12CD" oninput="validateBizForm()">' +
+        '<p id="bizInviteMsg" class="form-note">Enter the invite code you got from Student Club Hub.</p></div>' +
+      '<div class="modal-actions three">' +
+        '<button class="btn ghost" onclick="cancelBizForm()">Cancel</button>' +
+        '<button class="btn amber" onclick="saveBizDraft()">Save as Draft</button>' +
+        '<button id="bizSubmit" class="btn primary" disabled onclick="submitBusiness()">Publish to Directory</button></div>' +
+    '</div></div>';
+  ['bizName', 'bizCity', 'bizZip', 'bizPhone', 'bizEmail'].forEach(function (id) { var i = $(id); if (i) i.setAttribute('oninput', 'validateBizForm()'); });
+  if (typed) _fillBizForm(typed); else if (_bizDraftEditing) _fillBizForm(_bizDraftEditing);
+  validateBizForm();
 }
 function field2(id, label, type, ph) {
   return '<div class="field"><label>' + escHtml(label) + '</label><input id="' + id + '" type="' + type + '" placeholder="' + escAttr(ph) + '"></div>';
 }
 function bizErr(msg) { var e = $('bizFormErr'); if (e) { e.textContent = msg; e.classList.remove('hidden'); } }
-function submitBusiness() {
+function onBizCatChange() { toggleOtherBox($('bizCat'), 'bizCatOther'); validateBizForm(); }
+function bizCatValue() { return pickOrOther('bizCat', 'bizCatOther'); }
+function _bizFormData() {
   var g = function (id) { return ($(id) && $(id).value || '').trim(); };
+  return { name: g('bizName'), category: g('bizCat'), other: g('bizCatOther'), address: g('bizAddr'), city: g('bizCity'), zip: g('bizZip'),
+    phone: g('bizPhone'), email: g('bizEmail'), invite: g('bizInvite') };
+}
+function _fillBizForm(d) {
+  var set = function (id, v) { if ($(id)) $(id).value = v || ''; };
+  set('bizName', d.name); set('bizCat', d.category); set('bizCatOther', d.other); set('bizAddr', d.address); set('bizCity', d.city);
+  set('bizZip', d.zip); set('bizPhone', d.phone); set('bizEmail', d.email); set('bizInvite', d.invite);
+  var o = $('bizCatOther'); if (o) o.classList.toggle('hidden', d.category !== 'Other');
+}
+/* Publish turns on once the required fields are filled and the server says the code is valid (and unused). */
+function validateBizForm() {
+  var invite = (($('bizInvite') && $('bizInvite').value) || '').trim(), msg = $('bizInviteMsg'); if (!msg) return;
+  var paint = function () {
+    var ok = isValidInvite(invite), d = _bizFormData();
+    if (invite) { msg.className = 'form-note ' + (ok ? 'ok' : 'bad'); msg.textContent = ok ? '✓ Verified. You can publish this business.' : '✗ That invite code isn’t recognized (or it was already used).'; }
+    else { msg.className = 'form-note'; msg.textContent = 'Enter the invite code you got from Student Club Hub.'; }
+    $('bizSubmit').disabled = !(d.name && bizCatValue() && d.city && d.zip && d.phone && d.email && ok);
+  };
+  paint();
+  clearTimeout(validateBizForm._t);
+  if (invite && _inviteCheck.code !== invite.toUpperCase()) validateBizForm._t = setTimeout(function () {
+    checkInviteCode(invite).then(function () { if ($('bizInvite') && $('bizInvite').value.trim() === invite) paint(); });
+  }, 350);
+}
+function cancelBizForm() { _bizDraftEditing = null; navShop(_bizDrafts().length ? 'my' : 'browse'); }
+function submitBusiness() {
   if (!currentUser) return bizErr('Please log in first.');
-  var name = g('bizName'), cat = g('bizCat'), city = g('bizCity'), zip = g('bizZip'), email = g('bizEmail').toLowerCase(), phone = g('bizPhone');
-  if (!name) return bizErr('Please enter your business name.');
-  if (!cat) return bizErr('Please choose a category.');
-  if (!city || !zip) return bizErr('City and zip code are required.');
-  if (!phone) return bizErr('A phone number is required.');
+  var d = _bizFormData(), cat = bizCatValue(), email = d.email.toLowerCase();
+  if (!d.name) return bizErr('Please enter your business name.');
+  if (!cat) return bizErr(d.category === 'Other' ? 'Type your business category.' : 'Please choose a category.');
+  if (!d.city || !d.zip) return bizErr('City and zip code are required.');
+  if (!/^\d{5}$/.test(d.zip)) return bizErr('Enter a 5-digit zip code.');
+  if (!d.phone) return bizErr('A phone number is required.');
   if (!(typeof isValidEmail === 'function' ? isValidEmail(email) : /@/.test(email))) return bizErr('Enter a valid contact email.');
+  if (!isValidInvite(d.invite)) return bizErr('Enter a valid business invite code to publish.');
   var payload = {
-    name: name, category: cat, address: g('bizAddr'), city: city, zip: zip, phone: phone,
-    perk_type: 'discount', perk_description: '', redemption_instructions: '',
-    contact_email: email,
-    owner_email: currentUser.email.toLowerCase(),
-    // TEMP: auto-approve so you can test the full flow now. Restore 'pending' when
-    // club-officer/admin verification is wired up.
+    name: d.name, category: cat, address: d.address, city: d.city, zip: d.zip, phone: d.phone,
+    perk_type: 'discount', perk_description: '', redemption_instructions: '',   // old columns (no longer shown)
+    contact_email: email, owner_email: currentUser.email.toLowerCase(),
+    invite_code: d.invite.toUpperCase(),   // the database claims this single-use code
     status: 'verified'
   };
-  authBusy2('bizSubmit', true, 'Submitting…');
+  authBusy2('bizSubmit', true, 'Publishing…');
   sbRegisterBusiness(payload).then(function () {
-    _bizCache = null;   // force a refetch so the new listing shows immediately
-    refreshMyBizIds();
+    _bizCache = null; _inviteCheck = { code: null, ok: false };
+    if (_bizDraftEditing) { _removeBizDraft(_bizDraftEditing.id); _bizDraftEditing = null; }
+    // refreshMyBizIds repaints the open section when ownership changes, so show the success card after it
+    return refreshMyBizIds().then(function () {
     $('shopsBody').innerHTML =
       '<div class="soon-card" style="margin-top:40px"><div class="soon-ico">' + svgIcon('check', 34) + '</div>' +
         '<h2>Your business is live!</h2>' +
-        '<p><strong>' + escHtml(name) + '</strong> is now in the directory. Open it from My Business to add a promotion, hours, and photos.</p>' +
+        '<p><strong>' + escHtml(d.name) + '</strong> is now in the directory. Open it from My Business to add a promotion, hours, and photos.</p>' +
         '<div class="soon-actions"><button class="btn primary" onclick="navShop(\'my\')">Go to My Business</button>' +
           '<button class="btn blue" onclick="navShop(\'register\')">Register Another</button></div></div>';
-  }).catch(function (e) { authBusy2('bizSubmit', false); bizErr(e.message); });
+    });
+  }).catch(function (e) { authBusy2('bizSubmit', false); bizErr(/invite code/i.test(e.message) ? 'That invite code isn’t valid (or it was already used).' : e.message); });
+}
+
+/* ---------- Business drafts (kept on this device, per account; like club drafts) ---------- */
+function _bizDraftKey() { return 'sch_biz_drafts:' + ((currentUser && currentUser.email) || '').toLowerCase(); }
+function _bizDrafts() { try { return JSON.parse(localStorage.getItem(_bizDraftKey())) || []; } catch (e) { return []; } }
+function _setBizDrafts(list) { try { localStorage.setItem(_bizDraftKey(), JSON.stringify(list)); return true; } catch (e) { toast('Couldn’t save the draft on this device.'); return false; } }
+function _removeBizDraft(id) { _setBizDrafts(_bizDrafts().filter(function (x) { return x.id !== id; })); }
+function saveBizDraft() {
+  if (!currentUser) { pendingAuthAction = saveBizDraft; return openAuth('login'); }
+  var d = _bizFormData();
+  if (!d.name) return bizErr('Add at least a business name before saving a draft.');
+  d.id = (_bizDraftEditing && _bizDraftEditing.id) || 'bd-' + Date.now().toString(36); d.saved = Date.now();
+  var list = _bizDrafts(), i = list.findIndex(function (x) { return x.id === d.id; });
+  if (i > -1) list[i] = d; else list.push(d);
+  if (!_setBizDrafts(list)) return;
+  _bizDraftEditing = null; myBizTabView = 'drafts';
+  toast('Draft saved. You’ll find it in My Business → Drafts.');
+  navShop('my');
+}
+function resumeBizDraft(id) { var d = _bizDrafts().find(function (x) { return x.id === id; }); if (!d) return; _bizDraftEditing = d; openShops('register'); }
+function askDeleteBizDraft(id) {
+  openConfirm('Delete this draft?', 'This permanently removes the saved draft.', svgIcon('trash', 26), function () { _removeBizDraft(id); renderShops(); toast('Draft deleted.'); });
+}
+function bizDraftCard(d) {
+  var cat = d.category === 'Other' ? d.other : d.category;
+  return '<article class="card draft-card"><div class="card-cover draft-cover">' + svgIcon('draft', 18) + ' Draft</div><div class="card-body">' +
+    '<div class="card-title"><h3>' + escHtml(d.name || 'Untitled draft') + '</h3></div>' +
+    '<div class="card-meta">Saved ' + escHtml(timeAgo(d.saved)) + (d.city ? ' · ' + escHtml(d.city) : '') + '</div>' +
+    '<p class="card-desc">' + escHtml(cat || 'No category yet.') + '</p>' +
+    '<div class="card-foot"><button class="btn primary" onclick="resumeBizDraft(\'' + d.id + '\')">Resume</button>' +
+    '<button class="btn danger" onclick="askDeleteBizDraft(\'' + d.id + '\')">Delete</button></div></div></article>';
 }
 function authBusy2(id, busy, label) {
   var b = $(id); if (!b) return;
@@ -651,19 +730,33 @@ var _bizOwned = {};
 
 /* ---------- Media upload → Supabase Storage (returns public URL) ---------- */
 var IMG_MAX = 6 * 1024 * 1024, VID_MAX = 50 * 1024 * 1024;
-function sbUploadMedia(file, allowVideo) {
+/* Uploads go to biz/<business id>/…, signed in as the owner (the storage rules only let a business's
+   owner add files to its folder, and only images / videos). */
+function sbUploadMedia(file, allowVideo, bizId) {
   var isVid = /^video\//i.test(file.type);
   if (isVid && !allowVideo) return Promise.reject(new Error('Only images are allowed here.'));
   if (!/^image\//i.test(file.type) && !isVid) return Promise.reject(new Error('Please choose an image' + (allowVideo ? ' or video' : '') + '.'));
   if (isVid && file.size > VID_MAX) return Promise.reject(new Error('Video too large (max 50 MB).'));
   if (!isVid && file.size > IMG_MAX) return Promise.reject(new Error('Image too large (max 6 MB).'));
   var ext = ((file.name.split('.').pop() || 'bin').toLowerCase().match(/[a-z0-9]+/) || ['bin'])[0];
-  var path = 'biz/' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '.' + ext;
-  return fetch(SUPABASE_URL + '/storage/v1/object/business-media/' + path, {
-    method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': file.type || 'application/octet-stream' }, body: file
-  }).then(function (res) { if (!res.ok) return res.text().then(function () { throw new Error('Upload failed. Try a smaller file.'); }); return SUPABASE_URL + '/storage/v1/object/public/business-media/' + path; });
+  if (!bizId) return Promise.reject(new Error('Upload failed: no business selected.'));
+  var path = 'biz/' + bizId + '/' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+  return sbAccessToken().then(function (tok) {
+    if (!tok) throw new Error('Please log in again to upload.');
+    return fetch(SUPABASE_URL + '/storage/v1/object/business-media/' + path, {
+      method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + tok, 'Content-Type': file.type || 'application/octet-stream' }, body: file
+    });
+  }).then(function (res) {
+    if (!res.ok) return res.text().then(function (t) {
+      throw new Error(/mime|type/i.test(t) ? 'That file type isn’t allowed. Use a photo (JPG, PNG, GIF, WebP) or an MP4/WebM video.'
+        : /size|large/i.test(t) ? 'That file is too large.' : res.status === 403 || /security|policy/i.test(t) ? 'Only this business’s owner can upload here. Try logging in again.' : 'Upload failed. Try a smaller file.');
+    });
+    return SUPABASE_URL + '/storage/v1/object/public/business-media/' + path;
+  });
 }
 
+var myBizTabView = 'published';
+function myBizTab(t) { myBizTabView = t; renderShops(); }
 function renderMyBusiness(el) {
   if (!currentUser) {
     el.innerHTML = '<div class="page-head centered"><h1>My Business</h1><p>Sign in to manage your storefront.</p></div>' +
@@ -673,16 +766,28 @@ function renderMyBusiness(el) {
         '<button class="btn blue" onclick="navShop(\'register\')">Register a Business</button></div></div>';
     return;
   }
-  el.innerHTML = '<div class="page-head centered"><h1>My Business</h1><p>Edit your storefront, promotions, hours, and partnership settings.</p></div>' +
+  var drafts = _bizDrafts();
+  el.innerHTML = '<div class="page-head centered"><h1>My Business</h1><p>Your published businesses and your saved drafts.</p></div>' +
+    '<div class="settings-tabs centered-tabs">' +
+      '<button class="settings-tab' + (myBizTabView === 'published' ? ' active' : '') + '" onclick="myBizTab(\'published\')">Published Businesses</button>' +
+      '<button class="settings-tab' + (myBizTabView === 'drafts' ? ' active' : '') + '" onclick="myBizTab(\'drafts\')">Drafts' + (drafts.length ? ' (' + drafts.length + ')' : '') + '</button></div>' +
     '<div id="myBizList" class="grid"><p class="form-note" style="grid-column:1/-1;text-align:center;padding:40px">Loading your listings…</p></div>';
+  var g = $('myBizList');
+  if (myBizTabView === 'drafts') {
+    g.innerHTML = drafts.length ? drafts.map(bizDraftCard).join('')
+      : '<div class="empty" style="grid-column:1/-1"><div class="big">' + svgIcon('draft', 40) + '</div><p>No drafts yet.</p>' +
+        '<p class="form-note">Register a business and choose “Save as Draft” to keep it here.</p>' +
+        '<div style="margin-top:14px"><button class="btn primary" onclick="navShop(\'register\')">Register a Business</button></div></div>';
+    return;
+  }
   refreshMyBizIds().then(function (ids) {
     return ids.length ? sbRest('businesses?id=in.(' + ids.map(encodeURIComponent).join(',') + ')&select=' + BIZ_SELECT + '&order=created_at.desc') : [];
   }).then(function (rows) {
-      var g = $('myBizList'); if (!g) return;
+      var g = $('myBizList'); if (!g || myBizTabView !== 'published') return;
       if (!rows || !rows.length) {
         g.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="big">' + svgIcon('store', 40) + '</div>' +
-          '<p>You haven’t listed a business yet. Once you do, you can manage it here.</p>' +
-          '<button class="btn primary" style="margin-top:12px" onclick="navShop(\'register\')">Register Your Business</button></div>';
+          '<p>You haven’t published a business yet. Once you do, you can manage it here.</p>' +
+          '<button class="btn primary" style="margin-top:12px" onclick="navShop(\'register\')">Register a Business</button></div>';
         return;
       }
       rows.forEach(function (r) { _bizOwned[r.id] = r; });

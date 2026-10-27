@@ -47,6 +47,8 @@
             <button data-i18n="nav_howitworks" onclick="navHowItWorks()">How It Works</button>
             <button data-i18n="nav_faq" onclick="navFaq()">FAQ</button>
             <button onclick="navContact()">Contact Us</button>
+            <button onclick="navLegal('terms')">Terms of Use</button>
+            <button onclick="navLegal('privacy')">Privacy Policy</button>
           </div>
         </div>
       </nav>
@@ -93,6 +95,10 @@
     <section id="view-howitworks" class="app-view hidden">
       <div id="howitworksBody"></div>
     </section>
+
+    <!-- ======================= TERMS OF USE / PRIVACY POLICY (legal.js) ======================= -->
+    <section id="view-terms" class="app-view hidden"><div id="termsBody"></div></section>
+    <section id="view-privacy" class="app-view hidden"><div id="privacyBody"></div></section>
 
     <!-- ======================= FAQ (standalone) ======================= -->
     <section id="view-faq" class="app-view hidden">
@@ -208,10 +214,12 @@
             <div class="field"><label><span data-i18n="cc_category">Category</span> *</label><select id="ccCategory" onchange="onCreateCategoryChange()"><option value="">Select…</option></select></div>
             <div class="field"><label data-i18n="cc_visibility">Club status</label><select id="ccRecruit"><option value="Public" data-i18n="vis_public">Public</option><option value="Private" data-i18n="vis_private">Private</option></select></div>
           </div>
-          <div id="ccOtherWrap" class="field hidden"><label>Custom category</label><input id="ccOther" type="text" placeholder="Type your own category" oninput="validateCreate()" /></div>
+          <div id="ccOtherWrap" class="field hidden"><label>Custom category</label><input id="ccOther" type="text" maxlength="30" placeholder="Type your own category (30 characters max)" oninput="validateCreate()" /></div>
           <div class="two-col">
-            <div class="field"><label><span data-i18n="cc_school">School</span> *</label><select id="ccSchool" class="select block-select" onchange="onSchoolPick('ccSchool','ccDistrict'); validateCreate()"></select></div>
-            <div class="field"><label><span data-i18n="cc_district">School district</span> *</label><select id="ccDistrict" class="select block-select" onchange="validateCreate()"></select></div>
+            <div class="field"><label><span data-i18n="cc_school">School</span> *</label><select id="ccSchool" class="select block-select" onchange="onSchoolPick('ccSchool','ccDistrict'); toggleOtherBox(this,'ccSchoolOther'); validateCreate()"></select>
+              <input id="ccSchoolOther" class="other-box hidden" type="text" maxlength="30" placeholder="Type your school (30 characters max)" oninput="validateCreate()" /></div>
+            <div class="field"><label><span data-i18n="cc_district">School district</span> *</label><select id="ccDistrict" class="select block-select" onchange="toggleOtherBox(this,'ccDistrictOther'); validateCreate()"></select>
+              <input id="ccDistrictOther" class="other-box hidden" type="text" maxlength="30" placeholder="Type your district (30 characters max)" oninput="validateCreate()" /></div>
           </div>
           <div class="two-col">
             <div class="field"><label><span data-i18n="cc_zip">Zip code</span> *</label><input id="ccZip" type="text" inputmode="numeric" maxlength="5" required placeholder="90274" oninput="validateCreate()" /></div>
@@ -233,7 +241,7 @@
     </section>
   </main>
 
-  <footer class="site-footer">© 2026 Student Club Hub · A local high-school club directory</footer>
+  <footer class="site-footer"><span>© 2026 Student Club Hub · A local high-school club directory</span> · <a href="#" class="footer-link" onclick="navLegal('terms');return false;">Terms of Use</a> · <a href="#" class="footer-link" onclick="navLegal('privacy');return false;">Privacy Policy</a></footer>
 
   <!-- ======================= OVERLAYS ======================= -->
   <div id="authOverlay" class="overlay hidden" onclick="onOverlayClick(event, 'authOverlay', closeAuth)">
@@ -358,6 +366,7 @@
   <script src="scripts/live.js"></script>
   <script src="scripts/editors.js"></script>
   <script src="scripts/admin.js"></script>
+  <script src="scripts/legal.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       initAuth();
