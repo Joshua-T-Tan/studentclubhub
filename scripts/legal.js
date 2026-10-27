@@ -9,7 +9,7 @@
    and everyone is asked again. Policy text is English (marked
    data-no-tr). Loaded last.
    ============================================================ */
-var LEGAL_VERSION = '2026-10-26', LEGAL_UPDATED = 'October 26, 2026', LEGAL_EMAIL = 'support@studentclubhub.com';
+var LEGAL_VERSION = '2026-10-26', LEGAL_UPDATED = 'October 27, 2026', LEGAL_EMAIL = 'support@studentclubhub.com';
 
 function _legalSections(kind) {
   var mail = '<a class="link" href="mailto:' + LEGAL_EMAIL + '">' + LEGAL_EMAIL + '</a>';
@@ -25,7 +25,7 @@ function _legalSections(kind) {
       '<li>Your name and the profile details you choose to show are public unless you make your profile private in Settings.</li>' +
       '<li>Club rosters and club chat are visible to that club’s members.</li>' +
       '<li>Your email address is never shown to other users. Clubs and businesses show only the public contact email they choose to list.</li></ul>'],
-    ['Who helps us run the site', 'We use a few service providers that process data for us: Supabase (database, login and file storage), Vercel (website hosting), Google (only if you choose “Continue with Google”) and our email provider (to send sign-in codes and account emails). They may only use your information to provide their service to us. We may also share information if the law requires it, or to protect the safety of our users.'],
+    ['Who helps us run the site', 'We use a small number of trusted service providers to run the site: a database, login and file-storage provider, a website hosting provider, an email provider that sends sign-in codes and account emails, and Google sign-in (only if you choose “Continue with Google”). They may only use your information to provide their service to us. We may also share information if the law requires it, or to protect the safety of our users.'],
     ['How long we keep it', 'We keep your information while your account is open. You can delete your account at any time in Settings → Account; this removes your profile and your club memberships. Content you posted in a club may remain in that club’s history. Reports and records we need for safety or legal reasons may be kept for a limited time.'],
     ['Your choices and rights', 'You can view and edit your profile, make it private, change your language and settings, and delete your account at any time. You can also email us to ask for a copy of your information, to correct it, or to delete it. California residents have rights under California law (including the CCPA), and we honor them for everyone. We will not treat you differently for using them.'],
     ['Security', 'We use secure connections, a professional login system, and database rules that limit who can read and change each piece of information. No system is perfect, so please use a strong password, keep it private, and tell us right away if you think your account was misused.'],
