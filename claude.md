@@ -184,9 +184,14 @@ Schema + policies: `supabase/security_2026_10.sql` (and later `supabase/*.sql`).
   an editor changed — `sbSaveClub` diffs against `_clubBase`), so simultaneous
   edits to different parts of a page don't overwrite each other. Two people
   editing the *same* field is still last-writer-wins.
-- **Verified seal is admin-granted.** Owners send a request
-  (`verification_requests`); an admin approves it on the Admin page. Triggers
-  ignore any other attempt to set `verified`.
+- **Verified seal is admin-granted.** Owners fill out a questionnaire
+  (Page settings → Get verified → Request; `openVerifyForm` in editors.js): Club
+  or Business at the top, then checkable answers (clubs: school + office phone +
+  faculty advisor's school email; businesses: role, public phone/address,
+  website/listing). Answers go in `verification_requests.details`;
+  `trg_verification_guard` refuses missing answers, and only one pending request
+  per listing is allowed. An admin approves it on the Admin page (answers shown
+  with mailto/tel links). Triggers ignore any other attempt to set `verified`.
 - **Emails are never readable from the browser.** `profiles.email` and
   `businesses.owner_email` have column SELECT revoked; business queries must use
   `BIZ_SELECT` (never `select=*`). Ownership comes from `my_business_ids()` /

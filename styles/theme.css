@@ -782,3 +782,27 @@ h1, h2, h3, h4, .brand, .page-head h1 { font-weight: 800; letter-spacing: -0.02e
 .legal-read { flex: 0 0 auto; align-self: center; padding: 3px 10px; font-size: .8rem; font-weight: 800; background: var(--note); color: #1a1a1a;
   border: var(--edge); border-radius: var(--r-sm); cursor: pointer; }
 .legal-read:hover { background: var(--brand); color: #fff; }
+
+/* ---------- Verification request form + admin view ---------- */
+.verify-row .verify-copy { flex: 1; min-width: 0; }
+.verify-row .sm-btn { flex-shrink: 0; align-self: center; }
+#vfForm .vf-lead { margin: 0 0 12px; }
+#vfForm .vf-sec { margin: 18px 0 8px; font-size: .95rem; font-weight: 800; padding-top: 12px; border-top: var(--edge); }
+#vfForm .vf-sec:first-of-type { border-top: 0; padding-top: 0; }
+#vfForm .vf-types { grid-template-columns: repeat(2, 1fr); }
+#vfForm .pt-option[disabled] { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+#vfForm .vf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+#vfForm .vf-grid .vf-wide, #vfForm .vf-grid .field.vf-wide { grid-column: 1 / -1; }
+#vfForm .field .form-note { margin: 4px 0 0; font-size: .76rem; }
+#vfForm input[disabled] { opacity: .7; }
+#vfForm .vf-missing { border-color: var(--brand) !important; box-shadow: 0 0 0 2px rgba(224, 82, 82, .25); }
+#vfForm textarea { min-height: 70px; }
+.vf-attest { display: flex; gap: 10px; align-items: flex-start; margin: 14px 0 4px; font-size: .88rem; line-height: 1.4; cursor: pointer; }
+.vf-attest input { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; }
+#vfForm .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+@media (max-width: 640px) { #vfForm .vf-grid, #vfForm .vf-types { grid-template-columns: 1fr; } }
+.adm-vf { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 10px 0 6px; font-size: .88rem; }
+.adm-vf dt { color: var(--muted); font-weight: 700; }
+.adm-vf dd { margin: 0; overflow-wrap: anywhere; }
+.adm-vf-hint { margin: 2px 0 8px; font-style: italic; }
+@media (max-width: 520px) { .adm-vf { grid-template-columns: 1fr; } .adm-vf dd { margin-bottom: 6px; } }

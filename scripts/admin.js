@@ -205,7 +205,7 @@ function _admPaintVerification() {
     var pending = reqs.length ? reqs.map(function (r) {
       return '<article class="adm-card is-open"><div class="adm-card-top">' + _admKind(r.kind) + ' <strong>' + _admTargetLink(r.kind, r.entity_id, r.entity_name) + '</strong>' + _admNewTag(r.created_at) +
           '<span class="adm-pill st-open">Pending</span></div>' +
-        '<p class="adm-text">' + escHtml(r.note || '') + '</p>' +
+        _admVerifyDetails(r) +
         '<div class="adm-meta">Requested by ' + _admPerson('', r.requester_email, r.requester_id) + ' · ' + _admWhen(r.created_at) + '</div>' +
         '<div class="adm-actions"><button class="btn primary sm-btn" onclick="adminDecide(\'' + r.id + '\',true)">Approve</button>' +
           '<button class="btn ghost sm-btn" onclick="adminDecide(\'' + r.id + '\',false)">Reject</button></div></article>';
@@ -216,6 +216,33 @@ function _admPaintVerification() {
     }).join('') : '<p class="form-note">Nothing is verified yet.</p>';
     _admList(pending + '<h3 class="adm-sub">Currently verified</h3><div class="adm-rows">' + list + '</div>');
   }).catch(_admFail);
+}
+/* The questionnaire answers (older requests only have a note). Emails / phones / links are
+   clickable so the admin can check them: email the advisor, call the school or the business. */
+var VF_LABELS = {
+  fullName: 'Name', role: 'Role', email: 'Contact email', phone: 'Phone',
+  school: 'School', schoolCity: 'School city', schoolPhone: 'School office phone', standing: 'School recognition',
+  advisorName: 'Advisor', advisorEmail: 'Advisor email', link: 'Link',
+  address: 'Address', city: 'City', zip: 'Zip', bizPhone: 'Business phone', website: 'Website', listing: 'Online listing'
+};
+function _admVfValue(k, v) {
+  if (/email/i.test(k)) return '<a class="link" href="mailto:' + escAttr(v) + '">' + escHtml(v) + '</a>';
+  if (/phone/i.test(k)) return '<a class="link" href="tel:' + escAttr(v.replace(/[^\d+]/g, '')) + '">' + escHtml(v) + '</a>';
+  if (/^(link|website|listing)$/.test(k)) {
+    var url = /^https?:\/\//i.test(v) ? v : 'https://' + v;
+    return '<a class="link" href="' + escAttr(url) + '" target="_blank" rel="noopener noreferrer">' + escHtml(v) + '</a>';
+  }
+  return escHtml(v);
+}
+function _admVerifyDetails(r) {
+  var d = r.details || {}, rows = Object.keys(VF_LABELS).filter(function (k) { return d[k]; }).map(function (k) {
+    return '<dt>' + VF_LABELS[k] + '</dt><dd>' + _admVfValue(k, String(d[k])) + '</dd>';
+  }).join('');
+  var hint = !rows ? '' : r.kind === 'club'
+    ? '<p class="form-note adm-vf-hint">To confirm: email the advisor at their school address, or call the school office.</p>'
+    : '<p class="form-note adm-vf-hint">To confirm: compare with the public listing (Google Maps, website) and call the business number.</p>';
+  return (rows ? '<dl class="adm-vf">' + rows + '</dl>' + hint : '') +
+    (r.note ? '<p class="adm-text">' + (rows ? '<span class="form-note">Anything else: </span>' : '') + escHtml(r.note) + '</p>' : '');
 }
 function adminDecide(reqId, approve) {
   sbRpc('admin_decide_verification', { p_req: reqId, p_approve: approve }).then(function () {

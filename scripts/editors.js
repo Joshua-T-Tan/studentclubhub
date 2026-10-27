@@ -97,20 +97,154 @@ function _paintVerifyRow(kind, id) {
     }
     var note = (r && r.status === 'rejected') ? 'Your last request wasn’t approved. You can send a new one with more detail.'
       : 'Ask for the gold Verified seal. An admin first checks that this is the official ' + kind + '.';
-    el.innerHTML = '<div style="flex:1"><div class="tr-title">Get verified</div><div class="form-note">' + note + '</div>' +
-      '<div id="vrForm" class="hidden" style="margin-top:8px"><textarea id="vrNote" maxlength="500" placeholder="How can we confirm it? e.g. your advisor’s name and school email, or your business website."></textarea>' +
-      '<button type="button" class="btn primary sm-btn" style="margin-top:6px" onclick="submitVerification(\'' + kind + '\',\'' + jsArg(id) + '\')">Send request</button></div></div>' +
-      '<button type="button" class="btn ghost sm-btn" onclick="$(\'vrForm\').classList.remove(\'hidden\');this.remove()">Request</button>';
+    el.innerHTML = '<div class="verify-copy"><div class="tr-title">Get verified</div><div class="form-note">' + note + '</div></div>' +
+      '<button type="button" class="btn primary sm-btn" onclick="openVerifyForm(\'' + kind + '\',\'' + jsArg(id) + '\')">Request</button>';
   }).catch(function () { var el = $('verifyRow'); if (el) el.innerHTML = '<div class="form-note">Couldn’t load verification status.</div>'; });
 }
-function submitVerification(kind, id) {
-  var note = _emVal('vrNote');
-  if (note.length < 10) return _emErr('Tell us a little about how to confirm it (a sentence is enough).');
-  var name = kind === 'club' ? (getClub(id) || {}).name : (_biz(id) || {}).name;
+
+/* ---------- Verification questionnaire ----------
+   Opens over Page settings. The top switch picks Club or Business (like the profile types), then
+   which of your unverified listings. Every answer gives the admin something they can check on
+   their own: clubs → the faculty advisor's school email + the school office's phone;
+   businesses → the publicly listed phone/address and the website or online listing.
+   The database refuses a request with a missing answer (trg_verification_guard). */
+var _vf = null;   // { kind, id, from: {kind,id}, clubs: [], biz: [], vals: {} }
+function openVerifyForm(kind, id) {
+  _vf = { kind: kind, id: id, from: { kind: kind, id: id }, clubs: [], biz: [], vals: {} };
+  _vf.clubs = (typeof CLUBS !== 'undefined' ? CLUBS : []).filter(function (c) { return ownerOf(c) && !c.verified && !isSampleClub(c); });
+  $('bizBody').innerHTML = '<div class="modal-pad edit-modal"><p class="form-note" style="text-align:center;padding:30px">Loading…</p></div>';
+  refreshMyBizIds().then(function (ids) {
+    return ids.length ? sbRest('businesses?id=in.(' + ids.map(encodeURIComponent).join(',') + ')&select=' + BIZ_SELECT) : [];
+  }).then(function (rows) {
+    _vf.biz = (rows || []).filter(function (b) { return !b.verified && !b.is_sample; });
+  }).catch(function () {}).then(_paintVerifyForm);
+}
+function _vfList(kind) { return kind === 'club' ? _vf.clubs : _vf.biz; }
+function _vfItem() { return _vfList(_vf.kind).find(function (x) { return String(x.id) === String(_vf.id); }); }
+/* Keep what's typed when switching type/listing; a value you never typed falls back to the listing's own. */
+function _vfKeep() {
+  document.querySelectorAll('#vfForm [data-vf]').forEach(function (i) { _vf.vals[i.getAttribute('data-vf')] = i.type === 'checkbox' ? i.checked : i.value; });
+}
+function _vfIn(key, label, type, ph, preset, opts) {
+  opts = opts || {};
+  var v = Object.prototype.hasOwnProperty.call(_vf.vals, key) ? _vf.vals[key] : (preset || '');
+  return '<div class="field' + (opts.wide ? ' vf-wide' : '') + '"><label>' + escHtml(label) + (opts.optional ? ' <span class="form-note">(optional)</span>' : ' *') + '</label>' +
+    '<input data-vf="' + key + '" type="' + type + '" maxlength="' + (opts.max || 120) + '" placeholder="' + escAttr(ph || '') + '" value="' + escAttr(v) + '">' +
+    (opts.hint ? '<p class="form-note">' + escHtml(opts.hint) + '</p>' : '') + '</div>';
+}
+function _vfSelect(key, label, options, preset) {
+  var v = Object.prototype.hasOwnProperty.call(_vf.vals, key) ? _vf.vals[key] : (preset || '');
+  return '<div class="field vf-wide"><label>' + escHtml(label) + ' *</label><select data-vf="' + key + '" class="select block-select">' +
+    '<option value="">Select…</option>' + options.map(function (o) { return '<option' + (o === v ? ' selected' : '') + '>' + escHtml(o) + '</option>'; }).join('') + '</select></div>';
+}
+var VF_STANDING = ['Officially approved by the school', 'Waiting for school approval', 'Not affiliated with a school'];
+var VF_ROLES = ['Owner', 'Co-owner', 'Manager', 'Authorized employee'];
+function _paintVerifyForm() {
+  if (!_vf) return;
+  var item = _vfItem();
+  if (!item) { var first = _vfList(_vf.kind)[0]; _vf.id = first ? String(first.id) : ''; item = first; }
+  var u = currentUser || {};
+  var typeCard = function (k, icon, title, sub) {
+    var n = _vfList(k).length, on = _vf.kind === k;
+    return '<button type="button" class="pt-option' + (on ? ' on' : '') + '"' + (n ? '' : ' disabled') + ' onclick="vfType(\'' + k + '\')">' +
+      '<span class="pt-ico">' + svgIcon(icon, 20) + '</span><span class="pt-txt"><strong>' + title + '</strong><small>' +
+      (n ? sub : 'You don’t have an unverified ' + k + ' to verify.') + '</small></span></button>';
+  };
+  var list = _vfList(_vf.kind);
+  var pick = '<div class="field vf-wide"><label>Which ' + _vf.kind + '? *</label><select class="select block-select" onchange="vfPick(this.value)">' +
+    list.map(function (x) { return '<option value="' + escAttr(x.id) + '"' + (String(x.id) === String(_vf.id) ? ' selected' : '') + '>' + escHtml(x.name) + '</option>'; }).join('') + '</select></div>';
+  var you = '<h4 class="vf-sec">About you</h4><div class="vf-grid">' +
+    _vfIn('fullName', 'Your full name', 'text', 'First and last name', u.name) +
+    (_vf.kind === 'business' ? _vfSelect('role', 'Your role at the business', VF_ROLES) : '<div class="field"><label>Your role</label><input type="text" value="President" disabled></div>') +
+    _vfIn('email', 'Contact email', 'email', 'you@example.com', u.email, { hint: 'We’ll only use this if we have questions about your request.' }) +
+    (_vf.kind === 'business' ? _vfIn('phone', 'Your phone number', 'tel', '(310) 555-0123', '', { max: 30 }) : '') + '</div>';
+  var body;
+  if (!item) body = '<p class="form-note">Everything you run is already verified (or waiting for review).</p>';
+  else if (_vf.kind === 'club') body = you +
+    '<h4 class="vf-sec">Your school</h4><div class="vf-grid">' +
+      _vfIn('school', 'School name', 'text', 'e.g. Palos Verdes High School', item.school, { wide: true }) +
+      _vfIn('schoolCity', 'School city', 'text', 'e.g. Palos Verdes Estates', '') +
+      _vfIn('schoolPhone', 'School main office phone', 'tel', '(310) 555-0100', '', { max: 30, hint: 'So we can confirm your advisor works there.' }) +
+      _vfSelect('standing', 'Is the club recognized by your school?', VF_STANDING) + '</div>' +
+    '<h4 class="vf-sec">Faculty advisor</h4><p class="form-note vf-lead">A teacher or staff member who sponsors the club. We may email them to confirm it’s real.</p><div class="vf-grid">' +
+      _vfIn('advisorName', 'Advisor’s full name', 'text', 'e.g. Ms. Rivera') +
+      _vfIn('advisorEmail', 'Advisor’s school email', 'email', 'name@school.org', '', { hint: 'Use their school address, not a personal one.' }) +
+      _vfIn('link', 'Link showing the club', 'url', 'School website page, club Instagram…', '', { optional: true, wide: true, max: 300 }) + '</div>';
+  else body = you +
+    '<h4 class="vf-sec">The business</h4><p class="form-note vf-lead">We check these against public sources (like Google Maps) and may call the business to confirm.</p><div class="vf-grid">' +
+      _vfIn('address', 'Street address', 'text', '123 Main St', item.address, { wide: true }) +
+      _vfIn('city', 'City', 'text', 'Palos Verdes', item.city) +
+      _vfIn('zip', 'Zip code', 'text', '90274', item.zip, { max: 10 }) +
+      _vfIn('bizPhone', 'Business phone (as listed publicly)', 'tel', '(310) 555-0123', item.phone, { max: 30 }) +
+      _vfIn('website', 'Website', 'url', 'https://…', item.website, { optional: true, max: 300 }) +
+      _vfIn('listing', 'Google Maps, Yelp, or social media page', 'url', 'https://…', '', { optional: true, wide: true, max: 300 }) + '</div>';
+  var attest = Object.prototype.hasOwnProperty.call(_vf.vals, 'attest') ? _vf.vals.attest : false;
+  var tail = item ?
+    '<h4 class="vf-sec">Anything else?</h4><div class="field"><textarea data-vf="extra" maxlength="500" placeholder="Optional: anything that helps us confirm it.">' +
+      escHtml(_vf.vals.extra || '') + '</textarea></div>' +
+    '<label class="vf-attest"><input type="checkbox" data-vf="attest"' + (attest ? ' checked' : '') + '><span>' +
+      (_vf.kind === 'club' ? 'I’m the President of this club, the information above is true, and Student Club Hub may contact my advisor to confirm it.'
+        : 'I’m allowed to represent this business, the information above is true, and Student Club Hub may contact the business to confirm it.') + ' *</span></label>' +
+    '<div class="modal-actions"><button type="button" class="btn ghost" onclick="closeVerifyForm()">Cancel</button>' +
+      '<button type="button" id="vfSubmit" class="btn primary" onclick="submitVerification()">Submit for review</button></div>'
+    : '<div class="modal-actions"><button type="button" class="btn ghost" onclick="closeVerifyForm()">Back</button></div>';
+  $('bizBody').innerHTML = '<div class="modal-pad edit-modal" id="vfForm"><div class="ro-head"><h3>Request verification</h3>' +
+      '<button class="icon-btn" onclick="closeVerifyForm()">✕</button></div>' +
+    '<p class="form-note vf-lead">An admin checks your answers before adding the gold Verified seal. Only admins see this form, and we use it only to confirm the listing. Fields marked * are required.</p>' +
+    '<div id="emErr" class="auth-error hidden"></div>' +
+    '<h4 class="vf-sec">What are you verifying?</h4>' +
+    '<div class="pt-switch vf-types">' + typeCard('club', 'book', 'Student club', 'Confirmed through your school and faculty advisor') +
+      typeCard('business', 'store', 'Local business', 'Confirmed through your public business info') + '</div>' +
+    (list.length ? pick : '') + body + tail + '</div>';
+  openOverlay('bizOverlay');
+  if ($('vfForm')) $('vfForm').scrollTop = 0;
+}
+function vfType(k) { if (!_vf || _vf.kind === k) return; _vfKeep(); ['role', 'phone', 'school', 'address', 'city', 'zip', 'bizPhone', 'website', 'attest'].forEach(function (x) { delete _vf.vals[x]; }); _vf.kind = k; _vf.id = ''; _paintVerifyForm(); }
+function vfPick(id) { _vfKeep(); ['school', 'address', 'city', 'zip', 'bizPhone', 'website'].forEach(function (x) { delete _vf.vals[x]; }); _vf.id = id; _paintVerifyForm(); }
+/* Back to the Page settings you came from */
+function closeVerifyForm() {
+  var from = _vf && _vf.from; _vf = null;
+  if (from && from.kind === 'club' && getClub(from.id)) editClubBanner(from.id);
+  else if (from && from.kind === 'business' && _biz(from.id)) editBizBanner(from.id);
+  else closeReach();
+}
+function _vfDigits(s) { return String(s || '').replace(/\D/g, '').length; }
+function _vfUrlOk(s) { return !s || /^(https?:\/\/)?[^\s.]+\.[^\s]{2,}$/i.test(s); }
+function submitVerification() {
+  if (!_vf || !currentUser) return;
+  _vfKeep();
+  var v = _vf.vals, kind = _vf.kind, item = _vfItem(); if (!item) return;
+  var g = function (k) { return String(v[k] == null ? '' : v[k]).trim(); };
+  var need = kind === 'club' ? ['fullName', 'email', 'school', 'schoolCity', 'schoolPhone', 'standing', 'advisorName', 'advisorEmail']
+    : ['fullName', 'role', 'email', 'phone', 'address', 'city', 'zip', 'bizPhone'];
+  document.querySelectorAll('#vfForm .vf-missing').forEach(function (x) { x.classList.remove('vf-missing'); });
+  var missing = need.filter(function (k) { return !g(k); });
+  missing.forEach(function (k) { var i = document.querySelector('#vfForm [data-vf="' + k + '"]'); if (i) i.classList.add('vf-missing'); });
+  var err = function (m) { _emErr(m); var e = $('emErr'); if (e) e.scrollIntoView({ block: 'center', behavior: 'smooth' }); };
+  if (missing.length) return err('Please answer every question marked *.');
+  if (!isValidEmail(g('email'))) return err('Enter a valid contact email.');
+  if (kind === 'club') {
+    if (_vfDigits(g('schoolPhone')) < 10) return err('Enter the school office’s full phone number.');
+    if (!isValidEmail(g('advisorEmail'))) return err('Enter a valid email for your advisor.');
+    if ([g('email').toLowerCase(), currentUser.email.toLowerCase()].indexOf(g('advisorEmail').toLowerCase()) > -1) return err('Your advisor’s email must be different from your own.');
+  } else {
+    if (_vfDigits(g('phone')) < 10 || _vfDigits(g('bizPhone')) < 10) return err('Enter full phone numbers, including the area code.');
+    if (!/^\d{5}$/.test(g('zip'))) return err('Enter a 5-digit zip code.');
+    if (!_vfUrlOk(g('website')) || !_vfUrlOk(g('listing'))) return err('Check the links. They should look like https://example.com');
+  }
+  if (!v.attest) return err('Please check the box to confirm the information is true.');
+  var keys = kind === 'club' ? need.concat(['link']) : need.concat(['website', 'listing']);
+  var details = { type: kind, attest: true };
+  keys.forEach(function (k) { if (g(k)) details[k] = g(k); });
+  authBusy2('vfSubmit', true, 'Submitting…');
   sbRest('verification_requests', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({
-    kind: kind, entity_id: id, entity_name: name || '', requester_id: currentUser.memberId, requester_email: currentUser.email.toLowerCase(), note: note }) })
-    .then(function () { toast('Verification requested. An admin will review it.'); _paintVerifyRow(kind, id); })
-    .catch(function (ex) { _emErr(ex.message); });
+    kind: kind, entity_id: String(item.id), entity_name: item.name || '', requester_id: currentUser.memberId,
+    requester_email: currentUser.email.toLowerCase(), note: g('extra'), details: details }) })
+    .then(function () { toast('Verification requested. An admin will review it.'); _vf.from = { kind: kind, id: String(item.id) }; closeVerifyForm(); })
+    .catch(function (ex) {
+      authBusy2('vfSubmit', false);
+      err(/duplicate|unique/i.test(ex.message) ? 'There’s already a request waiting for review for this ' + kind + '.' : ex.message);
+    });
 }
 function emPaintClubBanner(id) {
   var c = getClub(id); var el = $('emBannerPrev'); if (!el) return;
