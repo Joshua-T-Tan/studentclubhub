@@ -119,6 +119,8 @@ function openVerifyForm(kind, id) {
     _vf.biz = (rows || []).filter(function (b) { return !b.verified && !b.is_sample; });
   }).catch(function () {}).then(_paintVerifyForm);
 }
+/* Text boxes are skipped by the page translator (people type in them), so translate this placeholder here. */
+function _vfTr(en) { return (typeof trPhrase === 'function' && trPhrase(en)) || en; }
 function _vfList(kind) { return kind === 'club' ? _vf.clubs : _vf.biz; }
 function _vfItem() { return _vfList(_vf.kind).find(function (x) { return String(x.id) === String(_vf.id); }); }
 /* Keep what's typed when switching type/listing; a value you never typed falls back to the listing's own. */
@@ -135,7 +137,7 @@ function _vfIn(key, label, type, ph, preset, opts) {
 function _vfSelect(key, label, options, preset) {
   var v = Object.prototype.hasOwnProperty.call(_vf.vals, key) ? _vf.vals[key] : (preset || '');
   return '<div class="field vf-wide"><label>' + escHtml(label) + ' *</label><select data-vf="' + key + '" class="select block-select">' +
-    '<option value="">Select…</option>' + options.map(function (o) { return '<option' + (o === v ? ' selected' : '') + '>' + escHtml(o) + '</option>'; }).join('') + '</select></div>';
+    '<option value="">Select…</option>' + options.map(function (o) { return '<option value="' + escAttr(o) + '"' + (o === v ? ' selected' : '') + '>' + escHtml(o) + '</option>'; }).join('') + '</select></div>';
 }
 var VF_STANDING = ['Officially approved by the school', 'Waiting for school approval', 'Not affiliated with a school'];
 var VF_ROLES = ['Owner', 'Co-owner', 'Manager', 'Authorized employee'];
@@ -155,7 +157,7 @@ function _paintVerifyForm() {
     list.map(function (x) { return '<option value="' + escAttr(x.id) + '"' + (String(x.id) === String(_vf.id) ? ' selected' : '') + '>' + escHtml(x.name) + '</option>'; }).join('') + '</select></div>';
   var you = '<h4 class="vf-sec">About you</h4><div class="vf-grid">' +
     _vfIn('fullName', 'Your full name', 'text', 'First and last name', u.name) +
-    (_vf.kind === 'business' ? _vfSelect('role', 'Your role at the business', VF_ROLES) : '<div class="field"><label>Your role</label><input type="text" value="President" disabled></div>') +
+    (_vf.kind === 'business' ? _vfSelect('role', 'Your role at the business', VF_ROLES) : '<div class="field"><label>Your role</label><input type="text" placeholder="President" disabled></div>') +
     _vfIn('email', 'Contact email', 'email', 'you@example.com', u.email, { hint: 'We’ll only use this if we have questions about your request.' }) +
     (_vf.kind === 'business' ? _vfIn('phone', 'Your phone number', 'tel', '(310) 555-0123', '', { max: 30 }) : '') + '</div>';
   var body;
@@ -180,7 +182,8 @@ function _paintVerifyForm() {
       _vfIn('listing', 'Google Maps, Yelp, or social media page', 'url', 'https://…', '', { optional: true, wide: true, max: 300 }) + '</div>';
   var attest = Object.prototype.hasOwnProperty.call(_vf.vals, 'attest') ? _vf.vals.attest : false;
   var tail = item ?
-    '<h4 class="vf-sec">Anything else?</h4><div class="field"><textarea data-vf="extra" maxlength="500" placeholder="Optional: anything that helps us confirm it.">' +
+    '<h4 class="vf-sec">Anything else?</h4><div class="field"><textarea data-vf="extra" maxlength="500" placeholder="' +
+      escAttr(_vfTr('Optional: anything that helps us confirm it.')) + '">' +
       escHtml(_vf.vals.extra || '') + '</textarea></div>' +
     '<label class="vf-attest"><input type="checkbox" data-vf="attest"' + (attest ? ' checked' : '') + '><span>' +
       (_vf.kind === 'club' ? 'I’m the President of this club, the information above is true, and Student Club Hub may contact my advisor to confirm it.'
